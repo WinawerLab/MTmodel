@@ -12,6 +12,11 @@ the most recent versions of the code, are available at
 
     http://www.cns.nyu.edu/~lcv/MT-model.html
 
+Project planning note:
+
+- See AGENTS.md at repository root for the active RGC front-end roadmap,
+  implementation status, and next execution steps.
+
 Recent major updates:
 
 - Native MATLAB fallbacks were added for core 3D operations used by the
@@ -20,6 +25,10 @@ Recent major updates:
    valid correlation steps.
 - Gaussian blur internals were updated to call native helper functions,
    preserving the separable filtering pipeline while improving portability.
+- An optional retinal ganglion cell (RGC) preprocessing layer was added in
+   front of V1. By default it is disabled so legacy behavior is preserved.
+- A calibration helper was added to fit healthy RGC parameters so V1/MT
+   outputs stay close to the legacy model before impairment is introduced.
 - Legacy C/MEX sources are still included in the repository for reference.
 
 Authors:  Timothy Saint and Eero P. Simoncelli
@@ -36,6 +45,21 @@ INSTALLATION
    Optional: Legacy C/MEX sources are still included in the mex subfolder
    for reference and experimentation. Core model internals call explicit
    native helper functions, so default execution does not depend on MEX.
+
+3) Optional RGC front-end (default OFF):
+
+   pars = shPars;
+   pars.rgc.enabled = 1;
+
+   The RGC layer supports center-surround filtering, temporal smoothing,
+   global gain, and optional amplitude/timing impairment maps.
+
+4) First-pass RGC calibration protocol:
+
+   report = shCalibrateRgcLayer;
+
+   This fits healthy RGC parameters to keep V1/MT outputs close to the
+   legacy model with RGC disabled.
 
 ___________________________________________________________________________
 USING THE SOFTWARE
