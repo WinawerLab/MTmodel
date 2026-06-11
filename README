@@ -12,7 +12,15 @@ the most recent versions of the code, are available at
 
     http://www.cns.nyu.edu/~lcv/MT-model.html
 
-Changes/updates to the software are documented in the ChangeLog file.
+Recent major updates:
+
+- Native MATLAB fallbacks were added for core 3D operations used by the
+   model internals, reducing dependence on legacy precompiled MEX binaries.
+- The V1 linear stage now uses explicit native helper calls for blur and
+   valid correlation steps.
+- Gaussian blur internals were updated to call native helper functions,
+   preserving the separable filtering pipeline while improving portability.
+- Legacy C/MEX sources are still included in the repository for reference.
 
 Authors:  Timothy Saint and Eero P. Simoncelli
 ___________________________________________________________________________
