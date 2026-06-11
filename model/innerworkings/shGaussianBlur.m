@@ -23,10 +23,10 @@ for s = 1:nscales
     for n = 1:size(pop, 2)
         tmp = shGetSubPop(pop, popind, n, s);
         
-        tmp = validCorrDn3(tmp, fx);
-        tmp = validCorrDn3(tmp, fy);
+        tmp = shValidCorrDn3(tmp, fx);
+        tmp = shValidCorrDn3(tmp, fy);
         if ft ~= 1
-            tmp = validCorrDn3(tmp, ft);
+            tmp = shValidCorrDn3(tmp, ft);
         end
         res = shSetSubPop(res, ind, tmp, n, s);
     end

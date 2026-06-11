@@ -38,16 +38,16 @@ order = 3;
 fsz = size(v1SpatialFilters, 1);
 ind = zeros(nScales+1, 4);
 for scale = 1:nScales
-    m = blurDn3(M, scale);
+    m = shBlurDn3(M, scale);
     n = 1;
     for torder = 0:order
         tfilt = reshape(flipud(v1TemporalFilters(:,torder+1)),[1 1 fsz]);
-        tmp1 = validCorrDn3(m, reshape(tfilt, [1 1 fsz]));  % first conv
+        tmp1 = shValidCorrDn3(m, reshape(tfilt, [1 1 fsz]));  % first conv
         for xorder = 0:(order-torder)
             yorder = order - torder - xorder;
             xfilt = reshape(v1SpatialFilters(:,xorder+1),[1 fsz 1]);
             yfilt = reshape(flipud(v1SpatialFilters(:,yorder+1)),[fsz 1 1]);
-            tmp2 = validCorrDn3(validCorrDn3(tmp1, yfilt), xfilt); % second and third convs
+            tmp2 = shValidCorrDn3(shValidCorrDn3(tmp1, yfilt), xfilt); % second and third convs
 
 
             ind(scale+1, 2:4) = [size(tmp2, 1), size(tmp2, 2), size(tmp2, 3)];

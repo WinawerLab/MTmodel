@@ -22,9 +22,12 @@ INSTALLATION
    the folder anywhere on your system, but we'll assume it's in a
    folder/directory named "MTmodel".
 
-2) Compile the C code in the mex subfolder.  You should be able to do this 
-   by executing "shCompileMex" from within matlab, after setting your path 
-   to include the MTmodel folder (see step 0 of next section).
+2) No MEX compilation is required for normal use. The core model now runs
+   with native MATLAB implementations.
+
+   Optional: Legacy C/MEX sources are still included in the mex subfolder
+   for reference and experimentation. Core model internals call explicit
+   native helper functions, so default execution does not depend on MEX.
 
 ___________________________________________________________________________
 USING THE SOFTWARE
