@@ -36,14 +36,31 @@ function report = shShowRgcAndV1Comparison(stimulus, pars, showMovies)
     if ~isfield(parsRgc.rgc, 'impairmentEnabled')
         parsRgc.rgc.impairmentEnabled = 0;
     end
+    parsRgc = localEnsureFourPopV1Weights(parsRgc, stimulus);
 
     rgcStimulus = shModelRgc(stimulus, parsRgc);
+    if isstruct(rgcStimulus) && isfield(rgcStimulus, 'mode') && strcmp(rgcStimulus.mode, 'fourPop')
+        rgcMovieForPlots = rgcStimulus.combined;
+    else
+        rgcMovieForPlots = rgcStimulus;
+    end
 
     if showMovies == 1
         figure('Name', 'Input movie');
         flipBook(stimulus);
-        figure('Name', 'RGC movie');
-        flipBook(rgcStimulus);
+        if isstruct(rgcStimulus) && isfield(rgcStimulus, 'mode') && strcmp(rgcStimulus.mode, 'fourPop')
+            figure('Name', 'RGC onFast');
+            flipBook(rgcStimulus.channels.onFast);
+            figure('Name', 'RGC offFast');
+            flipBook(rgcStimulus.channels.offFast);
+            figure('Name', 'RGC onSlow');
+            flipBook(rgcStimulus.channels.onSlow);
+            figure('Name', 'RGC offSlow');
+            flipBook(rgcStimulus.channels.offSlow);
+        else
+            figure('Name', 'RGC movie');
+            flipBook(rgcMovieForPlots);
+        end
     end
 
     [v1NoRgcPop, v1NoRgcInd] = shModel(stimulus, parsNoRgc, 'v1Complex');
@@ -59,7 +76,7 @@ function report = shShowRgcAndV1Comparison(stimulus, pars, showMovies)
     v1Nrmse = localNrmse(v1NoRgcCenter(:), v1RgcCenter(:));
 
     midT = round(size(stimulus, 3) / 2);
-    centerPatch = localCenterPatch(stimulus, rgcStimulus);
+    centerPatch = localCenterPatch(stimulus, rgcMovieForPlots);
 
     figure('Name', 'RGC output overview', 'Color', 'w');
     subplot(2, 2, 1);
@@ -67,8 +84,19 @@ function report = shShowRgcAndV1Comparison(stimulus, pars, showMovies)
     title(sprintf('Input frame t=%d', midT));
 
     subplot(2, 2, 2);
-    imagesc(rgcStimulus(:, :, midT)); axis image off; colormap gray;
+    imagesc(rgcMovieForPlots(:, :, midT)); axis image off; colormap gray;
     title(sprintf('RGC frame t=%d', midT));
+
+    if isstruct(rgcStimulus) && isfield(rgcStimulus, 'mode') && strcmp(rgcStimulus.mode, 'fourPop')
+        figure('Name', 'RGC four populations', 'Color', 'w');
+        channelNames = {'onFast', 'offFast', 'onSlow', 'offSlow'};
+        for i = 1:length(channelNames)
+            subplot(2, 2, i);
+            imagesc(rgcStimulus.channels.(channelNames{i})(:, :, midT));
+            axis image off; colormap gray;
+            title(channelNames{i});
+        end
+    end
 
     subplot(2, 2, 3);
     plot(centerPatch.inputTrace, 'k', 'LineWidth', 1.4); hold on;
@@ -78,7 +106,7 @@ function report = shShowRgcAndV1Comparison(stimulus, pars, showMovies)
     title('Temporal trace at center patch');
 
     subplot(2, 2, 4);
-    scatter(stimulus(:), rgcStimulus(:), 6, '.');
+    scatter(stimulus(:), rgcMovieForPlots(:), 6, '.');
     xlabel('Input pixel values'); ylabel('RGC pixel values');
     title('Input vs RGC transfer');
 
@@ -111,6 +139,9 @@ function report = shShowRgcAndV1Comparison(stimulus, pars, showMovies)
     text(0.02, 0.6, sprintf('V1 NRMSE: %.4f', v1Nrmse), 'FontSize', 12);
     text(0.02, 0.4, sprintf('RGC enabled: %d', parsRgc.rgc.enabled), 'FontSize', 12);
     text(0.02, 0.2, sprintf('RGC impairment: %d', parsRgc.rgc.impairmentEnabled), 'FontSize', 12);
+    if isfield(parsRgc.rgc, 'populationMode')
+        text(0.02, 0.0, sprintf('RGC mode: %s', parsRgc.rgc.populationMode), 'FontSize', 12);
+    end
     title('Summary metrics');
 
     report = struct;
@@ -120,6 +151,45 @@ function report = shShowRgcAndV1Comparison(stimulus, pars, showMovies)
     report.v1RgcCenter = v1RgcCenter;
     report.stimulus = stimulus;
     report.rgcStimulus = rgcStimulus;
+    report.rgcMovieForPlots = rgcMovieForPlots;
+
+end
+
+function parsRgc = localEnsureFourPopV1Weights(parsRgc, stimulus)
+
+    if ~isfield(parsRgc.rgc, 'populationMode') || ~strcmpi(parsRgc.rgc.populationMode, 'fourPop')
+        return;
+    end
+
+    if isfield(parsRgc.rgc, 'v1Weights') && ~isempty(parsRgc.rgc.v1Weights)
+        return;
+    end
+
+    stimSet = localCalibrationStimuli(parsRgc, stimulus);
+    parsRgc.rgc.v1Weights = shFitRgcV1Weights(parsRgc, stimSet);
+
+end
+
+function stimSet = localCalibrationStimuli(pars, stimulus)
+
+  stimSet = cell(1, 4);
+  dims = size(stimulus);
+
+  stimSet{1} = stimulus;
+  stimSet{2} = mkDots(dims, pi/2, 0.7, 0.12, 0.7);
+
+  g1 = v12sin([0, 1.0]);
+  g2 = v12sin([pi/3, 1.6]);
+  stimSet{3} = mkSin(dims, 0, g1(2), g1(3), 1);
+  stimSet{4} = mkSin(dims, pi/3, g2(2), g2(3), 1);
+
+  if any(dims < shGetDims(pars, 'mtPattern', [1 1 dims(3)]))
+      dims = shGetDims(pars, 'mtPattern', [1 1 dims(3)]);
+      stimSet{1} = mkDots(dims, 0, 1.0, 0.12, 1.0);
+      stimSet{2} = mkDots(dims, pi/2, 0.7, 0.12, 0.7);
+      stimSet{3} = mkSin(dims, 0, g1(2), g1(3), 1);
+      stimSet{4} = mkSin(dims, pi/3, g2(2), g2(3), 1);
+  end
 
 end
 

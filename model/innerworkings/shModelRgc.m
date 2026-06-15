@@ -1,19 +1,23 @@
-% rgcStimulus = shModelRgc(stimulus, pars)
+% rgcOut = shModelRgc(stimulus, pars)
 %
-% Optional retinal ganglion cell (RGC) preprocessing layer. This is a
-% conservative first-pass implementation intended to preserve legacy model
-% behavior when disabled.
+% Optional retinal ganglion cell (RGC) preprocessing layer.
 %
 % Required arguments:
 % stimulus  3D movie [Y X T]
 % pars      model parameters structure from shPars
 %
 % Output:
-% rgcStimulus  filtered and optionally impaired RGC movie [Y X T]
+% legacy mode (populationMode = 'legacy'):
+%   rgcOut    filtered RGC movie [Y X T]
+% fourPop mode (populationMode = 'fourPop'):
+%   rgcOut    struct with fields:
+%             .mode = 'fourPop'
+%             .channels.onFast, .offFast, .onSlow, .offSlow  [Y X T]
+%             .combined  weighted sum of channels for inspection
 
-function rgcStimulus = shModelRgc(stimulus, pars)
+function rgcOut = shModelRgc(stimulus, pars)
 
-    rgcStimulus = stimulus;
+    rgcOut = stimulus;
 
     if ~isfield(pars, 'rgc')
         return;
@@ -23,15 +27,55 @@ function rgcStimulus = shModelRgc(stimulus, pars)
         return;
     end
 
-    rgcStimulus = localApplySpatialFilter(rgcStimulus, pars.rgc);
-    rgcStimulus = localApplyTemporalFilter(rgcStimulus, pars.rgc);
-
-    if isfield(pars.rgc, 'gain')
-        rgcStimulus = rgcStimulus .* pars.rgc.gain;
+    if localIsFourPopMode(pars.rgc)
+        rgcOut = localComputeFourPopulations(stimulus, pars.rgc);
+        return;
     end
 
-    if isfield(pars.rgc, 'impairmentEnabled') && pars.rgc.impairmentEnabled == 1
-        rgcStimulus = localApplyImpairment(rgcStimulus, pars.rgc);
+    rgcOut = localApplyLegacyFilter(stimulus, pars.rgc);
+
+end
+
+function tf = localIsFourPopMode(rgcPars)
+
+    tf = isfield(rgcPars, 'populationMode') && strcmpi(rgcPars.populationMode, 'fourPop');
+
+end
+
+function rgcOut = localComputeFourPopulations(stimulus, rgcPars)
+
+    channelNames = {'onFast', 'offFast', 'onSlow', 'offSlow'};
+    polarities = {'on', 'off', 'on', 'off'};
+    speeds = {'fast', 'fast', 'slow', 'slow'};
+
+    rgcOut = struct;
+    rgcOut.mode = 'fourPop';
+    rgcOut.channels = struct;
+
+    for i = 1:length(channelNames)
+        movie = shModelRgcPopulation(stimulus, rgcPars, polarities{i}, speeds{i});
+        if isfield(rgcPars, 'impairmentEnabled') && rgcPars.impairmentEnabled == 1
+            movie = localApplyImpairment(movie, rgcPars);
+        end
+        rgcOut.channels.(channelNames{i}) = movie;
+    end
+
+    rgcOut.combined = rgcOut.channels.onFast + rgcOut.channels.offFast + ...
+        rgcOut.channels.onSlow + rgcOut.channels.offSlow;
+
+end
+
+function out = localApplyLegacyFilter(stimulus, rgcPars)
+
+    out = localApplySpatialFilter(stimulus, rgcPars);
+    out = localApplyTemporalFilter(out, rgcPars);
+
+    if isfield(rgcPars, 'gain')
+        out = out .* rgcPars.gain;
+    end
+
+    if isfield(rgcPars, 'impairmentEnabled') && rgcPars.impairmentEnabled == 1
+        out = localApplyImpairment(out, rgcPars);
     end
 
 end

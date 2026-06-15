@@ -1,4 +1,4 @@
-% report = shCalibrateRgcLayer(maxIter)
+% report = shCalibrateRgcLayer(maxIter, parsTemplate)
 %
 % First-pass calibration protocol for the optional RGC layer.
 % The goal is to fit healthy RGC parameters so V1 and MT responses remain
@@ -8,42 +8,52 @@
 % none
 %
 % Optional arguments:
-% maxIter  maximum number of fminsearch iterations (default = 60)
+% maxIter       maximum number of fminsearch iterations (default = 60)
+% parsTemplate  parameter struct from shPars; set pars.rgc.populationMode
+%               to 'fourPop' to calibrate the four-population RGC layer.
 %
 % Output:
 % report   struct containing fitted parameters and fit quality metrics.
 
-function report = shCalibrateRgcLayer(maxIter)
+function report = shCalibrateRgcLayer(maxIter, parsTemplate)
 
     if nargin < 1
         maxIter = 60;
+    end
+    if nargin < 2 || isempty(parsTemplate)
+        parsTemplate = shPars;
     end
 
     rng(1);
 
     % Baseline model (legacy path).
-    parsBase = shPars;
+    parsBase = parsTemplate;
     parsBase.rgc.enabled = 0;
 
     % Candidate model (RGC enabled).
-    parsRgc = shPars;
+    parsRgc = parsTemplate;
     parsRgc.rgc.enabled = 1;
     parsRgc.rgc.impairmentEnabled = 0;
-
+    if isfield(parsRgc.rgc, 'populationMode') && strcmpi(parsRgc.rgc.populationMode, 'fourPop')
+        x0 = [log(0.8); log(1.2); -1.5; log(0.7); log(1.5); 0];
+    else
+        x0 = [log(0.8); log(1.2); -8; -8; 0];
+    end
     stimSet = localBuildStimulusSet(parsBase);
     baseVec = localCollectResponseVector(stimSet, parsBase);
 
     % Initial guess maps close to identity behavior.
-    x0 = [log(0.8); log(1.2); -8; -8; 0];
     opts = optimset('Display', 'iter', 'MaxIter', maxIter, 'TolX', 1e-3, 'TolFun', 1e-4);
 
     objFun = @(x) localObjective(x, parsRgc, stimSet, baseVec);
     [xBest, fBest] = fminsearch(objFun, x0, opts);
 
     parsFit = localAssignRgcPars(parsRgc, xBest);
+    parsFit = localFinalizeRgcPars(parsFit, stimSet);
     fitVec = localCollectResponseVector(stimSet, parsFit);
 
     beforePars = localAssignRgcPars(parsRgc, x0);
+    beforePars = localFinalizeRgcPars(beforePars, stimSet);
     beforeVec = localCollectResponseVector(stimSet, beforePars);
 
     report = struct;
@@ -103,6 +113,7 @@ end
 function loss = localObjective(x, parsTemplate, stimSet, baseVec)
 
     pars = localAssignRgcPars(parsTemplate, x);
+    pars = localFinalizeRgcPars(pars, stimSet);
     fitVec = localCollectResponseVector(stimSet, pars);
 
     corrTerm = 1 - localSafeCorr(baseVec, fitVec);
@@ -112,7 +123,25 @@ function loss = localObjective(x, parsTemplate, stimSet, baseVec)
 
 end
 
+function pars = localFinalizeRgcPars(pars, stimSet)
+
+    if isfield(pars.rgc, 'populationMode') && strcmpi(pars.rgc.populationMode, 'fourPop')
+        pars.rgc.v1Weights = shFitRgcV1Weights(pars, stimSet);
+    end
+
+end
+
 function pars = localAssignRgcPars(pars, x)
+
+    if isfield(pars.rgc, 'populationMode') && strcmpi(pars.rgc.populationMode, 'fourPop')
+        pars.rgc.spatial.centerSigma = exp(x(1));
+        pars.rgc.spatial.surroundSigma = pars.rgc.spatial.centerSigma + exp(x(2));
+        pars.rgc.spatial.surroundWeight = 0.5 ./ (1 + exp(-x(3)));
+        pars.rgc.temporal.fastSigma = max(0, exp(x(4)) - 1);
+        pars.rgc.temporal.slowSigma = max(pars.rgc.temporal.fastSigma + 0.1, exp(x(5)) - 1);
+        pars.rgc.gain = exp(x(6));
+        return;
+    end
 
     pars.rgc.centerSigma = exp(x(1));
     pars.rgc.surroundSigma = pars.rgc.centerSigma + exp(x(2));

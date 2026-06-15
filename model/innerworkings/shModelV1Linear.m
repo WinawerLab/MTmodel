@@ -15,6 +15,16 @@ function varargout = shModelV1Linear(varargin)
 % unpack varargin
 M = varargin{1};
 pars = varargin{2};
+
+if isfield(pars, 'rgc') && isfield(pars.rgc, 'enabled') && pars.rgc.enabled == 1 && ...
+        isfield(pars.rgc, 'populationMode') && strcmpi(pars.rgc.populationMode, 'fourPop')
+    if nargin > 2
+        [varargout{1:nargout}] = shModelV1LinearFromRgc(M, pars, varargin{3});
+    else
+        [varargout{1:nargout}] = shModelV1LinearFromRgc(M, pars);
+    end
+    return;
+end
 v1SpatialFilters = pars.v1SpatialFilters;
 v1TemporalFilters = pars.v1TemporalFilters;
 v1PopulationDirections = pars.v1PopulationDirections;
