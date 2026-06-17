@@ -20,7 +20,7 @@ function report = shShowRgcFourPopDemo
     dims = shGetDims(pars, 'v1Complex', [1 1 24]);
     stimulus = mkDots(dims, 0, 1.0, 0.12, 1.0);
 
-    calReport = shCalibrateRgcLayer(40, pars);
+    calReport = shCalibrateRgcLayer(3, pars);
     pars.rgc = calReport.bestRgcPars;
     pars.rgc.enabled = 1;
     pars.rgc.populationMode = 'fourPop';
