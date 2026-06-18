@@ -30,6 +30,7 @@ function report = shShowRgcAndMtComparison(stimulus, pars)
     if ~isfield(parsRgc.rgc, 'impairmentEnabled')
         parsRgc.rgc.impairmentEnabled = 0;
     end
+    parsRgc = localEnsureRgcV1Weights(parsRgc, stimulus);
 
     [mtNoRgcPop, mtNoRgcInd] = shModel(stimulus, parsNoRgc, 'mtPattern');
     [mtRgcPop, mtRgcInd] = shModel(stimulus, parsRgc, 'mtPattern');
@@ -79,6 +80,40 @@ function report = shShowRgcAndMtComparison(stimulus, pars)
     report.mtNRMSE = mtNrmse;
     report.mtNoRgcCenter = mtNoRgcCenter;
     report.mtRgcCenter = mtRgcCenter;
+
+end
+
+function parsRgc = localEnsureRgcV1Weights(parsRgc, stimulus)
+
+    if isfield(parsRgc.rgc, 'v1Weights') && ~isempty(parsRgc.rgc.v1Weights)
+        return;
+    end
+
+    stimSet = localCalibrationStimuli(parsRgc, stimulus);
+    parsRgc.rgc.v1Weights = shFitRgcV1Weights(parsRgc, stimSet);
+
+end
+
+function stimSet = localCalibrationStimuli(pars, stimulus)
+
+  stimSet = cell(1, 4);
+  dims = size(stimulus);
+
+  stimSet{1} = stimulus;
+  stimSet{2} = mkDots(dims, pi/2, 0.7, 0.12, 0.7);
+
+  g1 = v12sin([0, 1.0]);
+  g2 = v12sin([pi/3, 1.6]);
+  stimSet{3} = mkSin(dims, 0, g1(2), g1(3), 1);
+  stimSet{4} = mkSin(dims, pi/3, g2(2), g2(3), 1);
+
+  if any(dims < shGetDims(pars, 'mtPattern', [1 1 dims(3)]))
+      dims = shGetDims(pars, 'mtPattern', [1 1 dims(3)]);
+      stimSet{1} = mkDots(dims, 0, 1.0, 0.12, 1.0);
+      stimSet{2} = mkDots(dims, pi/2, 0.7, 0.12, 0.7);
+      stimSet{3} = mkSin(dims, 0, g1(2), g1(3), 1);
+      stimSet{4} = mkSin(dims, pi/3, g2(2), g2(3), 1);
+  end
 
 end
 

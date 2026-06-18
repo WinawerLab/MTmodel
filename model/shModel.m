@@ -44,12 +44,7 @@ function varargout = shModel(varargin)
     stimulus = varargin{1};
     pars = varargin{2};
     stageName = varargin{3};
-    if isfield(pars, 'rgc') && isfield(pars.rgc, 'enabled') && pars.rgc.enabled == 1 && ...
-            isfield(pars.rgc, 'populationMode') && strcmpi(pars.rgc.populationMode, 'fourPop')
-        stimulusForV1 = stimulus;
-    else
-        stimulusForV1 = shModelRgc(stimulus, pars);
-    end
+    stimulusForV1 = stimulus;
 
     sSz = [size(stimulus, 1), size(stimulus, 2), size(stimulus, 3)];
     if any(sSz < shGetDims(pars, stageName))

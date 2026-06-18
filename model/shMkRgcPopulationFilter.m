@@ -24,7 +24,15 @@ function kernel = shMkRgcPopulationFilter(pars, polarity, speed, kernelSize)
     cy = ceil(kernelSize(1) / 2);
     cx = ceil(kernelSize(2) / 2);
     ct = ceil(kernelSize(3) / 2);
-    impulse(cy, cx, ct) = 1;
+
+    % ON channels prefer bright flashes, OFF channels prefer dark flashes.
+    % Use the preferred polarity so the center pixel is driven and the
+    % temporal kernel shape is visible in the center-pixel time series.
+    if strcmpi(polarity, 'off')
+        impulse(cy, cx, ct) = -1;
+    else
+        impulse(cy, cx, ct) = 1;
+    end
 
     kernel = shModelRgcPopulation(impulse, pars.rgc, polarity, speed);
 

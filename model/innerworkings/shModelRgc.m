@@ -7,9 +7,9 @@
 % pars      model parameters structure from shPars
 %
 % Output:
-% legacy mode (populationMode = 'legacy'):
-%   rgcOut    filtered RGC movie [Y X T]
-% fourPop mode (populationMode = 'fourPop'):
+% RGC disabled:
+%   rgcOut    original stimulus [Y X T]
+% RGC enabled:
 %   rgcOut    struct with fields:
 %             .mode = 'fourPop'
 %             .channels.onFast, .offFast, .onSlow, .offSlow  [Y X T]
@@ -27,18 +27,7 @@ function rgcOut = shModelRgc(stimulus, pars)
         return;
     end
 
-    if localIsFourPopMode(pars.rgc)
-        rgcOut = localComputeFourPopulations(stimulus, pars.rgc);
-        return;
-    end
-
-    rgcOut = localApplyLegacyFilter(stimulus, pars.rgc);
-
-end
-
-function tf = localIsFourPopMode(rgcPars)
-
-    tf = isfield(rgcPars, 'populationMode') && strcmpi(rgcPars.populationMode, 'fourPop');
+    rgcOut = localComputeFourPopulations(stimulus, pars.rgc);
 
 end
 
@@ -60,58 +49,31 @@ function rgcOut = localComputeFourPopulations(stimulus, rgcPars)
         rgcOut.channels.(channelNames{i}) = movie;
     end
 
-    rgcOut.combined = rgcOut.channels.onFast + rgcOut.channels.offFast + ...
-        rgcOut.channels.onSlow + rgcOut.channels.offSlow;
-
-end
-
-function out = localApplyLegacyFilter(stimulus, rgcPars)
-
-    out = localApplySpatialFilter(stimulus, rgcPars);
-    out = localApplyTemporalFilter(out, rgcPars);
-
-    if isfield(rgcPars, 'gain')
-        out = out .* rgcPars.gain;
+    % Lagged copies of fast and slow channels.  A delay of D frames shifts
+    % the response by D frames, introducing a temporal phase offset that
+    % lets the weight-fitting stage approximate the odd-symmetric (temporal
+    % derivative) components of the V1 temporal filter basis.
+    fastLag = 0;
+    slowLag = 0;
+    if isfield(rgcPars, 'temporal')
+        if isfield(rgcPars.temporal, 'fastLag'), fastLag = rgcPars.temporal.fastLag; end
+        if isfield(rgcPars.temporal, 'slowLag'), slowLag = rgcPars.temporal.slowLag; end
+    end
+    if fastLag > 0
+        rgcOut.channels.onFastLag  = localShiftFrames(rgcOut.channels.onFast,  fastLag);
+        rgcOut.channels.offFastLag = localShiftFrames(rgcOut.channels.offFast, fastLag);
+    end
+    if slowLag > 0
+        rgcOut.channels.onSlowLag  = localShiftFrames(rgcOut.channels.onSlow,  slowLag);
+        rgcOut.channels.offSlowLag = localShiftFrames(rgcOut.channels.offSlow, slowLag);
     end
 
-    if isfield(rgcPars, 'impairmentEnabled') && rgcPars.impairmentEnabled == 1
-        out = localApplyImpairment(out, rgcPars);
+    allNames = fieldnames(rgcOut.channels);
+    rgcOut.combined = zeros(size(stimulus));
+    for i = 1:length(allNames)
+        rgcOut.combined = rgcOut.combined + rgcOut.channels.(allNames{i});
     end
 
-end
-
-function out = localApplySpatialFilter(in, rgcPars)
-    if ~isfield(rgcPars, 'centerSigma')
-        rgcPars.centerSigma = 0.8;
-    end
-    if ~isfield(rgcPars, 'surroundSigma')
-        rgcPars.surroundSigma = 2.0;
-    end
-    if ~isfield(rgcPars, 'surroundWeight')
-        rgcPars.surroundWeight = 0;
-    end
-
-    center = mkGaussianFilter(rgcPars.centerSigma);
-    surround = mkGaussianFilter(rgcPars.surroundSigma);
-
-    outCenter = localSeparableSpatialSame(in, center);
-    outSurround = localSeparableSpatialSame(in, surround);
-    out = outCenter - rgcPars.surroundWeight .* outSurround;
-end
-
-function out = localApplyTemporalFilter(in, rgcPars)
-    out = in;
-
-    if ~isfield(rgcPars, 'temporalSigma')
-        rgcPars.temporalSigma = 0;
-    end
-
-    if rgcPars.temporalSigma <= 0
-        return;
-    end
-
-    tf = mkGaussianFilter(rgcPars.temporalSigma);
-    out = convn(out, reshape(tf, [1 1 length(tf)]), 'same');
 end
 
 function out = localApplyImpairment(in, rgcPars)

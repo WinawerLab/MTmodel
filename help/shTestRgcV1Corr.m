@@ -6,7 +6,7 @@ dims = shGetDims(pars, 'v1Complex', [1 1 24]);
 stim = mkDots(dims, 0, 1.0, 0.12, 1.0);
 
 parsNo = pars; parsNo.rgc.enabled = 0;
-parsFour = pars; parsFour.rgc.enabled = 1; parsFour.rgc.populationMode = 'fourPop';
+parsFour = pars; parsFour.rgc.enabled = 1;
 
 [v1n, ~] = shModel(stim, parsNo, 'v1Complex');
 [v1a, ~] = shModel(stim, parsFour, 'v1Complex');
@@ -15,12 +15,11 @@ fprintf('analytical channel weights: %.4f\n', localCorr(v1a(:), v1n(:)));
 stimSet = localBuildStimSet(stim);
 parsFour.rgc.v1Weights = shFitRgcV1Weights(parsFour, stimSet);
 [v1f, ~] = shModel(stim, parsFour, 'v1Complex');
-fprintf('fitted 40-basis weights: %.4f\n', localCorr(v1f(:), v1n(:)));
+fprintf('fitted 16-basis spatial weights: %.4f\n', localCorr(v1f(:), v1n(:)));
 
 cal = shCalibrateRgcLayer(40, parsFour);
 parsFour.rgc = cal.bestRgcPars;
 parsFour.rgc.enabled = 1;
-parsFour.rgc.populationMode = 'fourPop';
 [v1c, ~] = shModel(stim, parsFour, 'v1Complex');
 fprintf('full calibration: %.4f (report corr %.4f)\n', localCorr(v1c(:), v1n(:)), cal.afterCorrelation);
 

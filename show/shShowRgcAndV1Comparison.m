@@ -49,14 +49,11 @@ function report = shShowRgcAndV1Comparison(stimulus, pars, showMovies)
         figure('Name', 'Input movie');
         flipBook(stimulus);
         if isstruct(rgcStimulus) && isfield(rgcStimulus, 'mode') && strcmp(rgcStimulus.mode, 'fourPop')
-            figure('Name', 'RGC onFast');
-            flipBook(rgcStimulus.channels.onFast);
-            figure('Name', 'RGC offFast');
-            flipBook(rgcStimulus.channels.offFast);
-            figure('Name', 'RGC onSlow');
-            flipBook(rgcStimulus.channels.onSlow);
-            figure('Name', 'RGC offSlow');
-            flipBook(rgcStimulus.channels.offSlow);
+            chNames = fieldnames(rgcStimulus.channels);
+            for ci = 1:length(chNames)
+                figure('Name', ['RGC ' chNames{ci}]);
+                flipBook(rgcStimulus.channels.(chNames{ci}));
+            end
         else
             figure('Name', 'RGC movie');
             flipBook(rgcMovieForPlots);
@@ -88,13 +85,16 @@ function report = shShowRgcAndV1Comparison(stimulus, pars, showMovies)
     title(sprintf('RGC frame t=%d', midT));
 
     if isstruct(rgcStimulus) && isfield(rgcStimulus, 'mode') && strcmp(rgcStimulus.mode, 'fourPop')
-        figure('Name', 'RGC four populations', 'Color', 'w');
-        channelNames = {'onFast', 'offFast', 'onSlow', 'offSlow'};
-        for i = 1:length(channelNames)
-            subplot(2, 2, i);
-            imagesc(rgcStimulus.channels.(channelNames{i})(:, :, midT));
+        chNames = fieldnames(rgcStimulus.channels);
+        nCh = length(chNames);
+        nCols = min(4, nCh);
+        nRows = ceil(nCh / nCols);
+        figure('Name', sprintf('RGC channels (%d)', nCh), 'Color', 'w');
+        for i = 1:nCh
+            subplot(nRows, nCols, i);
+            imagesc(rgcStimulus.channels.(chNames{i})(:, :, midT));
             axis image off; colormap gray;
-            title(channelNames{i});
+            title(chNames{i}, 'Interpreter', 'none');
         end
     end
 
@@ -139,9 +139,7 @@ function report = shShowRgcAndV1Comparison(stimulus, pars, showMovies)
     text(0.02, 0.6, sprintf('V1 NRMSE: %.4f', v1Nrmse), 'FontSize', 12);
     text(0.02, 0.4, sprintf('RGC enabled: %d', parsRgc.rgc.enabled), 'FontSize', 12);
     text(0.02, 0.2, sprintf('RGC impairment: %d', parsRgc.rgc.impairmentEnabled), 'FontSize', 12);
-    if isfield(parsRgc.rgc, 'populationMode')
-        text(0.02, 0.0, sprintf('RGC mode: %s', parsRgc.rgc.populationMode), 'FontSize', 12);
-    end
+    text(0.02, 0.0, 'RGC path: four-channel ON/OFF fast/slow', 'FontSize', 12);
     title('Summary metrics');
 
     report = struct;
@@ -156,10 +154,6 @@ function report = shShowRgcAndV1Comparison(stimulus, pars, showMovies)
 end
 
 function parsRgc = localEnsureFourPopV1Weights(parsRgc, stimulus)
-
-    if ~isfield(parsRgc.rgc, 'populationMode') || ~strcmpi(parsRgc.rgc.populationMode, 'fourPop')
-        return;
-    end
 
     if isfield(parsRgc.rgc, 'v1Weights') && ~isempty(parsRgc.rgc.v1Weights)
         return;

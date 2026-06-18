@@ -9,8 +9,7 @@
 %
 % Optional arguments:
 % maxIter       maximum number of fminsearch iterations (default = 60)
-% parsTemplate  parameter struct from shPars; set pars.rgc.populationMode
-%               to 'fourPop' to calibrate the four-population RGC layer.
+% parsTemplate  parameter struct from shPars.
 %
 % Output:
 % report   struct containing fitted parameters and fit quality metrics.
@@ -34,11 +33,7 @@ function report = shCalibrateRgcLayer(maxIter, parsTemplate)
     parsRgc = parsTemplate;
     parsRgc.rgc.enabled = 1;
     parsRgc.rgc.impairmentEnabled = 0;
-    if isfield(parsRgc.rgc, 'populationMode') && strcmpi(parsRgc.rgc.populationMode, 'fourPop')
-        x0 = [log(0.8); log(1.2); -1.5; log(0.7); log(1.5); 0];
-    else
-        x0 = [log(0.8); log(1.2); -8; -8; 0];
-    end
+    x0 = [log(0.8); log(1.2); -1.5; log(0.7); log(1.5); 0];
     stimSet = localBuildStimulusSet(parsBase);
     baseVec = localCollectResponseVector(stimSet, parsBase);
 
@@ -125,29 +120,22 @@ end
 
 function pars = localFinalizeRgcPars(pars, stimSet)
 
-    if isfield(pars.rgc, 'populationMode') && strcmpi(pars.rgc.populationMode, 'fourPop')
-        pars.rgc.v1Weights = shFitRgcV1Weights(pars, stimSet);
-    end
+    pars.rgc.v1Weights = shFitRgcV1Weights(pars, stimSet);
 
 end
 
 function pars = localAssignRgcPars(pars, x)
 
-    if isfield(pars.rgc, 'populationMode') && strcmpi(pars.rgc.populationMode, 'fourPop')
-        pars.rgc.spatial.centerSigma = exp(x(1));
-        pars.rgc.spatial.surroundSigma = pars.rgc.spatial.centerSigma + exp(x(2));
-        pars.rgc.spatial.surroundWeight = 0.5 ./ (1 + exp(-x(3)));
-        pars.rgc.temporal.fastSigma = max(0, exp(x(4)) - 1);
-        pars.rgc.temporal.slowSigma = max(pars.rgc.temporal.fastSigma + 0.1, exp(x(5)) - 1);
-        pars.rgc.gain = exp(x(6));
-        return;
-    end
-
-    pars.rgc.centerSigma = exp(x(1));
-    pars.rgc.surroundSigma = pars.rgc.centerSigma + exp(x(2));
-    pars.rgc.surroundWeight = 0.5 ./ (1 + exp(-x(3)));
-    pars.rgc.temporalSigma = max(0, exp(x(4)) - 1);
-    pars.rgc.gain = exp(x(5));
+    pars.rgc.spatial.centerSigma = exp(x(1));
+    pars.rgc.spatial.surroundSigma = pars.rgc.spatial.centerSigma + exp(x(2));
+    pars.rgc.spatial.surroundWeight = 0.5 ./ (1 + exp(-x(3)));
+    pars.rgc.temporal.fastSigma = max(0.1, exp(x(4)) - 1);
+    pars.rgc.temporal.slowSigma = max(pars.rgc.temporal.fastSigma + 0.1, exp(x(5)) - 1);
+    pars.rgc.temporal.fastTau1 = pars.rgc.temporal.fastSigma;
+    pars.rgc.temporal.fastTau2 = max(pars.rgc.temporal.fastTau1 + 0.25, 2 * pars.rgc.temporal.fastTau1);
+    pars.rgc.temporal.slowTau1 = pars.rgc.temporal.slowSigma;
+    pars.rgc.temporal.slowTau2 = max(pars.rgc.temporal.slowTau1 + 0.25, 2 * pars.rgc.temporal.slowTau1);
+    pars.rgc.gain = exp(x(6));
 
 end
 

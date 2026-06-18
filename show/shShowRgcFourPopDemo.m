@@ -14,7 +14,6 @@ function report = shShowRgcFourPopDemo
 
     pars = shPars;
     pars.rgc.enabled = 1;
-    pars.rgc.populationMode = 'fourPop';
     pars.rgc.impairmentEnabled = 0;
 
     dims = shGetDims(pars, 'v1Complex', [1 1 24]);
@@ -23,7 +22,6 @@ function report = shShowRgcFourPopDemo
     calReport = shCalibrateRgcLayer(3, pars);
     pars.rgc = calReport.bestRgcPars;
     pars.rgc.enabled = 1;
-    pars.rgc.populationMode = 'fourPop';
 
     rgcOut = shModelRgc(stimulus, pars);
     midT = round(size(stimulus, 3) / 2);
@@ -57,6 +55,12 @@ function report = shShowRgcFourPopDemo
         W = shRgcV1Weights(pars.v1PopulationDirections);
         Wplot = W;
         weightTitle = 'Per-neuron RGC channel weights (analytical)';
+    elseif size(W, 2) == 16
+        Wplot = zeros(size(W, 1), 4);
+        for ch = 1:4
+            Wplot(:, ch) = sum(W(:, (ch - 1) * 4 + 1:ch * 4), 2);
+        end
+        weightTitle = 'Per-neuron RGC channel weights (fitted, summed over spatial basis)';
     elseif size(W, 2) == 40
         Wplot = zeros(size(W, 1), 4);
         for ch = 1:4
@@ -79,7 +83,7 @@ function report = shShowRgcFourPopDemo
 
     fprintf('\nFour-population RGC demo\n');
     fprintf('  stimulus size : %s\n', mat2str(size(stimulus)));
-    fprintf('  V1 corr (no RGC vs calibrated fourPop): %.4f\n', v1Report.v1Corr);
+    fprintf('  V1 corr (no RGC vs calibrated RGC): %.4f\n', v1Report.v1Corr);
     fprintf('  V1 NRMSE                              : %.4f\n', v1Report.v1NRMSE);
     fprintf('  calibration corr (stim set)           : %.4f\n', calReport.afterCorrelation);
     fprintf('\n');

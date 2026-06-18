@@ -7,8 +7,8 @@
 %   (4) legacy V1 spatiotemporal filters (no RGC layer)
 %
 % Optional arguments:
-% pars        model parameters from shPars (default). Use fourPop + calibrated
-%             pars.rgc for the RGC panels and weights.
+% pars        model parameters from shPars (default). Use calibrated pars.rgc
+%             for the RGC panels and weights.
 % neuronIdx   vector of V1 neuron indices for panel (4) (default = 4 spread)
 % fitWeights  if 1 and pars.rgc.v1Weights is empty, fit weights on a small
 %             calibration set (default = 1)
@@ -45,16 +45,18 @@ function report = shShowRgcV1ReceptiveFields(pars, neuronIdx, fitWeights)
             ceil(end/2), ceil(end/2), :));
     end
 
+    dogKernels = localLinearSpatialDogKernels(pars.rgc);
+
     figure('Name', 'RGC spatial receptive fields', 'Color', 'w');
     for i = 1:4
         subplot(2, 2, i);
-        imagesc(spatialRf.(channelNames{i}));
+        imagesc(dogKernels.(channelNames{i}));
         axis image off;
         colormap(gca, redblueMap);
         colorbar;
         title(strrep(channelNames{i}, 'Fast', ' fast'));
     end
-    sgtitle('RGC spatial RFs (impulse response slice at peak time)');
+    sgtitle('RGC spatial RFs (signed linear DoG of contrast image)');
 
     figure('Name', 'RGC temporal receptive fields', 'Color', 'w');
     hold on;
@@ -69,18 +71,6 @@ function report = shShowRgcV1ReceptiveFields(pars, neuronIdx, fitWeights)
     title('RGC temporal RFs (center-pixel impulse response)');
     grid on;
 
-    figure('Name', 'RGC linear spatial kernels (DoG drive)', 'Color', 'w');
-    dogKernels = localLinearSpatialDogKernels(pars.rgc);
-    for i = 1:4
-        subplot(2, 2, i);
-        imagesc(dogKernels.(channelNames{i}));
-        axis image off;
-        colormap(gca, redblueMap);
-        colorbar;
-        title(['linear drive: ', channelNames{i}]);
-    end
-    sgtitle('Linear center-surround kernels before rectification');
-
     W = localGetV1Weights(pars);
     Wchan = localChannelWeightSummary(W);
     basisInfo = localV1BasisInfo(pars);
@@ -89,12 +79,12 @@ function report = shShowRgcV1ReceptiveFields(pars, neuronIdx, fitWeights)
     subplot(2, 2, 1);
     imagesc(W);
     colorbar;
-    xlabel('Basis index (4 RGC channels x 10 derivatives)');
+    xlabel('Basis index (4 RGC channels x 4 spatial derivatives)');
     ylabel('V1 neuron');
     title('Full fitted/analytical weights');
     hold on;
     for ch = 1:3
-        xline(ch * 10 + 0.5, 'w--');
+        xline(ch * 4 + 0.5, 'w--');
     end
     hold off;
 
@@ -114,6 +104,15 @@ function report = shShowRgcV1ReceptiveFields(pars, neuronIdx, fitWeights)
     title('Mean |weight| by spatial order');
 
     subplot(2, 2, 4);
+    rgcTemporalProfiles = localRgcTemporalProfiles(temporalRf, channelNames);
+    plot(rgcTemporalProfiles, 'LineWidth', 1.5);
+    xlabel('Frame');
+    ylabel('Center-pixel response');
+    legend(channelNames, 'Location', 'best');
+    title('Causal RGC temporal profiles');
+    sgtitle('RGC to V1 weights');
+
+    figure('Name', 'Legacy V1 temporal basis reference', 'Color', 'w');
     plot(basisInfo.temporalProfile, 'Color', [0.7 0.7 0.7]);
     hold on;
     cols = lines(4);
@@ -126,8 +125,7 @@ function report = shShowRgcV1ReceptiveFields(pars, neuronIdx, fitWeights)
     xlabel('Frame');
     ylabel('Weighted temporal basis');
     legend([{'basis components (gray)'}, channelNames], 'Location', 'best');
-    title('Temporal derivative filters and channel-weighted sum');
-    sgtitle('RGC to V1 weights');
+    title('Legacy V1 temporal filters are not applied in RGC V1 mode');
 
     v1Neurons = pars.v1PopulationDirections(neuronIdx, :);
     legacyFilters = shMkV1Filter(pars, v1Neurons);
@@ -172,10 +170,6 @@ function pars = localPreparePars(pars, fitWeights)
     if ~isfield(pars.rgc, 'enabled')
         pars.rgc.enabled = 1;
     end
-    if ~isfield(pars.rgc, 'populationMode')
-        pars.rgc.populationMode = 'fourPop';
-    end
-
     if ~fitWeights || (isfield(pars.rgc, 'v1Weights') && ~isempty(pars.rgc.v1Weights))
         return;
     end
@@ -197,23 +191,48 @@ end
 function dogKernels = localLinearSpatialDogKernels(rgcPars)
 
     channelNames = {'onFast', 'offFast', 'onSlow', 'offSlow'};
+    polarities = {'on', 'off', 'on', 'off'};
+    speeds = {'fast', 'fast', 'slow', 'slow'};
     sz = 31;
-    center = mkGaussianFilter(rgcPars.spatial.centerSigma);
-    surround = mkGaussianFilter(rgcPars.spatial.surroundSigma);
     dogKernels = struct;
 
+    baseCenterSigma = 0.8;
+    baseSurroundSigma = 2.0;
+    surroundWeight = 0.25;
+    if isfield(rgcPars, 'spatial')
+        if isfield(rgcPars.spatial, 'centerSigma'),   baseCenterSigma  = rgcPars.spatial.centerSigma;  end
+        if isfield(rgcPars.spatial, 'surroundSigma'), baseSurroundSigma = rgcPars.spatial.surroundSigma; end
+        if isfield(rgcPars.spatial, 'surroundWeight'), surroundWeight   = rgcPars.spatial.surroundWeight; end
+    end
+
     for i = 1:4
+        rfScale = 1.0;
+        if isfield(rgcPars, 'spatial') && isfield(rgcPars.spatial, 'fastRfScale')
+            if strcmpi(speeds{i}, 'fast'), rfScale = rfScale * rgcPars.spatial.fastRfScale; end
+        end
+        if isfield(rgcPars, 'spatial') && isfield(rgcPars.spatial, 'onRfScale')
+            if strcmpi(polarities{i}, 'on'), rfScale = rfScale * rgcPars.spatial.onRfScale; end
+        end
+        centerSigma  = baseCenterSigma  * rfScale;
+        surroundSigma = baseSurroundSigma * rfScale;
+        if surroundSigma <= centerSigma, surroundSigma = centerSigma + 0.5; end
+
+        center   = mkGaussianFilter(centerSigma);
+        surround = mkGaussianFilter(surroundSigma);
+
         impulse = zeros(sz, sz, 1);
         impulse(ceil(sz/2), ceil(sz/2), 1) = 1;
-        localMean = localSeparableSpatialSame(impulse, surround);
-        if i == 1 || i == 3
-            drive = max(0, impulse - localMean);
+        contrastImage = impulse - mean(impulse(:));
+
+        outCenter   = localSeparableSpatialSame(contrastImage, center);
+        outSurround = localSeparableSpatialSame(contrastImage, surround);
+        csResponse = outCenter - surroundWeight .* outSurround;
+
+        if strcmpi(polarities{i}, 'on')
+            dogKernels.(channelNames{i}) = csResponse;
         else
-            drive = max(0, localMean - impulse);
+            dogKernels.(channelNames{i}) = -csResponse;
         end
-        outCenter = localSeparableSpatialSame(drive, center);
-        outSurround = localSeparableSpatialSame(drive, surround);
-        dogKernels.(channelNames{i}) = max(0, outCenter - rgcPars.spatial.surroundWeight .* outSurround);
     end
 
 end
@@ -231,18 +250,19 @@ function W = localGetV1Weights(pars)
     end
 
     W4 = shRgcV1Weights(pars.v1PopulationDirections);
-    W = zeros(size(W4, 1), 40);
+    W = zeros(size(W4, 1), 16);
     for ch = 1:4
-        W(:, (ch - 1) * 10 + 1:ch * 10) = repmat(W4(:, ch), 1, 10);
+        W(:, (ch - 1) * 4 + 1:ch * 4) = repmat(W4(:, ch), 1, 4);
     end
 
 end
 
 function Wchan = localChannelWeightSummary(W)
 
+    nBasis = size(W, 2) / 4;
     Wchan = zeros(size(W, 1), 4);
     for ch = 1:4
-        Wchan(:, ch) = sum(W(:, (ch - 1) * 10 + 1:ch * 10), 2);
+        Wchan(:, ch) = sum(W(:, (ch - 1) * nBasis + 1:ch * nBasis), 2);
     end
 
 end
@@ -260,8 +280,6 @@ function info = localV1BasisInfo(pars)
         tf = flipud(pars.v1TemporalFilters(:, torder + 1));
         for xorder = 0:(3 - torder)
             yorder = 3 - torder - xorder;
-            xf = pars.v1SpatialFilters(:, xorder + 1);
-            yf = flipud(pars.v1SpatialFilters(:, yorder + 1));
             info.temporalProfile(:, n) = tf;
             info.basisLabels{n} = sprintf('t%d x%d y%d', torder, xorder, yorder);
             info.spatialOrderPerBasis(n) = xorder + yorder;
@@ -273,11 +291,12 @@ end
 
 function mat = localBasisSpatialWeightProfile(W, info)
 
+    nBasis = size(W, 2) / 4;
     mat = zeros(4, 4);
     for ch = 1:4
-        cols = (ch - 1) * 10 + 1:ch * 10;
+        cols = (ch - 1) * nBasis + 1:ch * nBasis;
         for order = 0:3
-            idx = info.spatialOrderPerBasis == order;
+            idx = info.spatialOrderPerBasis(1:nBasis) == order;
             mat(ch, order + 1) = mean(abs(W(:, cols(idx))), 'all');
         end
     end
@@ -286,8 +305,20 @@ end
 
 function wt = localBasisTemporalWeightProfile(W, ch)
 
-    cols = (ch - 1) * 10 + 1:ch * 10;
-    wt = mean(abs(W(:, cols)), 1);
+    nBasis = size(W, 2) / 4;
+    cols = (ch - 1) * nBasis + 1:ch * nBasis;
+    wt = zeros(1, 10);
+    wt(1:nBasis) = mean(abs(W(:, cols)), 1);
+
+end
+
+function profiles = localRgcTemporalProfiles(temporalRf, channelNames)
+
+    nFrames = length(temporalRf.(channelNames{1}));
+    profiles = zeros(nFrames, length(channelNames));
+    for i = 1:length(channelNames)
+        profiles(:, i) = temporalRf.(channelNames{i});
+    end
 
 end
 
