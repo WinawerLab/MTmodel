@@ -1,7 +1,7 @@
-% [res, ind, pop, resnorm, popnorm, Qres, Qpop] = shModelV1Normalization_Tuned1(Qpop, Qind, Qres, pars, extradirs)
+% [res, ind, pop, resnorm, popnorm, Qres, Qpop] = shModelMtNormalization_Tuned(Qpop, Qind, Qres, pars, extradirs)
 % do "type 1" tuned normalization on V1 neurons
  
-function varargout = shModelV1Normalization_Tuned1(varargin)
+function varargout = shModelMtNormalization_Tuned(varargin)
 
 pop = varargin{1};
 ind = varargin{2};

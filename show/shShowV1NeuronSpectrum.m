@@ -120,7 +120,7 @@ for i = 1:size(ws, 1)
 end
 
 if strcmp(levelMode, 'norm')
-    f = Fs./max2(Fs);
+    f = Fs./max(Fs, [], 'all');
 else
     f = Fs;
 end
@@ -130,7 +130,7 @@ clf
 tmp = linspace(-.5, .5, fSz);
 [x,y,z] = meshgrid(tmp, tmp, tmp);
 if exist('levelToDraw') ~= 1
-    levelToDraw = .5.*f./max2(f);
+    levelToDraw = .5.*f./max(f, [], 'all');
 end
 p = feval(@patch, isosurface(x,y,z,f,levelToDraw), 'edgecolor', 'none', patchArgs{:});
 isonormals(x,y,z,f,p)
@@ -152,8 +152,8 @@ axis vis3d
 
 
 % calculate the point of maximum response
-i= find(f == max2(f));
-i = max2(i);
+i= find(f == max(f, [], 'all'));
+i = max(i, [], 'all');
 [i,j,k] = ind2sub([fSz,fSz,fSz], i);
 
 xf = ((i - 1)./(fSz-1)).*1 - .5;
@@ -170,5 +170,5 @@ S(2*cp - i, 2*cp - j, 2*cp - k) = fSz.^3;
 S = ifftshift(S);
 preferredSin = ifftn(S);
 preferredSin = real(preferredSin);
-preferredSin = preferredSin - min2(preferredSin);
-preferredSin = preferredSin./max2(preferredSin);
+preferredSin = preferredSin - min(preferredSin, [], 'all');
+preferredSin = preferredSin./max(preferredSin, [], 'all');

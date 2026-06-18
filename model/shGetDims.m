@@ -1,4 +1,4 @@
-% dims = shGetDims(pars, stageName, outputDims)   
+% dims = shGetDims(pars, stageName, outputDims)
 %
 % Find the size your stimulus must be to successfully run the MT model.
 %
@@ -18,35 +18,31 @@
 %               coordinates. DEFAULT = [1 1 1].
 %
 % Output:
-% dims          a three vector specifying the required stimulus size in 
+% dims          a three vector specifying the required stimulus size in
 %               [Y X T] coordinates.
 
 
 
 function dims = shGetDims(pars, stageName, outputDims)
 
-if exist('stage') ~= 1
-    stage = 'mtnorm';
-end
-
-if exist('outputDims') ~= 1
+if exist('outputDims', 'var') ~= 1
     outputDims = [1 1 1];
 end
 
 dims = outputDims;
 
 switch lower(stageName)
-    case 'v1lin';
+    case 'v1lin'
         s = pars.v1SpatialFilters;
         t = pars.v1TemporalFilters;
         dims = dims + [size(s,1), size(s,1), size(t,1)] - 1;
 
-    case 'v1halfrect';
+    case 'v1halfrect'
         s = pars.v1SpatialFilters;
         t = pars.v1TemporalFilters;
         dims = dims + [size(s,1), size(s,1), size(t,1)] - 1;
 
-    case 'v1simple';
+    case 'v1simple'
         s = pars.v1SpatialFilters;
         t = pars.v1TemporalFilters;
         dims = dims + [size(s,1), size(s,1), size(t,1)] - 1;
@@ -65,125 +61,52 @@ switch lower(stageName)
         s = pars.v1SpatialFilters;
         t = pars.v1TemporalFilters;
         dims = dims + [size(s,1), size(s,1), size(t,1)] - 1;
-        
-    case 'v1blur';
+
+    case 'v1blur'
         s = length(pars.v1SpatialFilters) - 1;
         t = length(pars.v1TemporalFilters) - 1;
         dims = dims + [s s t];
-        
+
         c = length(pars.v1ComplexFilter) - 1;
         dims = dims + [c c 0];
 
-    case 'v1complex';
+    case 'v1complex'
         s = length(pars.v1SpatialFilters) - 1;
         t = length(pars.v1TemporalFilters) - 1;
         dims = dims + [s s t];
-        
+
         c = length(pars.v1ComplexFilter) - 1;
         dims = dims + [c c 0];
-        
-        if strcmp(pars.v1NormalizationType, 'global')
-        else
+
+        if ~strcmp(pars.v1NormalizationType, 'global')
             nx = length(pars.v1NormalizationSpatialFilter) - 1;
             nt = length(pars.v1NormalizationTemporalFilter) - 1;
             dims = dims + [nx nx nt];
         end
 
-
-    case 'mtlin';
+    case 'mtlin'
         s = length(pars.v1SpatialFilters) - 1;
         t = length(pars.v1TemporalFilters) - 1;
         dims = dims + [s s t];
-        
+
         c = length(pars.v1ComplexFilter) - 1;
         dims = dims + [c c 0];
-        
-        if strcmp(pars.v1NormalizationType, 'global')
-        else
+
+        if ~strcmp(pars.v1NormalizationType, 'global')
             nx = length(pars.v1NormalizationSpatialFilter) - 1;
             nt = length(pars.v1NormalizationTemporalFilter) - 1;
             dims = dims + [nx nx nt];
         end
 
-        
-    case 'mtprepool';
+    case 'mtprepool'
         s = length(pars.v1SpatialFilters) - 1;
         t = length(pars.v1TemporalFilters) - 1;
         dims = dims + [s s t];
-        
+
         c = length(pars.v1ComplexFilter) - 1;
         dims = dims + [c c 0];
-        
-        if strcmp(pars.v1NormalizationType, 'global')
-        else
-            nx = length(pars.v1NormalizationSpatialFilter) - 1;
-            nt = length(pars.v1NormalizationTemporalFilter) - 1;
-            dims = dims + [nx nx nt];
-        end
 
-
-        if pars.mtSpatialPoolingBeforeThreshold == 1
-            s = length(pars.mtSpatialPoolingFilter) - 1;
-            dims = dims + [s s 0];
-        end
-            
-    case 'mthalfrect';
-        s = length(pars.v1SpatialFilters) - 1;
-        t = length(pars.v1TemporalFilters) - 1;
-        dims = dims + [s s t];
-        
-        c = length(pars.v1ComplexFilter) - 1;
-        dims = dims + [c c 0];
-        
-        if strcmp(pars.v1NormalizationType, 'global')
-        else
-            nx = length(pars.v1NormalizationSpatialFilter) - 1;
-            nt = length(pars.v1NormalizationTemporalFilter) - 1;
-            dims = dims + [nx nx nt];
-        end
-
-
-        if pars.mtSpatialPoolingBeforeThreshold == 1
-            s = length(pars.mtSpatialPoolingFilter) - 1;
-            dims = dims + [s s 0];
-        end
-            
-    case 'mtpostpool';
-        s = length(pars.v1SpatialFilters) - 1;
-        t = length(pars.v1TemporalFilters) - 1;
-        dims = dims + [s s t];
-        
-        c = length(pars.v1ComplexFilter) - 1;
-        dims = dims + [c c 0];
-        
-        if strcmp(pars.v1NormalizationType, 'global')
-        else
-            nx = length(pars.v1NormalizationSpatialFilter) - 1;
-            nt = length(pars.v1NormalizationTemporalFilter) - 1;
-            dims = dims + [nx nx nt];
-        end
-
-
-        if pars.mtSpatialPoolingBeforeThreshold == 1
-            s = length(pars.mtSpatialPoolingFilter) - 1;
-            dims = dims + [s s 0];
-        end
-   
-        if pars.mtSpatialPoolingBeforeThreshold == 0
-            s = length(pars.mtSpatialPoolingFilter) - 1;
-            dims = dims + [s s 0];
-        end
-        
-    case 'mtpattern';
-        s = length(pars.v1SpatialFilters) - 1;
-        t = length(pars.v1TemporalFilters) - 1;
-        dims = dims + [s s t];
-        
-        c = length(pars.v1ComplexFilter) - 1;
-        dims = dims + [c c 0];
-        
-        if strcmp(pars.v1NormalizationType, 'global')
-        else
+        if ~strcmp(pars.v1NormalizationType, 'global')
             nx = length(pars.v1NormalizationSpatialFilter) - 1;
             nt = length(pars.v1NormalizationTemporalFilter) - 1;
             dims = dims + [nx nx nt];
@@ -193,19 +116,70 @@ switch lower(stageName)
             s = length(pars.mtSpatialPoolingFilter) - 1;
             dims = dims + [s s 0];
         end
-   
-        if pars.mtSpatialPoolingBeforeThreshold == 0
+
+    case 'mthalfrect'
+        s = length(pars.v1SpatialFilters) - 1;
+        t = length(pars.v1TemporalFilters) - 1;
+        dims = dims + [s s t];
+
+        c = length(pars.v1ComplexFilter) - 1;
+        dims = dims + [c c 0];
+
+        if ~strcmp(pars.v1NormalizationType, 'global')
+            nx = length(pars.v1NormalizationSpatialFilter) - 1;
+            nt = length(pars.v1NormalizationTemporalFilter) - 1;
+            dims = dims + [nx nx nt];
+        end
+
+        if pars.mtSpatialPoolingBeforeThreshold == 1
             s = length(pars.mtSpatialPoolingFilter) - 1;
             dims = dims + [s s 0];
         end
-        
-        if strcmp(pars.mtNormalizationType, 'global')
-        else
+
+    case 'mtpostpool'
+        s = length(pars.v1SpatialFilters) - 1;
+        t = length(pars.v1TemporalFilters) - 1;
+        dims = dims + [s s t];
+
+        c = length(pars.v1ComplexFilter) - 1;
+        dims = dims + [c c 0];
+
+        if ~strcmp(pars.v1NormalizationType, 'global')
+            nx = length(pars.v1NormalizationSpatialFilter) - 1;
+            nt = length(pars.v1NormalizationTemporalFilter) - 1;
+            dims = dims + [nx nx nt];
+        end
+
+        % Spatial pooling padding applies regardless of whether it occurs
+        % before or after threshold (both branches added the same amount).
+        s = length(pars.mtSpatialPoolingFilter) - 1;
+        dims = dims + [s s 0];
+
+    case 'mtpattern'
+        s = length(pars.v1SpatialFilters) - 1;
+        t = length(pars.v1TemporalFilters) - 1;
+        dims = dims + [s s t];
+
+        c = length(pars.v1ComplexFilter) - 1;
+        dims = dims + [c c 0];
+
+        if ~strcmp(pars.v1NormalizationType, 'global')
+            nx = length(pars.v1NormalizationSpatialFilter) - 1;
+            nt = length(pars.v1NormalizationTemporalFilter) - 1;
+            dims = dims + [nx nx nt];
+        end
+
+        % Spatial pooling padding applies regardless of whether it occurs
+        % before or after threshold (both branches added the same amount).
+        s = length(pars.mtSpatialPoolingFilter) - 1;
+        dims = dims + [s s 0];
+
+        if ~strcmp(pars.mtNormalizationType, 'global')
             xSz = length(pars.mtNormalizationSpatialFilter) - 1;
             tSz = length(pars.mtNormalizationTemporalFilter) - 1;
             dims = dims + [xSz xSz tSz];
         end
-        
+
     otherwise
         error([stageName, ' is not a recognized stage name.']);
 end

@@ -92,7 +92,7 @@ for i = 1:length(xSpeed)
     if strcmp(stageName, 'v1lin')
         res = sqrt(res.^2);
     end
-    yResponse(i) = mean2(shGetNeuron(res, ind));
+    yResponse(i) = mean(shGetNeuron(res, ind), 'all');
 
     % plot the results thus far
     semilogx(xSpeed(1:i), yResponse(1:i), 'r-', xSpeed(1:i), yResponse(1:i), 'k.');

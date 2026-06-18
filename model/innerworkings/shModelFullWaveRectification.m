@@ -1,6 +1,6 @@
-% [pop, ind, res] = shmodv1simplerect(pop, ind, pars, resdirs)
+% [pop, ind, res] = shModelFullWaveRectification(pop, ind, pars, resdirs)
 
-function varargout = shmodv1simplerect(varargin)
+function varargout = shModelFullWaveRectification(varargin)
 
 % PARSE INPUTS
 pop = varargin{1};

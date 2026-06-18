@@ -409,7 +409,7 @@ for iNeuron = 1:3 %3
                                   1, barEdgeWidth(iNeuron));                                 
     % Compute the null response of this neuron
     [pop, ind, nullResponseTmp] = shModel(zeros(dims), pars, 'mtPattern', neurons(iNeuron, :));
-    nullResponseTmp = mean2(shGetNeuron(nullResponseTmp, ind));
+    nullResponseTmp = mean(shGetNeuron(nullResponseTmp, ind));
     nullResponseTmp = nullResponseTmp.*ones(1, nDataPoints);
     % Store all the computed responses in matrices that will contain the
     % responses of all three neurons.
@@ -484,7 +484,7 @@ rfArea = pi.*rfRad.^2;
 
 % Compute the null response of the model neuron.
 [pop, ind, resNull] = shModel(zeros(dims), pars, 'mtPattern', neuron);
-yNull = mean2(shGetNeuron(resNull, ind));
+yNull = mean(shGetNeuron(resNull, ind));
 yNull = yNull.*ones(1, size(yRes, 1));
 w = mkWin(dims, 15, 2);
 for j = 1:size(nMask, 2)
@@ -500,7 +500,7 @@ for j = 1:size(nMask, 2)
 
     % Compute the response of the model neuron.
     [pop, ind, res] = shModel(10.*sDotsWithMask, pars, 'mtPattern', neuron);
-    yRes(i, j) = mean2(shGetNeuron(res, ind));
+    yRes(i, j) = mean(shGetNeuron(res, ind));
   end
 
   % Now display the results so far
@@ -512,7 +512,7 @@ for j = 1:size(nMask, 2)
     h(n+1,:) = plot(x, yRes(1:i, n), sprintf('%c-',cols(n)), x, yRes(1:i, n), 'k.');
   end
   plot(x, yNull(1:i), 'k--');
-  axis([min(x) max(x) 0 1.2*max2(yRes)]);
+  axis([min(x) max(x) 0 1.2*max(yRes, [], 'all')]);
   hold off
   drawnow
 end
@@ -559,7 +559,7 @@ yDotsWithMask = zeros(size(x));
 
 % Compute the null response of the model neuron.
 [pop, ind, resNull] = shModel(zeros(dims), pars, 'mtPattern', neuron);
-yNull = mean2(shGetNeuron(resNull, ind));
+yNull = mean(shGetNeuron(resNull, ind));
 yNull = yNull.*ones(size(yDots));
 h = zeros(3,2);
 for i = 1:length(x)
@@ -572,8 +572,8 @@ for i = 1:length(x)
   % Compute the response of the model neuron.
   [pop, ind, resDots] = shModel(sDots, pars, 'mtPattern', neuron);
   [pop, ind, resDotsWithMask] = shModel(sDotsWithMask, pars, 'mtPattern', neuron);
-  yDots(i) = mean2(shGetNeuron(resDots, ind));
-  yDotsWithMask(i) = mean2(shGetNeuron(resDotsWithMask, ind));
+  yDots(i) = mean(shGetNeuron(resDots, ind));
+  yDotsWithMask(i) = mean(shGetNeuron(resDotsWithMask, ind));
 
   % Now display the results so far
   clf;

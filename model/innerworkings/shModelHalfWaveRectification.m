@@ -1,4 +1,4 @@
-% [pop, ind, res] = shmodv1simplerect(pop, ind, pars, resdirs)
+% [pop, ind, res] = shModelHalfWaveRectification(pop, ind, pars, resdirs)
 
 function varargout = shModelHalfWaveRectification(varargin)
 

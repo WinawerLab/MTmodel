@@ -101,7 +101,7 @@ for i = 1:length(xSpeed)
         res = sqrt(res.^2);
     end
 %   yResponse(i) = mean2(shGetSubPop(res, ind, 1));
-    yResponse(i) = mean2(shGetNeuron(res, ind, 1));
+    yResponse(i) = mean(shGetNeuron(res, ind, 1), 'all');
 
     
     

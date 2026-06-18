@@ -44,5 +44,5 @@ for t = 1:tdim
     res(:,:,t) = tmp;
 end
 
-res = res - min2(res);
-res = ampl.*res./max2(res);
+res = res - min(res, [], 'all');
+res = ampl.*res./max(res, [], 'all');

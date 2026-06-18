@@ -13,7 +13,12 @@
 %
 % ----------------- HELP functions ---------------------------------------
 %
-% shTutorial1.m         Overview of the software, generating tuning curves, etc.
+% shTutorial1               Overview of the software, generating tuning curves, etc.
+% shCalibrateRgcLayer       Optimize RGC temporal parameters to match legacy V1/MT responses
+% shFitRgcV1Weights         Ridge regression to fit per-neuron RGC-to-V1 projection weights
+% shRunRgcPlan              Execution workflow for the RGC calibration pipeline
+% shSweepRgcTemporalPars    Grid search over RGC temporal parameters
+% shTestRgcV1Corr           Regression test comparing legacy vs. RGC V1 paths
 %
 % ----------------- MODEL functions ---------------------------------------
 %
@@ -22,7 +27,6 @@
 % shGetNeuron               Extract the response of neuron(s) at one spatial position from shModel outputs.
 % shGetScale                Extract all the neuronal responses at a particular scale from shMatrix.
 % shGetSubPop               Extract the responses of all the neurons with similar tuning from shModel output
-% shMkV1Filter              Make the linear filter that is the front end of a given model V1 neuron.
 % shModel                   Run the Simoncelli & Heeger model
 % shMtPopulationResponse    Compute the response of a large population of MT neurons to a stimulus.
 % shV1PopulationResponse    Compute the response of a large population of V1 neurons to a stimulus.
@@ -32,8 +36,7 @@
 %
 % mkBar             Make a drifting bar stimulus
 % mkDots            make a drifting dot stimulus
-% mkFract           make a drifting fractal noise stimulus 
-% mkGlass           Make a translational dynamic glass pattern movie
+% mkFract           make a drifting fractal noise stimulus
 % mkPlaid           make a plaid stimulus
 % mkSin             make a drifting grating
 % mkWedge           make a wedge in the Fourier domain
@@ -64,8 +67,13 @@
 % shParsV1PopulationDirections  Get evenly spread V1 neurons for a population
 %
 % ------------------ SHOW functions --------------------------------------
-% 
-% shShowMtPopulationResponse            Show the response of a population of MT neurons          
+%
+% shMkV1Filter                          Make the linear filter of a given model V1 neuron (also displays it)
+% shShowMtPopulationResponse            Show the response of a population of MT neurons
+% shShowRgcAndMtComparison              Compare healthy RGC vs. legacy MT responses
+% shShowRgcAndV1Comparison              Compare healthy RGC vs. legacy V1 responses
+% shShowRgcFourPopDemo                  Visualize individual RGC channel outputs
+% shShowRgcV1ReceptiveFields            Plot spatial receptive fields of RGC-fitted V1 neurons
 % shShowV1NeuronSpectrum                Show the fourier spectrum of V1 neuron(s)
 % shShowV1PopulationDirectionsDots      Show the neurons in V1 population as dots on a sphere
 % shShowV1PopulationDirectionsDotsMovie Show the neurons in V1 population being chosen
@@ -83,8 +91,6 @@
 % flipBook                      Show the values of a 3D matrix as a movie
 % gray2rgbsc                    Convert a 2D matrix into RGB format for display with IMAGE
 % labelCrossAxes                Label crossAxes
-% max2                          Overall maximum of a multidimensional matrix
-% min2                          Overall minimum of a multidimensional matrix
 % rec2sphere                    Transform [y, x, t] coordinates to [az, el, radius]
 % sphere2rec                    Transform [az, el, radius] coordinates to [y, x, t]
 %
@@ -93,10 +99,4 @@
 % showIm                Display a 2D matrix as a grayscale image
 % pixelAxes             Set the axes of the current plot to avoid aliasing
 % range2                Overall min and max of a multidimensional matrix
-%
-% ----------------- MEX functions ---------------------------------------
-%
-% blurDn3               Blur and downsample a 3D matrix
-% upblur3               Blur and upsample a 3D matrix (NOT YET WORKING)
-% validCorrDn3          Do correlation with a 3D matrix
 %

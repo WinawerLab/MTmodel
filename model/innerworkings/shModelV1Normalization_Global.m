@@ -1,7 +1,7 @@
-% [res, ind, pop, resnorm, popnorm, Qres, C] = shModelV1Normalization_untuned(C, Cind, Qres, pars)
+% [res, ind, pop, resnorm, popnorm, Qres, C] = shModelV1Normalization_Global(C, Cind, Qres, pars)
 % do untuned normalization on V1 responses.
 
-function varargout = shModelV1Normalization_untuned(varargin)
+function varargout = shModelV1Normalization_Global(varargin)
 
 % Extract parameters
 pop = varargin{1};

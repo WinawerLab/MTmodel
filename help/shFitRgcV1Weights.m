@@ -1,15 +1,16 @@
 % W = shFitRgcV1Weights(pars, stimSet)
 %
-% Fit per-neuron weights over the four RGC spatial bases (16 total
-% channels = 4 populations x 4 spatial derivative filters) so linear V1
-% responses match the legacy model (RGC disabled).
+% Fit per-neuron weights mapping RGC channels onto V1 linear responses so
+% they match the legacy model (RGC disabled).  The number of channels is
+% determined automatically: 4 RGC populations x 10 spatial basis functions
+% = 40 columns (80 if lagged channels are enabled via pars.rgc.temporal.fastLag).
 %
 % Required arguments:
 % pars     model parameters with pars.rgc enabled or ready to enable
 % stimSet  cell array of 3D movies [Y X T]
 %
 % Output:
-% W        Nx16 weight matrix
+% W        Nx(nChannels) weight matrix
 
 function W = shFitRgcV1Weights(pars, stimSet)
 

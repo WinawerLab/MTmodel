@@ -16,7 +16,7 @@ function shShowV1PopulationResponse(populationResponse)
 
 ntheta = sqrt(size(populationResponse,1));
 nphi = ntheta;
-populationResponse = (populationResponse./max2(abs(populationResponse))).^2;
+populationResponse = (populationResponse./max(abs(populationResponse), [], 'all')).^2;
 
 phi = linspace(-pi/2, pi/2, nphi+1);
 theta = linspace(0, 2.*pi, ntheta+1);

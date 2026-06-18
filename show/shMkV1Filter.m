@@ -64,4 +64,6 @@ filters = reshape(filters', [fsz, fsz, fsz, size(v1Neurons, 1)]);
 S = reshape(S', [fsz, fsz, fsz, 10]);
 
 
-flipBook(filters);
+if nargout == 0
+    flipBook(filters);
+end

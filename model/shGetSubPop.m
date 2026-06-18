@@ -28,18 +28,18 @@ scaleToGet = 'default';
 
 shMatrix = varargin{1};
 ind = varargin{2};
-if nargin >= 3;         neuronsToGet = varargin{3};             end;
-if nargin >= 4;         scaleToGet = varargin{4};               end;
+if nargin >= 3;         neuronsToGet = varargin{3};             end
+if nargin >= 4;         scaleToGet = varargin{4};               end
 
-if strcmp(neuronsToGet, 'default');         neuronsToGet = 1;       end;
-if strcmp(scaleToGet, 'default');           scaleToGet = 1;         end;    
+if strcmp(neuronsToGet, 'default');         neuronsToGet = 1;       end
+if strcmp(scaleToGet, 'default');           scaleToGet = 1;         end    
 
 scaleback = 1;
 
 shMatrix = shMatrix(ind(scaleToGet,1)+1:ind(scaleToGet+1,1), neuronsToGet);
 res = reshape(shMatrix, [ind(scaleToGet+1, 2), ind(scaleToGet+1, 3), ind(scaleToGet+1, 4), 1]);
 
-if scaleback == 1;
+if scaleback == 1
     while scaleToGet > 1
         x = size(res, 1);
         x1 = reshape(linspace(0, 1, x), [x 1 1]);

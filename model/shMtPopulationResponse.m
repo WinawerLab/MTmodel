@@ -49,7 +49,7 @@ while i < size(mtVelocities, 1)
     for k = 1:size(res, 2)
         try
         tmp = shGetSubPop(res, ind, k);
-        populationResponse(i+k, 1) = mean2(tmp);
+        populationResponse(i+k, 1) = mean(tmp, 'all');
         catch
             keyboard
         end

@@ -7,7 +7,7 @@
 % resvels is supplied, res contains the firing rates of the neurons
 % specified by resvels; if it is not supplied, res is a copy of pop.
 
-function varargout = shModelMtLinear(varargin)
+function varargout = shModelMtPreThresholdBlur(varargin)
 
 pop = varargin{1};
 ind = varargin{2};

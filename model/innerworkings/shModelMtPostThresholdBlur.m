@@ -1,5 +1,5 @@
 
-function varargout = shmodmtpostfilt(varargin)
+function varargout = shModelMtPostThresholdBlur(varargin)
 
 pop = varargin{1};
 ind = varargin{2};

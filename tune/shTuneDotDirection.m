@@ -79,7 +79,7 @@ for i = 1:length(xDirection)
     if strcmp(stageName, 'v1lin')
         res = sqrt(res.^2);
     end
-    yResponse(i) = mean2(shGetNeuron(res, ind, 1, 1));
+    yResponse(i) = mean(shGetNeuron(res, ind, 1, 1), 'all');
 
     % plot the results so far
     plot(180*xDirection(1:i)/pi, yResponse(1:i), 'r-', 180*xDirection(1:i)/pi, yResponse(1:i), 'k.');
