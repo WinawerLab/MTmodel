@@ -21,7 +21,7 @@ if nargin >= 2;         displayRange = varargin{2};         end
 if nargin >= 3;         pauseLength = varargin{3};          end
 
 if strcmp(displayRange, 'default')
-    displayRange = [min2(matrixToFlip), max2(matrixToFlip)];
+    displayRange = [min(matrixToFlip, [], 'all'), max(matrixToFlip,[], 'all')];
 end
 if strcmp(pauseLength, 'default');      pauseLength = 0;        end
 

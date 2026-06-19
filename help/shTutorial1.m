@@ -1,10 +1,10 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% shTutorial1.m - Introduction and overview to the MT model
-%% Authors: Timothy Saint and Eero Simoncelli
-%%
-%% This file is part of the MTmodel package, available at
-%%      http://www.cns.nyu.edu/~lcv/MT-model.html
-%% See the README file for brief description and installation
+% Authors: Timothy Saint and Eero Simoncelli
+%
+% This file is part of the MTmodel package, available at
+%      http://www.cns.nyu.edu/~lcv/MT-model.html
+% See the README file for brief description and installation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % This tutorial provides a basic introduction to a package of matlab

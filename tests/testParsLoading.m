@@ -19,8 +19,9 @@ shAssert(isfinite(pars.scaleFactors.v1Linear)  && pars.scaleFactors.v1Linear  > 
 shAssert(isfinite(pars.scaleFactors.mtLinear)  && pars.scaleFactors.mtLinear  > 0, 'mtLinear scale factor must be positive finite');
 shAssert(isfinite(pars.scaleFactors.mtPattern) && pars.scaleFactors.mtPattern > 0, 'mtPattern scale factor must be positive finite');
 
-% RGC off by default
-shAssert(pars.rgc.enabled == 0, 'RGC must be disabled by default');
+% RGC on by default with fitted weights to match the legacy model
+shAssert(pars.rgc.enabled == 1, 'RGC must be enabled by default');
+shAssert(~isempty(pars.rgc.v1Weights), 'RGC v1Weights must be fitted when RGC is enabled by default');
 
 % Population arrays have the right shape
 shAssert(size(pars.v1PopulationDirections, 2) == 2, 'v1PopulationDirections must have 2 columns');

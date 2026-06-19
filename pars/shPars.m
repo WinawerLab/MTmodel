@@ -28,7 +28,7 @@ function pars = shPars
 
     %%%%% NOW WE GET STARTED: V1
     pars.nScales = 1;
-    pars.rgc.enabled = 0;                           % If 1, pass the stimulus through an RGC layer before V1.
+    pars.rgc.enabled = 1;                           % If 1, pass the stimulus through an RGC layer before V1.
     pars.rgc.gain = 1;                              % Global gain applied after RGC filtering.
     pars.rgc.spatial.centerSigma = 0.8;             % RGC center sigma for ON/OFF center-surround filters.
     pars.rgc.spatial.surroundSigma = 2.0;           % RGC surround sigma (pixels).
@@ -49,7 +49,7 @@ function pars = shPars
     pars.rgc.temporal.power = 2;                    % RGC gamma-kernel exponent.
     pars.rgc.onOffSignSplit = 'contrast';           % RGC 'contrast' (frame mean-subtracted), 'local', or 'bipolar'.
     pars.rgc.onOffSymmetry = 1.0;                   % RGC relative scaling of OFF vs ON rectification.
-    pars.rgc.v1Weights = [];                        % RGC optional Nx16 fitted V1 weights (4 channels x 4 spatial basis).
+    pars.rgc.v1Weights = [];                        % RGC optional Nx40 fitted V1 weights (4 channels x 10 spatial basis); Nx80 when lagged channels are enabled.
     pars.rgc.impairmentEnabled = 0;                 % If 1, apply amplitude/timing impairments.
     pars.rgc.impairmentAmplitudeMap = [];           % Optional YxX multiplicative map for RGC amplitude deficits.
     pars.rgc.impairmentDelayMap = [];               % Optional YxX integer delay map (frames) for timing deficits.
@@ -76,5 +76,27 @@ function pars = shPars
     pars.mtBaseline = .1;                           % Baseline response of MT neurons.
     pars.mtExponent = 2;                            % Exponent to which MT neuron responses are raised.
 
-    %%%% COMPUTE SCALE FACTORS
+    %%%% COMPUTE SCALE FACTORS AND FIT RGC WEIGHTS
+    % Scale factors are derived from the legacy (no-RGC) path so the
+    % subsequent weight fit has the correct normalization reference.
+    pars.rgc.enabled = 0;
     pars = shParsScaleFactors(pars);
+
+    % Re-enable RGC and fit channel-to-V1 weights so that the RGC path
+    % matches the legacy model response on a standard set of stimuli.
+    pars.rgc.enabled = 1;
+    pars.rgc.v1Weights = shFitRgcV1Weights(pars, localDefaultStimSet(pars));
+
+end
+
+function stimSet = localDefaultStimSet(pars)
+    dims = shGetDims(pars, 'mtPattern', [1 1 18]);
+    g1 = v12sin([0, 1.0]);
+    g2 = v12sin([pi/3, 1.6]);
+    stimSet = { ...
+        mkDots(dims, 0,    1.0, 0.12, 1), ...
+        mkDots(dims, pi/2, 0.7, 0.12, 0.7), ...
+        mkSin(dims, 0,    g1(2), g1(3), 1), ...
+        mkSin(dims, pi/3, g2(2), g2(3), 1) ...
+    };
+end
