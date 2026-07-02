@@ -1,6 +1,6 @@
 # MTmodel Agent Working Plan (RGC Front-End Project)
 
-Last updated: 2026-06-17
+Last updated: 2026-07-02
 
 ## Primary Goal
 
@@ -9,6 +9,19 @@ Add a retinal ganglion cell (RGC) layer before V1 so the model can simulate opti
 ## Non-Negotiable Constraint
 
 With impairment disabled, outputs should remain near legacy behavior.
+
+## Status Update (2026-07-02)
+
+`pars.rgc.enabled` now defaults to 1: `shPars` fits `pars.rgc.v1Weights`
+automatically at init time (via `shFitRgcV1Weights` on a standard stimulus
+set), so the default model path runs through the RGC layer rather than
+legacy V1 directly. Scale factors are still derived from the legacy path
+before weight fitting, and `pars.rgc.impairmentEnabled` still defaults to 0.
+A `tests/` suite (`tests/runAllTests.m`, 8 regression tests) now covers pars
+loading, stimulus generation, V1/MT pipelines, the RGC path, and RGC-vs-legacy
+correlation -- this fulfills the "deterministic regression script" item from
+Canonical Plan step 4. `min2`/`max2`/`mean2` (Image Processing Toolbox) calls
+have been removed/replaced throughout, dropping that toolbox dependency.
 
 ## Current Implementation Status
 
@@ -87,7 +100,10 @@ Start here on the next session:
 * `results = shSweepRgcTemporalPars;`
 * Record the best V1 correlation (expected to exceed the previous ~0.80).
 * If a clear optimum is found, write the best temporal parameters into shPars
-  as the new defaults (keeping pars.rgc.enabled = 0 so legacy users are unaffected).
+  as the new defaults. RGC is now enabled by default (pars.rgc.enabled = 1),
+  so any default-parameter change directly affects all users -- verify
+  `tests/runAllTests.m` still passes and rerun `shShowRgcAndV1Comparison`
+  before committing new defaults.
 
 2. Validate the healthy-mode baseline:
 
@@ -99,11 +115,6 @@ Start here on the next session:
 * Enable pars.rgc.impairmentEnabled = 1 with a known amplitude or delay map.
 * Confirm impaired responses differ from healthy in the expected direction.
 * Record V1/MT correlation and NRMSE under impairment.
-
-4. Add a deterministic regression script:
-
-* Small script that runs legacy vs healthy-RGC on a fixed stimulus and
-  saves/compares summary metrics -- guards against future regressions.
 
 ## Current Architecture Summary
 
@@ -147,9 +158,10 @@ orientation and spatial frequency.
 * report = shCalibrateRgcLayer(60)
 
 
-2. Healthy RGC enabled path:
+2. Healthy RGC path (enabled by default):
 
-* pars = shPars; pars.rgc.enabled = 1;
+* pars = shPars;   % pars.rgc.enabled == 1, v1Weights already fitted
+* To use legacy V1 directly: pars.rgc.enabled = 0;
 
 
 3. Example impairment setup:
@@ -160,7 +172,9 @@ orientation and spatial frequency.
 
 ## Notes for Future Agents
 
-* Do not change default behavior for users who do not enable RGC.
+* RGC is enabled by default (pars.rgc.enabled = 1); any change to default
+  temporal/spatial parameters or v1Weights fitting affects all users, not
+  just an opt-in path. Run `tests/runAllTests.m` before changing defaults.
 * Prioritize scientific comparability (healthy mode) before adding new complexity.
 * Keep all new scripts deterministic where possible (set random seeds).
 
