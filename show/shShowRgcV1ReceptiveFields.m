@@ -167,9 +167,12 @@ end
 
 function pars = localPreparePars(pars, fitWeights)
 
+    % This analysis is specific to the biological 'fourPop' channels
+    % (onFast/offFast/onSlow/offSlow); it does not apply to 'derivative' mode.
     if ~isfield(pars.rgc, 'enabled')
         pars.rgc.enabled = 1;
     end
+    pars.rgc.mode = 'fourPop';
     if ~fitWeights || (isfield(pars.rgc, 'v1Weights') && ~isempty(pars.rgc.v1Weights))
         return;
     end

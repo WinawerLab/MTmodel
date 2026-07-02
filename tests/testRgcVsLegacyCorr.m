@@ -6,8 +6,12 @@ pars = shPars();
 dims = shGetDims(pars, 'v1Complex', [1 1 24]);
 stim = mkDots(dims, 0, 1.0, 0.12, 1.0);
 
+% Pin the biological 'fourPop' path explicitly: this test measures the
+% fitted-weight correlation ceiling of that mode. The default mode
+% ('derivative') is covered separately by testRgcDerivativeVsLegacy, which
+% expects near-exact (not just > 0.7) reconstruction.
 parsNo  = pars; parsNo.rgc.enabled  = 0;
-parsRgc = pars; parsRgc.rgc.enabled = 1;
+parsRgc = pars; parsRgc.rgc.enabled = 1; parsRgc.rgc.mode = 'fourPop'; parsRgc.rgc.v1Weights = [];
 
 [v1Legacy, ~] = shModel(stim, parsNo,  'v1Complex');
 [v1Rgc,    ~] = shModel(stim, parsRgc, 'v1Complex');

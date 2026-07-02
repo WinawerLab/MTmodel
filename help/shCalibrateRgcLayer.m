@@ -29,9 +29,13 @@ function report = shCalibrateRgcLayer(maxIter, parsTemplate)
     parsBase = parsTemplate;
     parsBase.rgc.enabled = 0;
 
-    % Candidate model (RGC enabled).
+    % Candidate model (RGC enabled). This calibration protocol is specific to
+    % the biological 'fourPop' path (DoG spatial RFs, biphasic temporal
+    % kernels); it does not apply to the default 'derivative' mode, which
+    % needs no calibration.
     parsRgc = parsTemplate;
     parsRgc.rgc.enabled = 1;
+    parsRgc.rgc.mode = 'fourPop';
     parsRgc.rgc.impairmentEnabled = 0;
     x0 = [log(0.8); log(1.2); -1.5; log(0.7); log(1.5); 0];
     stimSet = localBuildStimulusSet(parsBase);

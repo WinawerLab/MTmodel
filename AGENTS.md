@@ -10,172 +10,157 @@ Add a retinal ganglion cell (RGC) layer before V1 so the model can simulate opti
 
 With impairment disabled, outputs should remain near legacy behavior.
 
-## Status Update (2026-07-02)
+## Two-Stage RGC Strategy
 
-`pars.rgc.enabled` now defaults to 1: `shPars` fits `pars.rgc.v1Weights`
-automatically at init time (via `shFitRgcV1Weights` on a standard stimulus
-set), so the default model path runs through the RGC layer rather than
-legacy V1 directly. Scale factors are still derived from the legacy path
-before weight fitting, and `pars.rgc.impairmentEnabled` still defaults to 0.
-A `tests/` suite (`tests/runAllTests.m`, 8 regression tests) now covers pars
-loading, stimulus generation, V1/MT pipelines, the RGC path, and RGC-vs-legacy
-correlation -- this fulfills the "deterministic regression script" item from
-Canonical Plan step 4. `min2`/`max2`/`mean2` (Image Processing Toolbox) calls
-have been removed/replaced throughout, dropping that toolbox dependency.
+The RGC front-end now has two selectable modes, `pars.rgc.mode`:
 
-## Current Implementation Status
+1. **`'derivative'` (default)** -- a non-biological but computationally exact
+   layer: 4 channels, one per temporal-derivative order (0-3) of the same
+   kernel family `v1TemporalFilters` already uses, each with a single-pixel
+   (delta) spatial RF. Combined with the existing V1 spatial-derivative basis,
+   this reconstructs legacy V1/MT responses essentially exactly (see
+   "Derivative Mode Architecture" below) -- no weight fitting is needed. Its
+   purpose is to give a clean, principled 4-channel substrate for lesion
+   studies (see `pars.rgc.derivative.channelGain`).
+2. **`'fourPop'`** -- the original biological ON/OFF x fast/slow population
+   model with DoG spatial RFs and causal biphasic temporal kernels, combined
+   via a numerically fitted weight matrix (`shFitRgcV1Weights`). This is the
+   path to extend with more realistic midget/parasol RGC properties.
 
-Completed:
+## Derivative Mode Architecture (default, `pars.rgc.mode = 'derivative'`)
 
-1. Optional RGC preprocessing hook integrated before V1 computation.
-2. RGC parameter schema in shPars with full four-population defaults.
-3. Four-population RGC layer: ON/OFF x fast/slow channel classes, each a
-   full 2D neural image (same spatial layout as stimulus).
-4. Optional lagged channels: fastLag and slowLag parameters add temporally
-   phase-shifted copies of each base channel, giving up to 8 channel classes.
-   Lagged channels introduce the temporal phase (quadrature) components needed
-   to span V1's direction-selective temporal filter basis.
-5. V1 spatial projection corrected: each RGC neural image is projected onto
-   all 10 spatial derivative combinations (orders 0-3, matching shModelV1Linear
-   loop structure and shSwts column order), not just the 4 third-order combos.
-   This is the mechanism by which V1 neurons form orientation-selective
-   receptive fields from spatially distributed RGC inputs.
-6. Weight fitting (shFitRgcV1Weights) updated to handle 4- or 8-channel basis
-   dynamically (nWeights inferred from feature matrix column count).
-7. Parameter sweep tool (shSweepRgcTemporalPars) for grid search over RGC
-   temporal parameters with per-combo weight refitting.
-8. Calibration helper (shCalibrateRgcLayer) for healthy-mode parameter fitting.
-9. Visualization helpers: shShowRgcAndV1Comparison, shShowRgcAndMtComparison,
-   shShowRgcFourPopDemo -- all updated to use dynamic channel lists.
+1. `shModelRgcDerivative` causally filters the raw stimulus in time with each
+   of the 4 columns of `pars.v1TemporalFilters` (orders 0-3), using the same
+   `convn(..., 'full')`-then-truncate approach as the causal kernel in
+   `shModelRgcPopulation.m`. No spatial filtering happens at this stage
+   (delta spatial RF). Output: `rgcOut.channels.order0 .. order3`.
+2. `pars.rgc.derivative.channelGain` (1x4, default `ones(1,4)`) is applied as
+   a per-channel scalar multiplier right after filtering -- a simple
+   lesioning hook (set an entry to 0 to silence that temporal-derivative-order
+   channel everywhere). More elaborate lesions (spatially restricted,
+   random-subset, delay/SNR degradation) are deliberately not implemented yet
+   -- see "Next Steps".
+3. `shModelV1LinearFromRgcDerivative` rebuilds the same 10-column `S` matrix
+   that legacy `shModelV1Linear` builds (10 = the number of
+   `(torder,xorder,yorder)` combos with `torder+xorder+yorder=3`), sourcing
+   each combo's temporal component from the RGC channel matching its
+   `torder`, then applying `v1SpatialFilters` derivatives for `xorder`/`yorder`
+   exactly as legacy does. `pop = S * shSwts(directions)' * scaleFactor` --
+   the same combination formula as legacy, no fitted weights involved.
+4. Why this is (near-)exact: causally filtering with `v1TemporalFilters(:,k+1)`
+   via `'full'` convolution and then trimming the leading `fsz-1` frames
+   (`shModelV1LinearFromRgcDerivative.m`) reproduces legacy's centered
+   `'valid'`-convolution values exactly for the retained frames -- 'full'
+   convolution's first T samples contain the same interior values as 'valid'
+   convolution as a contiguous subsequence, so the trim removes exactly the
+   boundary-affected samples and nothing else lines up differently. There is
+   no delay and no shape distortion in the default single-scale
+   (`pars.nScales = 1`) configuration.
+5. Known limitation: for `pars.nScales > 1`, legacy blurs/downsamples
+   (`shBlurDn3`, which also downsamples in time) *before* applying the
+   temporal derivative filter; the derivative-mode RGC channel applies the
+   causal temporal filter *before* blurring. These commute exactly only at
+   `nScales = 1` (the default). Multi-scale exactness has not been verified.
+
+## fourPop Mode Architecture (`pars.rgc.mode = 'fourPop'`)
+
+Unchanged from the prior implementation:
+
+1. Stimulus (Y x X x T) enters shModelRgc, which produces 4-8 neural images
+   (same Y x X x T layout): onFast, offFast, onSlow, offSlow (always
+   present), plus onFastLag/offFastLag/onSlowLag/offSlowLag when
+   `fastLag`/`slowLag > 0`. Each channel applies a spatial center-surround
+   (DoG) filter plus a causal biphasic temporal kernel to the luminance
+   input.
+2. shModelV1LinearFromRgc projects each neural image onto all 10 spatial
+   derivative combinations (matching shModelV1Linear's loop order), giving 40
+   features (4 channels x 10) or 80 (8 channels x 10).
+3. A per-neuron weight matrix (fitted by shFitRgcV1Weights) linearly combines
+   those features to approximate the legacy V1 linear responses -- this fit
+   tops out around ~0.7-0.8 V1 correlation, because (unlike derivative mode)
+   this basis never applies a genuine temporal-derivative filter; `torder` in
+   the projection only rebalances the x/y spatial split.
+4. Calibration/sweep tools (`shCalibrateRgcLayer`, `shSweepRgcTemporalPars`,
+   `shShowRgcV1ReceptiveFields`, `shShowRgcFourPopDemo`) are specific to this
+   mode and explicitly set `pars.rgc.mode = 'fourPop'` internally so they
+   keep working regardless of the global default.
+5. Amplitude/delay impairment maps (`pars.rgc.impairmentEnabled`,
+   `impairmentAmplitudeMap`, `impairmentDelayMap`) are implemented only in
+   this mode (`localApplyImpairment` in `shModelRgc.m`), not in derivative
+   mode.
 
 Implemented files:
 
-* model/innerworkings/shModelRgc.m
-* model/innerworkings/shModelV1LinearFromRgc.m
+* model/innerworkings/shModelRgc.m (mode dispatch)
+* model/innerworkings/shModelRgcDerivative.m ('derivative' channels)
+* model/innerworkings/shModelV1LinearFromRgcDerivative.m ('derivative' V1 projection)
+* model/innerworkings/shModelV1LinearFromRgc.m ('fourPop' V1 projection)
+* model/innerworkings/shModelV1Linear.m (mode dispatch)
 * model/shModel.m
 * pars/shPars.m
-* help/shCalibrateRgcLayer.m
-* help/shFitRgcV1Weights.m
-* help/shSweepRgcTemporalPars.m
-* show/shShowRgcAndV1Comparison.m
-* show/shShowRgcAndMtComparison.m
-* show/shShowRgcFourPopDemo.m
+* help/shCalibrateRgcLayer.m, shFitRgcV1Weights.m, shSweepRgcTemporalPars.m, shTestRgcV1Corr.m (fourPop-specific)
+* show/shShowRgcAndV1Comparison.m, shShowRgcAndMtComparison.m, shShowRgcFourPopDemo.m, shShowRgcV1ReceptiveFields.m
+* tests/testRgcDerivativeVsLegacy.m, testRgcPath.m, testRgcVsLegacyCorr.m, testParsLoading.m
 * README
 
-## Canonical Plan
+## Next Steps
 
+1. ~~Validate the derivative-mode baseline empirically~~ -- DONE (2026-07-02):
+   `report = shShowRgcAndV1Comparison;` gives `v1Corr = 1.000000`,
+   `v1NRMSE = 0.000000` against legacy with the new default (single-scale,
+   `nScales = 1`). `tests/runAllTests.m` passes all 9 tests. `shCalibrateRgcLayer`
+   confirmed still functional on the `fourPop` path (~0.95 correlation,
+   consistent with its pre-existing behavior).
 
-1. Healthy-mode calibration lock
+2. Explore lesioning of the derivative-mode RGC population (the original
+   motivation for stage 1):
 
-* Use baseline (RGC off) as reference.
-* Fit healthy RGC defaults to maximize V1/MT similarity.
-* Freeze defaults once fit quality is acceptable.
+* Start with the uniform `pars.rgc.derivative.channelGain` hook already in
+  place (per-order-class, spatially uniform).
+* Planned follow-ups, not yet implemented: spatially restricted lesions (one
+  channel silenced in a limited X-Y region), random-subset lesions across
+  temporal class and space (per-RGC-unit rather than per-channel), and
+  partial lesions (delay and/or reduced SNR rather than full silencing).
+  These will need a per-pixel (not just per-channel) gain/delay/noise
+  mechanism in `shModelRgcDerivative.m`.
 
-
-2. Validation metrics and acceptance criteria
-
-* Population correlation (V1 and MT) over calibration stimulus set.
-* Relative error / NRMSE on summary response vectors.
-* Target: high correlation and low NRMSE compared to legacy baseline.
-
-
-3. Impairment model expansion
-
-* Amplitude impairment: multiplicative attenuation maps.
-* Timing impairment: delay map and temporal filtering changes.
-* Keep impairment off by default for backward compatibility.
-
-
-4. Test and reproducibility hardening
-
-* Add a deterministic regression script for baseline vs healthy RGC.
-* Add a small impairment demonstration script (amplitude only, timing only, combined).
-
-## Immediate Next Steps
-
-Start here on the next session:
-
-1. Re-run the parameter sweep with the corrected 10-combo spatial basis:
-
-* `results = shSweepRgcTemporalPars;`
-* Record the best V1 correlation (expected to exceed the previous ~0.80).
-* If a clear optimum is found, write the best temporal parameters into shPars
-  as the new defaults. RGC is now enabled by default (pars.rgc.enabled = 1),
-  so any default-parameter change directly affects all users -- verify
-  `tests/runAllTests.m` still passes and rerun `shShowRgcAndV1Comparison`
-  before committing new defaults.
-
-2. Validate the healthy-mode baseline:
-
-* `report = shShowRgcAndV1Comparison;`
-* Confirm V1 correlation and NRMSE are acceptable with best parameters.
-
-3. Validate impairment model:
-
-* Enable pars.rgc.impairmentEnabled = 1 with a known amplitude or delay map.
-* Confirm impaired responses differ from healthy in the expected direction.
-* Record V1/MT correlation and NRMSE under impairment.
-
-## Current Architecture Summary
-
-The RGC-to-V1 pipeline works as follows:
-
-1. Stimulus (Y x X x T) enters shModelRgc.
-2. shModelRgc produces 4-8 neural images (same Y x X x T layout):
-   - onFast, offFast, onSlow, offSlow (always present)
-   - onFastLag, offFastLag, onSlowLag, offSlowLag (present when fastLag/slowLag > 0)
-   Each channel applies a spatial center-surround (DoG) filter plus a causal
-   biphasic temporal kernel to the luminance input.  Lagged channels are
-   frame-shifted copies that add temporal phase diversity.
-3. shModelV1LinearFromRgc projects each neural image onto all 10 spatial
-   derivative combinations (xorder+yorder from 0 to 3, in the same loop
-   order as shModelV1Linear so columns align with shSwts).  This gives
-   40 features (4 channels x 10) or 80 (8 channels x 10).
-4. A per-neuron weight matrix (fitted by shFitRgcV1Weights) linearly combines
-   those features to approximate the legacy V1 linear responses.
-
-The spatial filtering step is the mechanism of V1 orientation/direction
-selectivity: each V1 neuron performs a weighted sum over the spatial map of
-RGC outputs, with the derivative filter weights determining its preferred
-orientation and spatial frequency.
-
-## Remaining Known Limitations
-
-* The RGC spatial center-surround pre-filter shapes the frequency content
-  reaching V1 in a way that has no analog in the legacy path.  This is an
-  irreducible source of mismatch that parameter tuning cannot fully remove.
-* The healthy-mode V1 correlation achievable with the current architecture
-  should be re-measured after running shSweepRgcTemporalPars with the
-  corrected 10-combo spatial basis (last measured ~0.80 with old 4-combo basis).
-* Impairment model (amplitude/delay maps) has been implemented but not yet
-  validated quantitatively against the legacy baseline.
+3. Stage 2 (biological realism): redefine the RGC classes in `fourPop` mode
+   with more realistic ON/OFF midget and parasol RGC spatial/temporal RF
+   properties (already partially in place -- see "fourPop Mode Architecture").
 
 ## MATLAB Commands
 
+1. Healthy RGC path (default, exact reconstruction):
 
-1. Calibration quick run:
+* `pars = shPars;   % pars.rgc.enabled == 1, pars.rgc.mode == 'derivative'`
+* To use legacy V1 directly: `pars.rgc.enabled = 0;`
+* To lesion a temporal-derivative channel: `pars.rgc.derivative.channelGain(2) = 0;`
 
-* report = shCalibrateRgcLayer(60)
+2. Biological (fourPop) path:
 
+* `pars = shPars; pars.rgc.mode = 'fourPop'; pars.rgc.v1Weights = [];`
+* `pars.rgc.v1Weights = shFitRgcV1Weights(pars, stimSet);` (or let
+  `shShowRgcAndV1Comparison`/`shShowRgcAndMtComparison` fit it automatically)
 
-2. Healthy RGC path (enabled by default):
+3. Calibration quick run (fourPop only):
 
-* pars = shPars;   % pars.rgc.enabled == 1, v1Weights already fitted
-* To use legacy V1 directly: pars.rgc.enabled = 0;
+* `report = shCalibrateRgcLayer(60)`
 
+4. Example impairment setup (fourPop only):
 
-3. Example impairment setup:
-
-* pars.rgc.impairmentEnabled = 1;
-* pars.rgc.impairmentAmplitudeMap = ones(Y, X);  % edit map values
-* pars.rgc.impairmentDelayMap = zeros(Y, X);     % integer frame delays
+* `pars.rgc.mode = 'fourPop'; pars.rgc.impairmentEnabled = 1;`
+* `pars.rgc.impairmentAmplitudeMap = ones(Y, X);  % edit map values`
+* `pars.rgc.impairmentDelayMap = zeros(Y, X);     % integer frame delays`
 
 ## Notes for Future Agents
 
-* RGC is enabled by default (pars.rgc.enabled = 1); any change to default
-  temporal/spatial parameters or v1Weights fitting affects all users, not
-  just an opt-in path. Run `tests/runAllTests.m` before changing defaults.
+* RGC is enabled by default in `'derivative'` mode; any change to
+  `pars.v1TemporalFilters`/`pars.v1SpatialFilters` or the derivative-mode
+  wiring affects all users by default. Run `tests/runAllTests.m` before
+  changing defaults.
+* `'fourPop'`-specific tools (`shCalibrateRgcLayer`, `shSweepRgcTemporalPars`,
+  `shShowRgcV1ReceptiveFields`, `shShowRgcFourPopDemo`, `shTestRgcV1Corr`) set
+  `pars.rgc.mode = 'fourPop'` internally -- keep doing this in any new
+  fourPop-specific tool so it isn't silently affected by the global default.
 * Prioritize scientific comparability (healthy mode) before adding new complexity.
 * Keep all new scripts deterministic where possible (set random seeds).
-
-

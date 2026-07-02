@@ -29,6 +29,12 @@ function pars = shPars
     %%%%% NOW WE GET STARTED: V1
     pars.nScales = 1;
     pars.rgc.enabled = 1;                           % If 1, pass the stimulus through an RGC layer before V1.
+    pars.rgc.mode = 'derivative';                   % 'derivative' (default): 4 causal temporal-derivative-order
+                                                     % channels that exactly reconstruct legacy V1/MT (no fitting
+                                                     % needed). 'fourPop': biological ON/OFF x fast/slow channels.
+    pars.rgc.derivative.channelGain = ones(1, 4);   % Per-channel gain for 'derivative' mode [order0 order1 order2 order3].
+                                                     % A simple lesioning hook: set an entry to 0 to silence that
+                                                     % temporal-derivative-order channel everywhere.
     pars.rgc.gain = 1;                              % Global gain applied after RGC filtering.
     pars.rgc.spatial.centerSigma = 0.8;             % RGC center sigma for ON/OFF center-surround filters.
     pars.rgc.spatial.surroundSigma = 2.0;           % RGC surround sigma (pixels).
@@ -49,7 +55,7 @@ function pars = shPars
     pars.rgc.temporal.power = 2;                    % RGC gamma-kernel exponent.
     pars.rgc.onOffSignSplit = 'contrast';           % RGC 'contrast' (frame mean-subtracted), 'local', or 'bipolar'.
     pars.rgc.onOffSymmetry = 1.0;                   % RGC relative scaling of OFF vs ON rectification.
-    pars.rgc.v1Weights = [];                        % RGC optional Nx40 fitted V1 weights (4 channels x 10 spatial basis); Nx80 when lagged channels are enabled.
+    pars.rgc.v1Weights = [];                        % Fitted V1 weights, 'fourPop' mode only (Nx40, or Nx80 with lagged channels). Unused in 'derivative' mode.
     pars.rgc.impairmentEnabled = 0;                 % If 1, apply amplitude/timing impairments.
     pars.rgc.impairmentAmplitudeMap = [];           % Optional YxX multiplicative map for RGC amplitude deficits.
     pars.rgc.impairmentDelayMap = [];               % Optional YxX integer delay map (frames) for timing deficits.
@@ -76,16 +82,20 @@ function pars = shPars
     pars.mtBaseline = .1;                           % Baseline response of MT neurons.
     pars.mtExponent = 2;                            % Exponent to which MT neuron responses are raised.
 
-    %%%% COMPUTE SCALE FACTORS AND FIT RGC WEIGHTS
-    % Scale factors are derived from the legacy (no-RGC) path so the
+    %%%% COMPUTE SCALE FACTORS AND (FOR 'fourPop') FIT RGC WEIGHTS
+    % Scale factors are derived from the legacy (no-RGC) path so any
     % subsequent weight fit has the correct normalization reference.
     pars.rgc.enabled = 0;
     pars = shParsScaleFactors(pars);
-
-    % Re-enable RGC and fit channel-to-V1 weights so that the RGC path
-    % matches the legacy model response on a standard set of stimuli.
     pars.rgc.enabled = 1;
-    pars.rgc.v1Weights = shFitRgcV1Weights(pars, localDefaultStimSet(pars));
+
+    % The 'derivative' mode needs no fitted weights -- it reconstructs the
+    % legacy basis exactly (see shModelV1LinearFromRgcDerivative). Only the
+    % biological 'fourPop' mode needs a numerically fitted channel-to-V1
+    % weight matrix.
+    if strcmpi(pars.rgc.mode, 'fourPop')
+        pars.rgc.v1Weights = shFitRgcV1Weights(pars, localDefaultStimSet(pars));
+    end
 
 end
 

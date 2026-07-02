@@ -73,6 +73,7 @@ function report = shShowRgcAndMtComparison(stimulus, pars)
     text(0.02, 0.6, sprintf('MT NRMSE: %.4f', mtNrmse), 'FontSize', 12);
     text(0.02, 0.4, sprintf('RGC enabled: %d', parsRgc.rgc.enabled), 'FontSize', 12);
     text(0.02, 0.2, sprintf('RGC impairment: %d', parsRgc.rgc.impairmentEnabled), 'FontSize', 12);
+    text(0.02, 0.0, sprintf('RGC path: %s', parsRgc.rgc.mode), 'FontSize', 12);
     title('Summary metrics');
 
     report = struct;
@@ -84,6 +85,11 @@ function report = shShowRgcAndMtComparison(stimulus, pars)
 end
 
 function parsRgc = localEnsureRgcV1Weights(parsRgc, stimulus)
+
+    % 'derivative' mode needs no fitted weights -- only 'fourPop' does.
+    if ~strcmpi(parsRgc.rgc.mode, 'fourPop')
+        return;
+    end
 
     if isfield(parsRgc.rgc, 'v1Weights') && ~isempty(parsRgc.rgc.v1Weights)
         return;

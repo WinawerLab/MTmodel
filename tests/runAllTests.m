@@ -16,6 +16,7 @@ tests = {
     'testMtPipeline',
     'testRgcPath',
     'testRgcVsLegacyCorr',
+    'testRgcDerivativeVsLegacy',
     'testGetNeuron',
     'testEdgeCases',
 };

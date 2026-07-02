@@ -17,10 +17,22 @@ M = varargin{1};
 pars = varargin{2};
 
 if isfield(pars, 'rgc') && isfield(pars.rgc, 'enabled') && pars.rgc.enabled == 1
+    mode = 'derivative';
+    if isfield(pars.rgc, 'mode') && ~isempty(pars.rgc.mode)
+        mode = pars.rgc.mode;
+    end
+    switch lower(mode)
+        case 'derivative'
+            rgcFun = @shModelV1LinearFromRgcDerivative;
+        case 'fourpop'
+            rgcFun = @shModelV1LinearFromRgc;
+        otherwise
+            error('pars.rgc.mode must be ''derivative'' or ''fourPop''.');
+    end
     if nargin > 2
-        [varargout{1:nargout}] = shModelV1LinearFromRgc(M, pars, varargin{3});
+        [varargout{1:nargout}] = rgcFun(M, pars, varargin{3});
     else
-        [varargout{1:nargout}] = shModelV1LinearFromRgc(M, pars);
+        [varargout{1:nargout}] = rgcFun(M, pars);
     end
     return;
 end

@@ -40,6 +40,14 @@ Recent major updates:
    temporal parameters that maximise V1 correlation with the legacy model.
 - A calibration helper was added to fit healthy RGC parameters so V1/MT
    outputs stay close to the legacy model before impairment is introduced.
+- The RGC layer is now enabled by default (pars.rgc.enabled = 1), using a
+   new default mode, pars.rgc.mode = 'derivative': 4 channels, one per
+   temporal-derivative order (0-3), each with a single-pixel spatial RF.
+   This reconstructs legacy V1/MT responses essentially exactly, with no
+   weight fitting required, and gives a clean 4-channel substrate for
+   lesion studies via pars.rgc.derivative.channelGain. The original
+   biological four-population model (ON/OFF x fast/slow, with fitted
+   weights) remains available as pars.rgc.mode = 'fourPop'.
 - Legacy C/MEX sources are still included in the repository for reference.
 
 Authors:  Timothy Saint and Eero P. Simoncelli
@@ -57,32 +65,43 @@ INSTALLATION
    for reference and experimentation. Core model internals call explicit
    native helper functions, so default execution does not depend on MEX.
 
-3) Optional RGC front-end (default OFF):
+3) RGC front-end (enabled by default):
+
+   pars = shPars;   % pars.rgc.enabled == 1, pars.rgc.mode == 'derivative'
+
+   By default the stimulus passes through an RGC layer before reaching V1,
+   using the 'derivative' mode: 4 channels, one per temporal-derivative
+   order (0-3) of the same kernel family V1's temporal filters use, each
+   with a single-pixel spatial RF (no spatial filtering at the RGC stage).
+   This reconstructs legacy V1/MT responses essentially exactly -- no
+   weight fitting is required. To lesion a channel:
+
+   pars.rgc.derivative.channelGain(2) = 0;  % silence the order-1 channel
+
+   Set pars.rgc.enabled = 0 to revert to the original no-RGC model.
+
+   A second, biological RGC mode is also available:
 
    pars = shPars;
-   pars.rgc.enabled = 1;
+   pars.rgc.mode = 'fourPop';
+   pars.rgc.v1Weights = [];
 
-   With RGC enabled, the stimulus passes through a population of model
-   retinal ganglion cells before reaching V1.  The RGC layer has four base
-   channel classes (onFast, offFast, onSlow, offSlow) defined by polarity
-   (ON/OFF center-surround) and temporal speed (fast/slow biphasic kernel).
-   Each channel is a 2D neural image -- the full spatial array of RGC
-   responses for that class -- with the same spatial layout as the stimulus.
+   This is the original four-population model, with base channel classes
+   (onFast, offFast, onSlow, offSlow) defined by polarity (ON/OFF
+   center-surround) and temporal speed (fast/slow biphasic kernel). Each
+   channel is a 2D neural image -- the full spatial array of RGC responses
+   for that class -- with the same spatial layout as the stimulus.
 
    Optional lagged channels (temporal phase offset) can be enabled:
 
    pars.rgc.temporal.fastLag = 1;  % frames; 0 = disabled (default)
    pars.rgc.temporal.slowLag = 2;  % frames; 0 = disabled (default)
 
-   With both lags enabled the layer has 8 channel classes.
-
-   At the V1 stage each RGC neural image is projected onto all 10 spatial
-   derivative combinations (xorder+yorder from 0 to 3), matching the full
-   spatiotemporal basis of shModelV1Linear.  V1 neurons therefore perform
-   weighted sums over the spatial map of RGC outputs, which is the mechanism
-   by which orientation and direction selectivity arise.
-
-   Before use, fit per-neuron V1 weights with:
+   With both lags enabled the layer has 8 channel classes. At the V1 stage
+   each RGC neural image is projected onto all 10 spatial derivative
+   combinations (xorder+yorder from 0 to 3), matching the full
+   spatiotemporal basis of shModelV1Linear. Before use, fit per-neuron V1
+   weights with:
 
    pars.rgc.v1Weights = shFitRgcV1Weights(pars, stimulusSet);
 
@@ -91,9 +110,7 @@ INSTALLATION
    results = shSweepRgcTemporalPars;
    pars    = results.bestPars;
 
-   Set pars.rgc.enabled = 0 to revert to the original no-RGC model.
-
-4) First-pass RGC calibration protocol:
+4) First-pass RGC calibration protocol (fourPop mode only):
 
    report = shCalibrateRgcLayer;
 

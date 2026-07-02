@@ -154,6 +154,7 @@ end
 function parsRgc = localApplyPars(pars, f1, s1, sw, sweepPars)
     parsRgc                         = pars;
     parsRgc.rgc.enabled             = 1;
+    parsRgc.rgc.mode                = 'fourPop';
     parsRgc.rgc.temporal.fastTau1   = f1;
     parsRgc.rgc.temporal.fastTau2   = f1 * sweepPars.fastTau2Ratio;
     parsRgc.rgc.temporal.fastWeight = sweepPars.fastWeight;

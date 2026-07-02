@@ -6,7 +6,7 @@ dims = shGetDims(pars, 'v1Complex', [1 1 24]);
 stim = mkDots(dims, 0, 1.0, 0.12, 1.0);
 
 parsNo = pars; parsNo.rgc.enabled = 0;
-parsFour = pars; parsFour.rgc.enabled = 1;
+parsFour = pars; parsFour.rgc.enabled = 1; parsFour.rgc.mode = 'fourPop'; parsFour.rgc.v1Weights = [];
 
 [v1n, ~] = shModel(stim, parsNo, 'v1Complex');
 [v1a, ~] = shModel(stim, parsFour, 'v1Complex');

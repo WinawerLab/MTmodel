@@ -9,7 +9,11 @@
 % Output:
 % RGC disabled:
 %   rgcOut    original stimulus [Y X T]
-% RGC enabled:
+% RGC enabled, pars.rgc.mode = 'derivative' (default):
+%   rgcOut    struct with fields:
+%             .mode = 'derivative'
+%             .channels.order0, .order1, .order2, .order3  [Y X T]
+% RGC enabled, pars.rgc.mode = 'fourPop':
 %   rgcOut    struct with fields:
 %             .mode = 'fourPop'
 %             .channels.onFast, .offFast, .onSlow, .offSlow  [Y X T]
@@ -27,7 +31,19 @@ function rgcOut = shModelRgc(stimulus, pars)
         return;
     end
 
-    rgcOut = localComputeFourPopulations(stimulus, pars.rgc);
+    mode = 'derivative';
+    if isfield(pars.rgc, 'mode') && ~isempty(pars.rgc.mode)
+        mode = pars.rgc.mode;
+    end
+
+    switch lower(mode)
+        case 'derivative'
+            rgcOut = shModelRgcDerivative(stimulus, pars);
+        case 'fourpop'
+            rgcOut = localComputeFourPopulations(stimulus, pars.rgc);
+        otherwise
+            error('pars.rgc.mode must be ''derivative'' or ''fourPop''.');
+    end
 
 end
 

@@ -14,6 +14,7 @@ function report = shShowRgcFourPopDemo
 
     pars = shPars;
     pars.rgc.enabled = 1;
+    pars.rgc.mode = 'fourPop';
     pars.rgc.impairmentEnabled = 0;
 
     dims = shGetDims(pars, 'v1Complex', [1 1 24]);
