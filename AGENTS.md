@@ -2,6 +2,15 @@
 
 Last updated: 2026-07-02
 
+> **2026-07-08 — NEW DIRECTION (read first):** see
+> [`docs/RGC_V1_unification_plan.md`](docs/RGC_V1_unification_plan.md). We decided
+> to **unify** `derivative` and `fourPop` into one class-based implementation
+> (they are the same machinery with different RGC-class parameters — validated),
+> and to build direction selectivity from an **ON/OFF temporal delay** (~10 ms,
+> Chariker/Shapley) for midget and parasol classes rather than downstream lag
+> copies. Validated exploratory scripts are in [`explore/`](explore/). The
+> sections below still describe the *current* code accurately.
+
 ## Primary Goal
 
 Add a retinal ganglion cell (RGC) layer before V1 so the model can simulate optic neuritis impairments (amplitude and timing), while keeping healthy-condition V1 and MT responses as close as possible to the legacy model.
