@@ -12,43 +12,16 @@ the most recent versions of the code, are available at
 
     http://www.cns.nyu.edu/~lcv/MT-model.html
 
-Project planning note:
+RGC front-end and project status:
 
-- See AGENTS.md at repository root for the active RGC front-end roadmap,
-  implementation status, and next execution steps.
-
-Recent major updates:
-
-- Native MATLAB fallbacks were added for core 3D operations used by the
-   model internals, reducing dependence on legacy precompiled MEX binaries.
-- The V1 linear stage now uses explicit native helper calls for blur and
-   valid correlation steps.
-- Gaussian blur internals were updated to call native helper functions,
-   preserving the separable filtering pipeline while improving portability.
-- An optional retinal ganglion cell (RGC) preprocessing layer was added in
-   front of V1. By default it is disabled so legacy behavior is preserved.
-- The RGC layer was expanded to four populations (ON/OFF x fast/slow) and
-   then to eight by adding optional lagged (temporally phase-shifted) copies
-   of each channel, controlled by pars.rgc.temporal.fastLag and slowLag.
-- The V1 spatial projection stage was corrected to apply all 10 spatial
-   derivative combinations (spatial orders 0-3, matching shModelV1Linear's
-   full spatiotemporal basis) rather than only the 4 third-order combinations.
-   Each RGC channel output (a 2D neural image) is now projected onto the full
-   V1 spatial derivative set, so V1 neurons perform weighted sums over the
-   spatial map of RGC outputs rather than over a fixed set of scalar features.
-- A parameter sweep tool (shSweepRgcTemporalPars) was added to find the RGC
-   temporal parameters that maximise V1 correlation with the legacy model.
-- A calibration helper was added to fit healthy RGC parameters so V1/MT
-   outputs stay close to the legacy model before impairment is introduced.
-- The RGC layer is now enabled by default (pars.rgc.enabled = 1), using a
-   new default mode, pars.rgc.mode = 'derivative': 4 channels, one per
-   temporal-derivative order (0-3), each with a single-pixel spatial RF.
-   This reconstructs legacy V1/MT responses essentially exactly, with no
-   weight fitting required, and gives a clean 4-channel substrate for
-   lesion studies via pars.rgc.derivative.channelGain. The original
-   biological four-population model (ON/OFF x fast/slow, with fitted
-   weights) remains available as pars.rgc.mode = 'fourPop'.
-- Legacy C/MEX sources are still included in the repository for reference.
+- This toolbox is being extended with an optional retinal ganglion cell (RGC)
+  layer in front of V1 (enabled by default; set pars.rgc.enabled = 0 to recover
+  exact legacy behavior). For the RGC front-end's design, current status, and
+  usage, see AGENTS.md at the repository root and the docs/ folder. The base
+  V1/MT model is described below and in the references.
+- Native MATLAB implementations of the core 3D operations mean no MEX
+  compilation is required for normal use (legacy C/MEX sources remain in the
+  mex/ subfolder for reference).
 
 Authors:  Timothy Saint and Eero P. Simoncelli
 ___________________________________________________________________________
@@ -65,57 +38,14 @@ INSTALLATION
    for reference and experimentation. Core model internals call explicit
    native helper functions, so default execution does not depend on MEX.
 
-3) RGC front-end (enabled by default):
+3) RGC front-end (optional, enabled by default):
 
-   pars = shPars;   % pars.rgc.enabled == 1, pars.rgc.mode == 'derivative'
+   pars = shPars;   % pars.rgc.enabled == 1
 
-   By default the stimulus passes through an RGC layer before reaching V1,
-   using the 'derivative' mode: 4 channels, one per temporal-derivative
-   order (0-3) of the same kernel family V1's temporal filters use, each
-   with a single-pixel spatial RF (no spatial filtering at the RGC stage).
-   This reconstructs legacy V1/MT responses essentially exactly -- no
-   weight fitting is required. To lesion a channel:
-
-   pars.rgc.derivative.channelGain(2) = 0;  % silence the order-1 channel
-
-   Set pars.rgc.enabled = 0 to revert to the original no-RGC model.
-
-   A second, biological RGC mode is also available:
-
-   pars = shPars;
-   pars.rgc.mode = 'fourPop';
-   pars.rgc.v1Weights = [];
-
-   This is the original four-population model, with base channel classes
-   (onFast, offFast, onSlow, offSlow) defined by polarity (ON/OFF
-   center-surround) and temporal speed (fast/slow biphasic kernel). Each
-   channel is a 2D neural image -- the full spatial array of RGC responses
-   for that class -- with the same spatial layout as the stimulus.
-
-   Optional lagged channels (temporal phase offset) can be enabled:
-
-   pars.rgc.temporal.fastLag = 1;  % frames; 0 = disabled (default)
-   pars.rgc.temporal.slowLag = 2;  % frames; 0 = disabled (default)
-
-   With both lags enabled the layer has 8 channel classes. At the V1 stage
-   each RGC neural image is projected onto all 10 spatial derivative
-   combinations (xorder+yorder from 0 to 3), matching the full
-   spatiotemporal basis of shModelV1Linear. Before use, fit per-neuron V1
-   weights with:
-
-   pars.rgc.v1Weights = shFitRgcV1Weights(pars, stimulusSet);
-
-   or run the parameter sweep to find temporal parameters and fit weights:
-
-   results = shSweepRgcTemporalPars;
-   pars    = results.bestPars;
-
-4) First-pass RGC calibration protocol (fourPop mode only):
-
-   report = shCalibrateRgcLayer;
-
-   This fits healthy RGC parameters to keep V1/MT outputs close to the
-   legacy model with RGC disabled.
+   The stimulus passes through an RGC layer before reaching V1. Set
+   pars.rgc.enabled = 0 to recover the original no-RGC model exactly. For the
+   RGC modes, the class-based parameterization (pars.rgc.classes), lesioning,
+   and calibration, see AGENTS.md and the docs/ folder.
 
 ___________________________________________________________________________
 USING THE SOFTWARE

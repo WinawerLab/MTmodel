@@ -2,6 +2,10 @@
 
 Last updated: 2026-07-10 (session with J. Winawer)
 
+> **This is the authoritative "current state + next steps" document for the RGC
+> front-end work.** Start at `AGENTS.md` (repo root), then read this. For the
+> reasoning behind the design, see `RGC_V1_design_discussion.md`.
+
 This document is a **self-contained handoff**. If you are a fresh agent picking
 this up (e.g. on the laptop after a `git pull`), read this top-to-bottom before
 touching code. It records what we established, the decisions we made, and the
