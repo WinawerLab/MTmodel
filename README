@@ -54,7 +54,7 @@ USING THE SOFTWARE
 
    addpath(genpath('PATHNAME-OF-MTmodel'));
 
-1) Start by going through the shTutorial1.m file in the "tut"
+1) Start by going through the shTutorial1.m file in the "help"
    folder.  This will show you how to compute responses of various
    stages of the model to any stimulus, and how to generate tuning
    curves.
