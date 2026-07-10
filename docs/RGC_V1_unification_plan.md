@@ -197,15 +197,27 @@ viewer (`shV1Rf` / `shShowV1Rf`, class-agnostic — the two-view viz in
   **exactly (err = 0)** — see `explore/verifyClassPathDerivative.m` and the new
   `tests/testClassPathDerivative.m` (now in `runAllTests`, 10/10 pass). Nothing in
   the existing dispatch was changed, so the default path is untouched.
-- **Increment 2 — TODO.** Biological presets. Implement `localClassChannel`'s
-  spatial-RF (DoG) + rectification (ON/OFF half-wave) branches (currently they
-  error as explicit TODOs), add `shRgcClassesMidgetParasol` with the ON/OFF
-  causal *quadrature* kernel pair (per §2.7) and the ON/OFF `readoutOffset`, and
-  wire `combine='weights'` to a fit. Then reproduce/replace the fourPop path and
-  measure DS vs TF through the real model.
+- **Increment 2 — DONE (2026-07-10).** Biological preset on the class path. The
+  feature builder was factored out to `model/innerworkings/shClassV1Basis.m`
+  (shared by the forward and the fitter); its `localClassChannel` now implements
+  the DoG spatial RF + ON/OFF half-wave rectification, and the ON/OFF `readoutOffset`
+  is applied (a `circshift` of the class channel). New:
+  `pars/shQuadratureKernel.m` (90-deg Hilbert phase shift, the ON/OFF constant-
+  phase partner), `pars/shRgcClassesMidgetParasol.m` (ON/OFF x midget/parasol with
+  quadrature ON kernels + spatial offset -> 4 classes x 10 read-outs = 40
+  features), and `help/shFitClassV1Weights.m` (ridge fit for `combine='weights'`).
+  Verified end-to-end (`explore/verifyClassPathBiological.m`, `tests/testClassPathBiological.m`,
+  11/11 pass): held-out legacy-V1 correlation ~0.70, on par with the old fourPop
+  ceiling (~0.69), finite. As expected, the quadrature aids DS but cannot recover
+  the missing high-TF orders, so legacy reconstruction still caps ~0.7. Existing
+  dispatch remains unchanged.
 - **Increment 3 — TODO.** Switch `shModelV1Linear`'s dispatch to the class path,
   make `pars.rgc.mode` presets set `pars.rgc.classes`, retire the twin forwards,
-  and generalize the RF viewer to read `pars.rgc.classes`.
+  and generalize the RF viewer to read `pars.rgc.classes`. Also (separate from
+  fitting to legacy): measure *intrinsic* DS of the biological front-end by wiring
+  V1 neurons directly from ON/OFF (Chariker), not by fitting to legacy -- fitting
+  to legacy inherits legacy's DS and does not test the mechanism. Calibrate kernels/
+  offset to a frame rate and to Kling (2020).
 
 **(1) Prototype the ON/OFF DS mechanism — DONE (2026-07-10).** See §2.7 and
 `explore/prototypeOnOffDelayDS.m`. Conclusion: a pure delay → narrowband (high-TF)
