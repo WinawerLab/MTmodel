@@ -223,10 +223,14 @@ viewer (`shV1Rf` / `shShowV1Rf`, class-agnostic — the two-view viz in
   is honored by mapping it onto the classes' per-class gains in the dispatch.
   Verified exact vs legacy incl. the `resdirs` output (err = 0); `testClassPathDerivative`
   extended to cover it; 11/11 pass. `'fourPop'` mode still uses its old path.
-- **Increment 3b — TODO.** Generalize the RF viewer to read `pars.rgc.classes`
-  (formalize `explore/showV1RfDerivative.m` into `shV1Rf` / `shShowV1Rf`, class-
-  agnostic: RGC-referred = per-class spatial maps, stimulus-referred = combined
-  with each class's temporal kernel).
+- **Increment 3b — DONE (2026-07-10).** Class-agnostic RF viewer. `help/shV1Rf.m`
+  computes a V1 neuron's RF referred two ways from `pars.rgc.classes` (RGC-referred
+  per-class spatial maps `RFrgc` [fsz x fsz x nClass]; stimulus-referred linear
+  space-time RF `RFstim`), for either `steer` or `weights` combine.
+  `show/shShowV1Rf.m` draws both figures. Verified: derivative `RFstim` reproduces
+  the model to ~6e-16; biological preset renders per-class maps + distinct ON/OFF
+  quadrature kernels. `tests/testV1Rf.m` added; 12/12 pass.
+  (`explore/showV1RfDerivative.m` is now superseded by these.)
 - **Increment 3c — TODO.** Retire the twin forwards
   (`shModelV1LinearFromRgcDerivative`, and eventually `shModelV1LinearFromRgc`);
   migrate `'fourPop'` to a class preset (`shRgcClassesFourPop`) with its dependent

@@ -19,6 +19,7 @@ tests = {
     'testRgcDerivativeVsLegacy',
     'testClassPathDerivative',
     'testClassPathBiological',
+    'testV1Rf',
     'testGetNeuron',
     'testEdgeCases',
 };
