@@ -120,17 +120,45 @@ This is Adelson–Bergen realized biologically: the two temporal phases = OFF
 directly onto §2.5's "class-specific spatial weighting of temporally-distinct
 channels."
 
+### 2.7 Prototype result: delay gives narrowband DS; quadrature gives broadband
+
+`explore/prototypeOnOffDelayDS.m` is a 1D linear simulation of the mechanism (OFF
+subregion at 0, ON subregion offset by `d`, ON kernel modified; measure F1 to
+gratings drifting both ways across TF). Findings:
+
+- **Both ingredients are required.** DSI is *exactly 0* when the ON delay OR the
+  spatial offset is removed (controls). DS is a genuine cross-term.
+- **A pure ON time delay gives frequency-dependent DS** (DSI rises with TF,
+  strong only at high TF) — matching Chariker Mechanism #1 ("DS at TFs above
+  ~4 Hz"). In this linear model the DS is *kernel-shape-independent*: parasol and
+  midget give identical DSI. The kernel sets the response *passband*, the ON/OFF
+  phase sets DS.
+- **A constant-phase (≈90° quadrature) ON/OFF kernel difference gives broadband
+  DS** (DSI roughly flat across TF; parasol quad mean 0.76, midget 0.58),
+  reproducing Chariker's broadband-DS signature (their Mechanism #2). The exact
+  Hilbert quad is acausal; biology approximates it with a *shaped causal* ON
+  kernel.
+
+**Design consequence:** implement the ON/OFF difference as a **kernel-shape
+(phase) difference approximating quadrature**, not merely a fixed time lag — a
+lag alone only buys high-TF DS. Parasol/midget kernels then set the TF passbands;
+together they broaden TF coverage for MT.
+
 ## 3. Decisions made this session
 
 1. **Keep the SH analytic derivative basis** as the healthy-baseline path (it is
    exact and provides the SF/TF range MT needs for speed tuning).
 2. **Unify** `derivative` and `fourPop` into one class-based implementation; they
    become *parameter presets*, not code branches (see §2.2).
-3. **Adopt the ON/OFF delay as the temporal-phase source for DS** (Chariker/
-   Shapley), rather than downstream lag-copy channels. Apply it for **two class
-   types — midgets and parasols** — giving ON/OFF × midget/parasol with distinct
-   midget vs parasol kernels and ON delayed ~10 ms within each type. This gives a
-   little more spatiotemporal-tuning variety.
+3. **Adopt an ON/OFF kernel-shape (phase) difference as the temporal-phase source
+   for DS** (Chariker/Shapley), rather than downstream lag-copy channels. Apply it
+   for **two class types — midgets and parasols** — giving ON/OFF × midget/parasol
+   with distinct midget vs parasol kernels. **Refined by the §2.7 prototype:** the
+   ON/OFF difference should approximate a constant-phase (~90° quadrature) causal
+   kernel difference (Chariker Mechanism #2) for *broadband* DS — a pure ~10 ms
+   delay alone (Mechanism #1) only yields high-TF DS. The schema should therefore
+   carry a per-class ON/OFF kernel *pair* (or a phase parameter), not just a
+   scalar delay.
 4. **The ON-vs-OFF spatial offset lives in the V1 read-out** and is *where DS is
    actually assembled* — design it explicitly, not as an accident of the
    derivative read-out.
@@ -158,10 +186,12 @@ step (analytic for the derivative preset, fit otherwise), **one** RF extractor +
 viewer (`shV1Rf` / `shShowV1Rf`, class-agnostic — the two-view viz in
 `explore/showV1RfDerivative.m`).
 
-**(1) Prototype the ON/OFF-delay + spatial-offset read-out** on the parasol
-(fast) and midget classes; measure **DS as a function of TF** and reproduce
-Chariker's broadband-DS signature (Pref/Opp roughly constant across TF). Use
-~10 ms ON delay. This validates route (b) before committing the schema.
+**(1) Prototype the ON/OFF DS mechanism — DONE (2026-07-08).** See §2.7 and
+`explore/prototypeOnOffDelayDS.m`. Conclusion: a pure delay → narrowband (high-TF)
+DS; a constant-phase (quadrature) ON/OFF kernel difference → broadband DS. Both
+the temporal difference and the spatial offset are required. Remaining refinement
+for the real implementation: use a *causal* quadrature-approximating ON kernel
+(Chariker Mechanism #2), and calibrate to a frame rate.
 
 **Guardrails:**
 - Keep the legacy (RGC-disabled) path as the oracle. The derivative preset must
