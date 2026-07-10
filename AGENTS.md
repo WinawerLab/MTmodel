@@ -32,14 +32,16 @@ legacy behavior. The legacy (RGC-disabled) path is the machine-precision oracle.
   exist (`pars.rgc.mode = 'derivative'` and `'fourPop'`); they are being **unified
   into one class-based path** driven by `pars.rgc.classes`
   (`shModelV1LinearFromClasses` / `shClassV1Basis`).
-- **Increments 1–2 done:** the derivative preset (`shRgcClassesDerivative`)
+- **Increments 1–3b done:** the derivative preset (`shRgcClassesDerivative`)
   reproduces legacy exactly (err = 0 at `nScales = 1`); the biological
   midget/parasol preset (`shRgcClassesMidgetParasol`, ON/OFF quadrature + spatial
-  offset) fits legacy V1 to ~0.70, on par with the old fourPop.
-- **Next: Increment 3** — switch `shModelV1Linear`'s dispatch to the class path,
-  make the `pars.rgc.mode` presets populate `pars.rgc.classes`, retire the twin
-  forwards, generalize the RF viewer, and measure the front-end's *intrinsic* DS.
-  (See the plan doc.)
+  offset) fits legacy V1 to ~0.70; the **default derivative path now runs through
+  the class forward** (`shPars` populates `pars.rgc.classes`); and a class-agnostic
+  RF viewer (`shV1Rf` / `shShowV1Rf`) is in place. `tests/runAllTests.m` is 12/12.
+- **Next: Increment 3c/3d** — retire the twin forwards and migrate `'fourPop'`
+  (with its impairment / calibration tooling) to a class preset; measure the
+  front-end's *intrinsic* DS (wire V1 from ON/OFF directly, not by fitting to
+  legacy); calibrate to a frame rate and Kling (2020). (See the plan doc.)
 
 ## Running the model & tests
 
