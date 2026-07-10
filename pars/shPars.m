@@ -90,11 +90,20 @@ function pars = shPars
     pars.rgc.enabled = 1;
 
     % The 'derivative' mode needs no fitted weights -- it reconstructs the
-    % legacy basis exactly (see shModelV1LinearFromRgcDerivative). Only the
+    % legacy basis exactly (see shModelV1LinearFromClasses). Only the
     % biological 'fourPop' mode needs a numerically fitted channel-to-V1
     % weight matrix.
     if strcmpi(pars.rgc.mode, 'fourPop')
         pars.rgc.v1Weights = shFitRgcV1Weights(pars, localDefaultStimSet(pars));
+    end
+
+    % Unified class-based parameterization (pars.rgc.classes): the default
+    % derivative path runs through shModelV1LinearFromClasses. Populate the
+    % derivative-preset classes so pars.rgc.classes is the live parameterization
+    % (edit it, or swap in shRgcClassesMidgetParasol, to change the front-end).
+    if strcmpi(pars.rgc.mode, 'derivative')
+        pars.rgc.classes = shRgcClassesDerivative(pars);
+        pars.rgc.combine = 'steer';
     end
 
 end

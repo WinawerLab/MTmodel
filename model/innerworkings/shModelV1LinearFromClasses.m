@@ -18,17 +18,24 @@
 % reproduces shModelV1LinearFromRgcDerivative (hence legacy) essentially exactly.
 %
 % Required arguments:
-% M      raw 3D movie [Y X T]
-% pars   parameters with pars.rgc.classes set and pars.rgc.combine in
-%        {'steer','weights'}.
+% M        raw 3D movie [Y X T]
+% pars     parameters with pars.rgc.classes set and pars.rgc.combine in
+%          {'steer','weights'}.
 %
-% Outputs match shModelV1Linear (pop, ind, S).
+% Optional arguments:
+% resdirs  additional neuron directions (same format as shModelV1Linear); if
+%          given and a 4th output is requested, res holds their responses.
+%
+% Outputs match shModelV1Linear (pop, ind, S, res).
 
-function [pop, ind, S] = shModelV1LinearFromClasses(M, pars)
+function [pop, ind, S, res] = shModelV1LinearFromClasses(M, pars, resdirs)
 
     if ~isfield(pars.rgc, 'classes') || isempty(pars.rgc.classes)
         error('shModelV1LinearFromClasses:noClasses', ...
               'pars.rgc.classes must be set (e.g. shRgcClassesDerivative(pars)).');
+    end
+    if nargout > 3 && nargin < 3
+        error('You must specify which neuronal responses you want.');
     end
     combine = 'steer';
     if isfield(pars.rgc, 'combine') && ~isempty(pars.rgc.combine)
@@ -36,18 +43,26 @@ function [pop, ind, S] = shModelV1LinearFromClasses(M, pars)
     end
 
     [S, ind, nCols] = shClassV1Basis(M, pars);
+    scale = pars.scaleFactors.v1Linear;
 
-    % --- combine feature columns into per-neuron responses ---
+    pop = localCombine(S, nCols, combine, pars, pars.v1PopulationDirections) * scale;
+
+    if nargout > 3
+        res = localCombine(S, nCols, combine, pars, resdirs) * scale;
+    end
+
+end
+
+% Combine feature columns into per-neuron responses for the given directions,
+% either analytically (SH steering, derivative diagonal) or with fitted weights.
+function pop = localCombine(S, nCols, combine, pars, directions)
     switch lower(combine)
         case 'steer'
-            % Analytic SH steering. Valid when the columns are the derivative
-            % diagonal (10 columns in shSwts order), as produced by
-            % shRgcClassesDerivative.
             if nCols ~= 10
                 error('shModelV1LinearFromClasses:steerColumns', ...
                       'combine=''steer'' expects the 10-column derivative diagonal, got %d columns.', nCols);
             end
-            pop = S * shSwts(pars.v1PopulationDirections)';
+            pop = S * shSwts(directions)';
         case 'weights'
             if ~isfield(pars.rgc, 'v1Weights') || isempty(pars.rgc.v1Weights)
                 error('shModelV1LinearFromClasses:noWeights', ...
@@ -58,10 +73,11 @@ function [pop, ind, S] = shModelV1LinearFromClasses(M, pars)
                 error('shModelV1LinearFromClasses:weightShape', ...
                       'pars.rgc.v1Weights has %d columns but the class basis has %d.', size(W, 2), nCols);
             end
+            % Fitted weights are tied to pars.v1PopulationDirections; resdirs are
+            % not independently steerable here, so this returns the fitted
+            % population responses (matches the legacy fourPop resdirs behavior).
             pop = S * W';
         otherwise
             error('pars.rgc.combine must be ''steer'' or ''weights''.');
     end
-    pop = pop * pars.scaleFactors.v1Linear;
-
 end

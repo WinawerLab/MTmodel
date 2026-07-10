@@ -215,13 +215,26 @@ viewer (`shV1Rf` / `shShowV1Rf`, class-agnostic — the two-view viz in
   ceiling (~0.69), finite. As expected, the quadrature aids DS but cannot recover
   the missing high-TF orders, so legacy reconstruction still caps ~0.7. Existing
   dispatch remains unchanged.
-- **Increment 3 — TODO.** Switch `shModelV1Linear`'s dispatch to the class path,
-  make `pars.rgc.mode` presets set `pars.rgc.classes`, retire the twin forwards,
-  and generalize the RF viewer to read `pars.rgc.classes`. Also (separate from
-  fitting to legacy): measure *intrinsic* DS of the biological front-end by wiring
-  V1 neurons directly from ON/OFF (Chariker), not by fitting to legacy -- fitting
-  to legacy inherits legacy's DS and does not test the mechanism. Calibrate kernels/
-  offset to a frame rate and to Kling (2020).
+- **Increment 3a — DONE (2026-07-10).** Dispatch switch. `shModelV1Linear`'s
+  default derivative path now routes through `shModelV1LinearFromClasses`; `shPars`
+  populates `pars.rgc.classes` (derivative preset) + `pars.rgc.combine='steer'` so
+  the class parameterization is live. Added the 4th (`resdirs`) output to the class
+  forward. The legacy per-channel lesioning hook (`pars.rgc.derivative.channelGain`)
+  is honored by mapping it onto the classes' per-class gains in the dispatch.
+  Verified exact vs legacy incl. the `resdirs` output (err = 0); `testClassPathDerivative`
+  extended to cover it; 11/11 pass. `'fourPop'` mode still uses its old path.
+- **Increment 3b — TODO.** Generalize the RF viewer to read `pars.rgc.classes`
+  (formalize `explore/showV1RfDerivative.m` into `shV1Rf` / `shShowV1Rf`, class-
+  agnostic: RGC-referred = per-class spatial maps, stimulus-referred = combined
+  with each class's temporal kernel).
+- **Increment 3c — TODO.** Retire the twin forwards
+  (`shModelV1LinearFromRgcDerivative`, and eventually `shModelV1LinearFromRgc`);
+  migrate `'fourPop'` to a class preset (`shRgcClassesFourPop`) with its dependent
+  tooling (calibration, impairment maps, lagged channels).
+- **Increment 3d — TODO.** Measure *intrinsic* DS of the biological front-end by
+  wiring V1 neurons directly from ON/OFF (Chariker), not by fitting to legacy --
+  fitting to legacy inherits legacy's DS and does not test the mechanism. Calibrate
+  kernels/offset to a frame rate and to Kling (2020).
 
 **(1) Prototype the ON/OFF DS mechanism — DONE (2026-07-10).** See §2.7 and
 `explore/prototypeOnOffDelayDS.m`. Conclusion: a pure delay → narrowband (high-TF)

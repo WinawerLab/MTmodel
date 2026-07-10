@@ -23,7 +23,24 @@ if isfield(pars, 'rgc') && isfield(pars.rgc, 'enabled') && pars.rgc.enabled == 1
     end
     switch lower(mode)
         case 'derivative'
-            rgcFun = @shModelV1LinearFromRgcDerivative;
+            % Route the default derivative path through the unified class-based
+            % forward (shModelV1LinearFromClasses). Ensure the derivative-preset
+            % classes are present; building them here keeps behavior identical
+            % for callers that set pars.rgc.enabled/mode without shPars.
+            if ~isfield(pars.rgc, 'classes') || isempty(pars.rgc.classes)
+                pars.rgc.classes = shRgcClassesDerivative(pars);
+                pars.rgc.combine = 'steer';
+            end
+            % Honor the legacy per-channel lesioning hook
+            % (pars.rgc.derivative.channelGain) by mapping it onto the derivative
+            % classes' per-class gains. Class k corresponds to channelGain(k).
+            if isfield(pars.rgc, 'derivative') && isfield(pars.rgc.derivative, 'channelGain')
+                cg = pars.rgc.derivative.channelGain;
+                for k = 1:min(numel(pars.rgc.classes), numel(cg))
+                    pars.rgc.classes(k).gain = pars.rgc.classes(k).gain * cg(k);
+                end
+            end
+            rgcFun = @shModelV1LinearFromClasses;
         case 'fourpop'
             rgcFun = @shModelV1LinearFromRgc;
         otherwise

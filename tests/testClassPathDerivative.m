@@ -32,6 +32,14 @@ for i = 1:numel(stims)
     eLeg = max(abs(popCls(:) - popLeg(:)));
     shAssert(eDer < 1e-10, sprintf('class path vs derivative path too far: %.3e (stim %d)', eDer, i));
     shAssert(eLeg < 1e-10, sprintf('class path vs legacy too far: %.3e (stim %d)', eLeg, i));
+
+    % 4th output (resdirs / additional neurons) must also match legacy exactly,
+    % since shModel uses it for the v1lin stage with additional neurons.
+    resdirs = [0.3 0.4; 1.2 0.25; 2.5 0.3];
+    [~, ~, ~, resCls] = shModelV1Linear(s, pars, resdirs);      % now the class path
+    [~, ~, ~, resLeg] = shModelV1Linear(s, parsLeg, resdirs);
+    shAssert(max(abs(resCls(:) - resLeg(:))) < 1e-10, ...
+        sprintf('class-path resdirs output must match legacy (stim %d)', i));
 end
 
 % 'steer' must reject a non-diagonal (non-10-column) class basis.
