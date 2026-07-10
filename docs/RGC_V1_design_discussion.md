@@ -1,6 +1,6 @@
 # RGC → V1: Design Discussion (narrative)
 
-Date: 2026-07-08. Participants: J. Winawer + Claude (Opus 4.8).
+Date: 2026-07-10. Participants: J. Winawer + Claude (Opus 4.8).
 
 This is a **narrative record of the design conversation** — the questions asked,
 the reasoning, the wrong turns and corrections, and the literature that shaped

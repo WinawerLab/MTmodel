@@ -1,6 +1,6 @@
 # RGC → V1 Unification: Design Notes & Handoff
 
-Last updated: 2026-07-08 (session with J. Winawer)
+Last updated: 2026-07-10 (session with J. Winawer)
 
 This document is a **self-contained handoff**. If you are a fresh agent picking
 this up (e.g. on the laptop after a `git pull`), read this top-to-bottom before
@@ -186,7 +186,28 @@ step (analytic for the derivative preset, fit otherwise), **one** RF extractor +
 viewer (`shV1Rf` / `shShowV1Rf`, class-agnostic — the two-view viz in
 `explore/showV1RfDerivative.m`).
 
-**(1) Prototype the ON/OFF DS mechanism — DONE (2026-07-08).** See §2.7 and
+**Refactor progress (incremental, keeping the oracle green):**
+
+- **Increment 1 — DONE (2026-07-10).** Schema + generic forward for the
+  derivative preset. New files: `pars/shRgcClass.m` (class constructor),
+  `pars/shRgcClassesDerivative.m` (derivative preset), and
+  `model/innerworkings/shModelV1LinearFromClasses.m` (the single class-based
+  forward; `combine='steer'` for analytic SH steering, `combine='weights'` for a
+  fitted matrix). Verified to reproduce the existing derivative path *and* legacy
+  **exactly (err = 0)** — see `explore/verifyClassPathDerivative.m` and the new
+  `tests/testClassPathDerivative.m` (now in `runAllTests`, 10/10 pass). Nothing in
+  the existing dispatch was changed, so the default path is untouched.
+- **Increment 2 — TODO.** Biological presets. Implement `localClassChannel`'s
+  spatial-RF (DoG) + rectification (ON/OFF half-wave) branches (currently they
+  error as explicit TODOs), add `shRgcClassesMidgetParasol` with the ON/OFF
+  causal *quadrature* kernel pair (per §2.7) and the ON/OFF `readoutOffset`, and
+  wire `combine='weights'` to a fit. Then reproduce/replace the fourPop path and
+  measure DS vs TF through the real model.
+- **Increment 3 — TODO.** Switch `shModelV1Linear`'s dispatch to the class path,
+  make `pars.rgc.mode` presets set `pars.rgc.classes`, retire the twin forwards,
+  and generalize the RF viewer to read `pars.rgc.classes`.
+
+**(1) Prototype the ON/OFF DS mechanism — DONE (2026-07-10).** See §2.7 and
 `explore/prototypeOnOffDelayDS.m`. Conclusion: a pure delay → narrowband (high-TF)
 DS; a constant-phase (quadrature) ON/OFF kernel difference → broadband DS. Both
 the temporal difference and the spatial offset are required. Remaining refinement

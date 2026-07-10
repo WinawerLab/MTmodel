@@ -2,7 +2,7 @@
 
 Last updated: 2026-07-02
 
-> **2026-07-08 — NEW DIRECTION (read first):** see
+> **2026-07-10 — NEW DIRECTION (read first):** see
 > [`docs/RGC_V1_unification_plan.md`](docs/RGC_V1_unification_plan.md). We decided
 > to **unify** `derivative` and `fourPop` into one class-based implementation
 > (they are the same machinery with different RGC-class parameters — validated),

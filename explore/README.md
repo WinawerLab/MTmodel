@@ -1,7 +1,7 @@
 # explore/
 
 Validated exploratory scripts from the RGC→V1 unification work
-(2026-07-08). Rough but self-contained: each adds the repo to the path from
+(2026-07-10). Rough but self-contained: each adds the repo to the path from
 its own location and shows figures directly. See
 `../docs/RGC_V1_unification_plan.md` for the full narrative and next steps.
 
