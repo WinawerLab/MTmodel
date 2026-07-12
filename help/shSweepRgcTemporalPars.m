@@ -139,7 +139,7 @@ function W = localFitWeights(parsRgc, stimSet, legTargetStack)
     nNeurons = size(parsRgc.v1PopulationDirections, 1);
     SStack = [];
     for i = 1:length(stimSet)
-        [~, ~, S] = shModelV1LinearFromRgc(stimSet{i}, parsRgc);
+        S = shClassV1Basis(stimSet{i}, parsRgc);
         SStack = [SStack; S]; %#ok<AGROW>
     end
     nWeights = size(SStack, 2);
@@ -164,6 +164,9 @@ function parsRgc = localApplyPars(pars, f1, s1, sw, sweepPars)
     parsRgc.rgc.temporal.slowWeight = sw;
     parsRgc.rgc.temporal.slowLag    = sweepPars.slowLag;
     parsRgc.rgc.v1Weights           = [];
+    parsRgc.rgc.classes             = shRgcClassesFourPop(parsRgc);
+    parsRgc.rgc.combine             = 'weights';
+    parsRgc.rgc.classesMode         = 'fourpop';
 end
 
 function stimSet = localCalibrationStimuli(pars, stimulus)

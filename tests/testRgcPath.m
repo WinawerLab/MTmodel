@@ -75,7 +75,9 @@ shAssert(isfield(outLag.channels, 'offSlowLag'), 'lagged RGC: offSlowLag missing
 
 % --- Full V1 run with RGC enabled (fourPop mode) completes without error ---
 parsFourPopFit = parsFourPop;
-parsFourPopFit.rgc.v1Weights = shFitRgcV1Weights(parsFourPopFit, {stimFull});
+parsFourPopFit.rgc.classes = shRgcClassesFourPop(parsFourPopFit);
+parsFourPopFit.rgc.combine = 'weights';
+parsFourPopFit.rgc.v1Weights = shFitClassV1Weights(parsFourPopFit, {stimFull});
 [popFourPop, indFourPop] = shModel(stimFull, parsFourPopFit, 'v1Complex');
 shAssert(~isempty(popFourPop),           'V1 run with RGC (fourPop): pop must be non-empty');
 shAssert(all(isfinite(popFourPop(:))),   'V1 run with RGC (fourPop): pop must be finite');

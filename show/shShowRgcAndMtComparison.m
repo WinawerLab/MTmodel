@@ -96,7 +96,10 @@ function parsRgc = localEnsureRgcV1Weights(parsRgc, stimulus)
     end
 
     stimSet = localCalibrationStimuli(parsRgc, stimulus);
-    parsRgc.rgc.v1Weights = shFitRgcV1Weights(parsRgc, stimSet);
+    parsRgc.rgc.classes = shRgcClassesFourPop(parsRgc);
+    parsRgc.rgc.combine = 'weights';
+    parsRgc.rgc.classesMode = 'fourpop';
+    parsRgc.rgc.v1Weights = shFitClassV1Weights(parsRgc, stimSet);
 
 end
 

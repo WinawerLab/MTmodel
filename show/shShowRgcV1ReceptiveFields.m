@@ -179,7 +179,10 @@ function pars = localPreparePars(pars, fitWeights)
 
     dims = shGetDims(pars, 'v1Complex', [1 1 18]);
     stimSet = {mkDots(dims, 0, 1.0, 0.12, 1.0), mkSin(dims, 0, 1.0, 0.12, 1)};
-    pars.rgc.v1Weights = shFitRgcV1Weights(pars, stimSet);
+    pars.rgc.classes = shRgcClassesFourPop(pars);
+    pars.rgc.combine = 'weights';
+    pars.rgc.classesMode = 'fourpop';
+    pars.rgc.v1Weights = shFitClassV1Weights(pars, stimSet);
 
 end
 
@@ -278,11 +281,16 @@ function info = localV1BasisInfo(pars)
     info.temporalProfile = zeros(fsz, 10);
     info.basisLabels = cell(1, 10);
 
+    % Column order matches shClassV1Basis's default readoutOrders = [0 1 2 3]
+    % (spatial order s ascending, xorder ascending within s) -- the basis used
+    % by the class-path fitter (shFitClassV1Weights), not the legacy
+    % shModelV1LinearFromRgc order (temporal order outer, s descending).
     n = 1;
-    for torder = 0:3
+    for s = 0:3
+        torder = 3 - s;
         tf = flipud(pars.v1TemporalFilters(:, torder + 1));
-        for xorder = 0:(3 - torder)
-            yorder = 3 - torder - xorder;
+        for xorder = 0:s
+            yorder = s - xorder;
             info.temporalProfile(:, n) = tf;
             info.basisLabels{n} = sprintf('t%d x%d y%d', torder, xorder, yorder);
             info.spatialOrderPerBasis(n) = xorder + yorder;

@@ -1,6 +1,6 @@
 # RGC → V1 Unification: Design Notes & Handoff
 
-Last updated: 2026-07-10 (session with J. Winawer)
+Last updated: 2026-07-12 (session with J. Winawer)
 
 > **This is the authoritative "current state + next steps" document for the RGC
 > front-end work.** Start at `AGENTS.md` (repo root), then read this. For the
@@ -231,20 +231,58 @@ viewer (`shV1Rf` / `shShowV1Rf`, class-agnostic — the two-view viz in
   the model to ~6e-16; biological preset renders per-class maps + distinct ON/OFF
   quadrature kernels. `tests/testV1Rf.m` added; 12/12 pass.
   (`explore/showV1RfDerivative.m` is now superseded by these.)
-- **Increment 3c — IN PROGRESS.**
-  - **DONE (2026-07-10): optic-neuritis impairment on the class path** (the
-    goal-relevant part). Impairment logic (spatial amplitude deficit + integer-
-    frame delay) was extracted to the shared
-    `model/innerworkings/shApplyRgcImpairment.m`, used by both `shClassV1Basis`
-    (class path) and `shModelRgc` (fourPop) so they stay consistent.
-    `shClassV1Basis` applies it to each class channel. Verified: a uniform 0.5
-    amplitude map scales the linear V1 response by exactly 0.5; localized/delay
-    deficits change the output and stay finite; non-integer delay errors.
-    `tests/testImpairment.m` added; 13/13 pass.
-  - **TODO:** retire the twin forwards (`shModelV1LinearFromRgcDerivative`, and
-    eventually `shModelV1LinearFromRgc`); migrate `'fourPop'` to a class preset
-    (`shRgcClassesFourPop`) with its remaining tooling (calibration, lagged
-    channels).
+- **Increment 3c — DONE (2026-07-12).**
+  - **(2026-07-10) optic-neuritis impairment on the class path.** Impairment
+    logic (spatial amplitude deficit + integer-frame delay) was extracted to
+    the shared `model/innerworkings/shApplyRgcImpairment.m`, used by both
+    `shClassV1Basis` (class path) and `shModelRgc` (fourPop) so they stay
+    consistent. `shClassV1Basis` applies it to each class channel. Verified: a
+    uniform 0.5 amplitude map scales the linear V1 response by exactly 0.5;
+    localized/delay deficits change the output and stay finite; non-integer
+    delay errors. `tests/testImpairment.m` added; 13/13 pass.
+  - **(2026-07-12) `'fourPop'` migrated to a class preset.** New
+    `pars/shRgcClassesFourPop.m` builds the 4 base classes (onFast/offFast/
+    onSlow/offSlow, DoG spatial RF + causal bi-gamma temporal kernel) plus
+    optional lag classes (`onFastLag`/etc., built as the same class with a
+    zero-padded kernel -- a post-hoc D-frame delay of a causally-filtered
+    channel is algebraically identical to convolving with the kernel preceded
+    by D zero taps) whenever `pars.rgc.temporal.fastLag`/`slowLag` > 0. Only
+    `pars.rgc.onOffSignSplit = 'contrast'` and `pars.rgc.temporal.mode =
+    'causal'` are supported (the only settings exercised elsewhere). Verified
+    to reproduce the legacy fourPop feature basis (`shModelV1LinearFromRgc` /
+    `shModelRgc`) **exactly (err = 0)**, including lagged channels, once
+    columns are permuted for the two paths' different (but equivalent)
+    read-out block ordering -- see `explore/verifyClassPathFourPop.m` and
+    `tests/testClassPathFourPop.m` (now in `runAllTests`, 14/14 pass).
+    `shModelV1Linear`'s `'fourpop'` dispatch now routes through
+    `shModelV1LinearFromClasses` (mirroring `'derivative'`); a new
+    `pars.rgc.classesMode` field records which preset built `pars.rgc.classes`
+    so switching `pars.rgc.mode` on an already-built `pars` rebuilds the right
+    preset instead of silently reusing stale classes from the other mode.
+    `pars/shPars.m` now fits fourPop's `v1Weights` via `shFitClassV1Weights`
+    (not `shFitRgcV1Weights`). All dependent tooling migrated to the class
+    path: `help/shCalibrateRgcLayer.m`, `help/shSweepRgcTemporalPars.m`,
+    `help/shTestRgcV1Corr.m`, `show/shShowRgcAndV1Comparison.m`,
+    `show/shShowRgcAndMtComparison.m`, `show/shShowRgcV1ReceptiveFields.m`
+    (including fixing its basis-column-label mapping to the class path's
+    ascending spatial-order convention). **Behavior change:** the class
+    path's `combine='weights'` has no default (unfitted) fallback -- unlike
+    legacy `shModelV1LinearFromRgc`, which applied `shRgcV1Weights` to the
+    first 4 channels when `v1Weights` was empty. fourPop mode now always
+    requires a fit; `tests/testRgcVsLegacyCorr.m` and
+    `help/shTestRgcV1Corr.m` were updated to expect an error instead of a
+    silent fallback.
+  - **Twin forwards retired.** `shModelV1LinearFromRgcDerivative` (already
+    dead -- no dispatcher used it) is deleted; `explore/unifyDerivativeVsFourPop.m`
+    updated to drop its cross-check (superseded by `testClassPathDerivative`'s
+    exact err=0 guardrail). `help/shFitRgcV1Weights.m` is deleted (no callers
+    remained after the tooling migration). `model/innerworkings/shModelV1LinearFromRgc.m`
+    is **kept, but retired from the live dispatch** -- it is now only the
+    independent reference oracle for `tests/testClassPathFourPop.m`'s exact-
+    equivalence guardrail (analogous to how the legacy no-RGC path is kept as
+    the oracle for the derivative preset). `model/innerworkings/shModelRgc.m`
+    (raw fourPop channel builder) is unchanged and still used directly by a
+    few `show/` scripts for channel visualization.
 - **Increment 3d — TODO.** Measure *intrinsic* DS of the biological front-end by
   wiring V1 neurons directly from ON/OFF (Chariker), not by fitting to legacy --
   fitting to legacy inherits legacy's DS and does not test the mechanism. Calibrate

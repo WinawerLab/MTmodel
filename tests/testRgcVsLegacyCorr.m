@@ -10,20 +10,32 @@ stim = mkDots(dims, 0, 1.0, 0.12, 1.0);
 % fitted-weight correlation ceiling of that mode. The default mode
 % ('derivative') is covered separately by testRgcDerivativeVsLegacy, which
 % expects near-exact (not just > 0.7) reconstruction.
+%
+% On the unified class path, combine='weights' has no default fallback (the
+% legacy shModelV1LinearFromRgc's default shRgcV1Weights combination for the
+% first 4 channels is gone) -- fourPop mode always needs a fit.
 parsNo  = pars; parsNo.rgc.enabled  = 0;
 parsRgc = pars; parsRgc.rgc.enabled = 1; parsRgc.rgc.mode = 'fourPop'; parsRgc.rgc.v1Weights = [];
 
 [v1Legacy, ~] = shModel(stim, parsNo,  'v1Complex');
-[v1Rgc,    ~] = shModel(stim, parsRgc, 'v1Complex');
 
-% Both paths must produce finite, non-identical outputs
-shAssert(all(isfinite(v1Rgc(:))),   'RGC path: V1 output must be finite');
-shAssert(any(v1Rgc(:) ~= v1Legacy(:)), 'RGC path: output must differ from legacy (not a no-op)');
+% Unfitted weights must error, not silently fall back.
+threw = false;
+try
+    shModel(stim, parsRgc, 'v1Complex');
+catch
+    threw = true;
+end
+shAssert(threw, 'fourPop mode: combine=weights must error before weights are fit');
 
 % Fitted weights should improve correlation to > 0.7
 stimSet = localBuildStimSet(stim, dims);
-parsRgc.rgc.v1Weights = shFitRgcV1Weights(parsRgc, stimSet);
+parsRgc.rgc.classes = shRgcClassesFourPop(parsRgc);
+parsRgc.rgc.combine = 'weights';
+parsRgc.rgc.v1Weights = shFitClassV1Weights(parsRgc, stimSet);
 [v1Fitted, ~] = shModel(stim, parsRgc, 'v1Complex');
+shAssert(all(isfinite(v1Fitted(:))),   'RGC path: fitted V1 output must be finite');
+shAssert(any(v1Fitted(:) ~= v1Legacy(:)), 'RGC path: fitted output must differ from legacy (not a no-op)');
 r2 = corrcoef(v1Legacy(:), v1Fitted(:));
 corrFitted = r2(1, 2);
 shAssert(corrFitted > 0.7, ...

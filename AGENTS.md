@@ -1,6 +1,6 @@
 # MTmodel — Agent Guide (START HERE)
 
-Last updated: 2026-07-10
+Last updated: 2026-07-12
 
 This is the entry point for any agent (or person) picking up work on this repo.
 Read it first, then follow the reading order below.
@@ -26,22 +26,28 @@ legacy behavior. The legacy (RGC-disabled) path is the machine-precision oracle.
 4. **README** — base-toolbox usage (install, `tut/shTutorial1.m`, references).
    **literature/** — the papers the design is grounded in.
 
-## Current status (2026-07-10) — summary; see the plan doc for detail
+## Current status (2026-07-12) — summary; see the plan doc for detail
 
-- The RGC layer is enabled by default (`pars.rgc.enabled = 1`). Two legacy modes
-  exist (`pars.rgc.mode = 'derivative'` and `'fourPop'`); they are being **unified
-  into one class-based path** driven by `pars.rgc.classes`
-  (`shModelV1LinearFromClasses` / `shClassV1Basis`).
-- **Increments 1–3b done:** the derivative preset (`shRgcClassesDerivative`)
+- The RGC layer is enabled by default (`pars.rgc.enabled = 1`). Both legacy modes
+  (`pars.rgc.mode = 'derivative'` and `'fourPop'`) are now **unified onto one
+  class-based path** driven by `pars.rgc.classes`
+  (`shModelV1LinearFromClasses` / `shClassV1Basis`); `mode` just selects which
+  preset + combine strategy `shModelV1Linear`'s dispatch builds.
+- **Increments 1–3c done:** the derivative preset (`shRgcClassesDerivative`)
   reproduces legacy exactly (err = 0 at `nScales = 1`); the biological
   midget/parasol preset (`shRgcClassesMidgetParasol`, ON/OFF quadrature + spatial
-  offset) fits legacy V1 to ~0.70; the **default derivative path now runs through
-  the class forward** (`shPars` populates `pars.rgc.classes`); and a class-agnostic
-  RF viewer (`shV1Rf` / `shShowV1Rf`) is in place. `tests/runAllTests.m` is 12/12.
-- **Next: Increment 3c/3d** — retire the twin forwards and migrate `'fourPop'`
-  (with its impairment / calibration tooling) to a class preset; measure the
-  front-end's *intrinsic* DS (wire V1 from ON/OFF directly, not by fitting to
-  legacy); calibrate to a frame rate and Kling (2020). (See the plan doc.)
+  offset) fits legacy V1 to ~0.70; a class-agnostic RF viewer (`shV1Rf` /
+  `shShowV1Rf`) is in place; optic-neuritis impairment
+  (`shApplyRgcImpairment`) is shared by both presets; and `'fourPop'` now
+  routes through a class preset (`shRgcClassesFourPop`), reproducing the old
+  fourPop feature basis exactly (err = 0, incl. lagged channels). The old
+  twin forwards are gone: `shModelV1LinearFromRgcDerivative` and
+  `help/shFitRgcV1Weights.m` are deleted; `shModelV1LinearFromRgc` is retired
+  from the live dispatch and kept only as the fourPop regression oracle.
+  `tests/runAllTests.m` is 14/14.
+- **Next: Increment 3d** — measure the front-end's *intrinsic* DS (wire V1
+  from ON/OFF directly, not by fitting to legacy); calibrate to a frame rate
+  and Kling (2020). (See the plan doc.)
 
 ## Running the model & tests
 
@@ -50,7 +56,7 @@ addpath(genpath('PATHNAME-OF-MTmodel'));
 pars = shPars;                         % RGC on, mode 'derivative' (exact)
 [pop, ind] = shModel(stim, pars, 'v1Complex');
 pars.rgc.enabled = 0;                  % legacy (no-RGC) oracle
-run tests/runAllTests.m                % must stay green (currently 11/11)
+run tests/runAllTests.m                % must stay green (currently 14/14)
 ```
 
 ## Conventions for agents

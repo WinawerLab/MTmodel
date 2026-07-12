@@ -9,13 +9,16 @@ parsNo = pars; parsNo.rgc.enabled = 0;
 parsFour = pars; parsFour.rgc.enabled = 1; parsFour.rgc.mode = 'fourPop'; parsFour.rgc.v1Weights = [];
 
 [v1n, ~] = shModel(stim, parsNo, 'v1Complex');
-[v1a, ~] = shModel(stim, parsFour, 'v1Complex');
-fprintf('analytical channel weights: %.4f\n', localCorr(v1a(:), v1n(:)));
 
+% On the unified class path, combine='weights' has no default (unfitted)
+% combination -- fourPop mode always needs a fit.
 stimSet = localBuildStimSet(stim);
-parsFour.rgc.v1Weights = shFitRgcV1Weights(parsFour, stimSet);
+parsFour.rgc.classes = shRgcClassesFourPop(parsFour);
+parsFour.rgc.combine = 'weights';
+parsFour.rgc.classesMode = 'fourpop';
+parsFour.rgc.v1Weights = shFitClassV1Weights(parsFour, stimSet);
 [v1f, ~] = shModel(stim, parsFour, 'v1Complex');
-fprintf('fitted 16-basis spatial weights: %.4f\n', localCorr(v1f(:), v1n(:)));
+fprintf('fitted 40-basis class weights: %.4f\n', localCorr(v1f(:), v1n(:)));
 
 cal = shCalibrateRgcLayer(40, parsFour);
 parsFour.rgc = cal.bestRgcPars;

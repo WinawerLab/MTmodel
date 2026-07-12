@@ -124,7 +124,10 @@ end
 
 function pars = localFinalizeRgcPars(pars, stimSet)
 
-    pars.rgc.v1Weights = shFitRgcV1Weights(pars, stimSet);
+    pars.rgc.classes = shRgcClassesFourPop(pars);
+    pars.rgc.combine = 'weights';
+    pars.rgc.classesMode = 'fourpop';
+    pars.rgc.v1Weights = shFitClassV1Weights(pars, stimSet);
 
 end
 

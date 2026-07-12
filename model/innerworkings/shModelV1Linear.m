@@ -26,10 +26,17 @@ if isfield(pars, 'rgc') && isfield(pars.rgc, 'enabled') && pars.rgc.enabled == 1
             % Route the default derivative path through the unified class-based
             % forward (shModelV1LinearFromClasses). Ensure the derivative-preset
             % classes are present; building them here keeps behavior identical
-            % for callers that set pars.rgc.enabled/mode without shPars.
-            if ~isfield(pars.rgc, 'classes') || isempty(pars.rgc.classes)
+            % for callers that set pars.rgc.enabled/mode without shPars. classesMode
+            % records which preset built pars.rgc.classes, so switching pars.rgc.mode
+            % on an already-built pars rebuilds the right preset instead of silently
+            % reusing stale classes from the other mode; a caller who sets custom
+            % classes without touching classesMode keeps them (matches how shPars
+            % leaves classesMode == mode).
+            if ~isfield(pars.rgc, 'classes') || isempty(pars.rgc.classes) ...
+                    || ~isfield(pars.rgc, 'classesMode') || ~strcmpi(pars.rgc.classesMode, 'derivative')
                 pars.rgc.classes = shRgcClassesDerivative(pars);
                 pars.rgc.combine = 'steer';
+                pars.rgc.classesMode = 'derivative';
             end
             % Honor the legacy per-channel lesioning hook
             % (pars.rgc.derivative.channelGain) by mapping it onto the derivative
@@ -42,7 +49,15 @@ if isfield(pars, 'rgc') && isfield(pars.rgc, 'enabled') && pars.rgc.enabled == 1
             end
             rgcFun = @shModelV1LinearFromClasses;
         case 'fourpop'
-            rgcFun = @shModelV1LinearFromRgc;
+            % Route fourPop through the unified class-based forward too (see
+            % classesMode note above).
+            if ~isfield(pars.rgc, 'classes') || isempty(pars.rgc.classes) ...
+                    || ~isfield(pars.rgc, 'classesMode') || ~strcmpi(pars.rgc.classesMode, 'fourpop')
+                pars.rgc.classes = shRgcClassesFourPop(pars);
+                pars.rgc.combine = 'weights';
+                pars.rgc.classesMode = 'fourpop';
+            end
+            rgcFun = @shModelV1LinearFromClasses;
         otherwise
             error('pars.rgc.mode must be ''derivative'' or ''fourPop''.');
     end

@@ -15,7 +15,7 @@
 %
 % shTutorial1               Overview of the software, generating tuning curves, etc.
 % shCalibrateRgcLayer       Optimize RGC temporal parameters to match legacy V1/MT responses
-% shFitRgcV1Weights         Ridge regression to fit per-neuron RGC-to-V1 projection weights
+% shFitClassV1Weights       Ridge regression to fit per-neuron RGC-class-to-V1 projection weights
 % shRunRgcPlan              Execution workflow for the RGC calibration pipeline
 % shSweepRgcTemporalPars    Grid search over RGC temporal parameters
 % shTestRgcV1Corr           Regression test comparing legacy vs. RGC V1 paths

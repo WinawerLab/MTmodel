@@ -6,9 +6,11 @@
 % classes. Evaluates correlation vs the legacy (RGC-disabled) model on a
 % held-out stimulus set.
 %
-% Expected: derivative classes -> ~0.9999 (1.0 modulo ridge), fourPop -> ~0.69,
-% and the derivative 40-feature projection contains the exact 10-column
-% structured basis (cross-check err = 0). See docs/RGC_V1_unification_plan.md §2.2.
+% Expected: derivative classes -> ~0.9999 (1.0 modulo ridge), fourPop -> ~0.69.
+% See docs/RGC_V1_unification_plan.md §2.2. (This script predates the
+% pars.rgc.classes refactor; the cross-check against the now-retired
+% shModelV1LinearFromRgcDerivative was dropped -- testClassPathDerivative.m
+% is the current, exact err=0 guardrail for that equivalence.)
 %
 % Self-locating.
 
@@ -34,15 +36,6 @@ testSet  = { mkDots(dims,pi/4,0.9,0.12,1), mkGr(pi/6,1.3,1), mkGr(2*pi/3,0.9,1),
 SF = pars.v1SpatialFilters; fsz = size(SF,1); order = 3;
 buildS = @(chStruct) localBuildS(chStruct, @(mv) localProj(mv,SF,fsz,order));
 
-% cross-check: derivative 40-feature S contains the exact 10-col structured basis
-s0 = trainSet{1};
-Sder40 = buildS(shModelRgcDerivative(s0, parsDer).channels);
-[~,~,Sstruct10] = shModelV1LinearFromRgcDerivative(s0, parsDer);
-[tC,~,~] = localComboOrders(order);
-sel = arrayfun(@(n) tC(n)*10 + n, 1:10);
-fprintf('cross-check (derivative 40-feat contains exact 10-col basis): max err = %.3e\n', ...
-        max(abs(Sder40(:,sel) - Sstruct10), [], 'all'));
-
 resDer = localFitEval(trainSet, testSet, parsLeg, scale, @(s) buildS(shModelRgcDerivative(s,parsDer).channels));
 resFP  = localFitEval(trainSet, testSet, parsLeg, scale, @(s) buildS(shModelRgc(s,parsFP).channels));
 
@@ -52,14 +45,6 @@ fprintf('fourPop    classes -> corr = %.6f  NRMSE = %.6f  (nFeat=%d)\n', resFP.c
 fprintf('==================================================\n');
 
 % ---- local functions ----
-function [tC,xC,yC] = localComboOrders(order)
-    tC=[];xC=[];yC=[];
-    for torder=0:order
-        for xorder=0:(order-torder)
-            tC(end+1)=torder; xC(end+1)=xorder; yC(end+1)=order-torder-xorder; %#ok<AGROW>
-        end
-    end
-end
 function S = localProj(movie, SF, fsz, order)
     movie = movie(:,:,fsz:end);
     n=1; S=[];
