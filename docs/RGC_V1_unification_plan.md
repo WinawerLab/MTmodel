@@ -231,10 +231,20 @@ viewer (`shV1Rf` / `shShowV1Rf`, class-agnostic — the two-view viz in
   the model to ~6e-16; biological preset renders per-class maps + distinct ON/OFF
   quadrature kernels. `tests/testV1Rf.m` added; 12/12 pass.
   (`explore/showV1RfDerivative.m` is now superseded by these.)
-- **Increment 3c — TODO.** Retire the twin forwards
-  (`shModelV1LinearFromRgcDerivative`, and eventually `shModelV1LinearFromRgc`);
-  migrate `'fourPop'` to a class preset (`shRgcClassesFourPop`) with its dependent
-  tooling (calibration, impairment maps, lagged channels).
+- **Increment 3c — IN PROGRESS.**
+  - **DONE (2026-07-10): optic-neuritis impairment on the class path** (the
+    goal-relevant part). Impairment logic (spatial amplitude deficit + integer-
+    frame delay) was extracted to the shared
+    `model/innerworkings/shApplyRgcImpairment.m`, used by both `shClassV1Basis`
+    (class path) and `shModelRgc` (fourPop) so they stay consistent.
+    `shClassV1Basis` applies it to each class channel. Verified: a uniform 0.5
+    amplitude map scales the linear V1 response by exactly 0.5; localized/delay
+    deficits change the output and stay finite; non-integer delay errors.
+    `tests/testImpairment.m` added; 13/13 pass.
+  - **TODO:** retire the twin forwards (`shModelV1LinearFromRgcDerivative`, and
+    eventually `shModelV1LinearFromRgc`); migrate `'fourPop'` to a class preset
+    (`shRgcClassesFourPop`) with its remaining tooling (calibration, lagged
+    channels).
 - **Increment 3d — TODO.** Measure *intrinsic* DS of the biological front-end by
   wiring V1 neurons directly from ON/OFF (Chariker), not by fitting to legacy --
   fitting to legacy inherits legacy's DS and does not test the mechanism. Calibrate

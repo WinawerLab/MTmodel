@@ -20,6 +20,7 @@ tests = {
     'testClassPathDerivative',
     'testClassPathBiological',
     'testV1Rf',
+    'testImpairment',
     'testGetNeuron',
     'testEdgeCases',
 };

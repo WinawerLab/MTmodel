@@ -59,9 +59,7 @@ function rgcOut = localComputeFourPopulations(stimulus, rgcPars)
 
     for i = 1:length(channelNames)
         movie = shModelRgcPopulation(stimulus, rgcPars, polarities{i}, speeds{i});
-        if isfield(rgcPars, 'impairmentEnabled') && rgcPars.impairmentEnabled == 1
-            movie = localApplyImpairment(movie, rgcPars);
-        end
+        movie = shApplyRgcImpairment(movie, rgcPars);   % shared with the class path
         rgcOut.channels.(channelNames{i}) = movie;
     end
 
@@ -92,44 +90,9 @@ function rgcOut = localComputeFourPopulations(stimulus, rgcPars)
 
 end
 
-function out = localApplyImpairment(in, rgcPars)
-    out = in;
-
-    if isfield(rgcPars, 'impairmentAmplitudeMap') && ~isempty(rgcPars.impairmentAmplitudeMap)
-        ampMap = rgcPars.impairmentAmplitudeMap;
-        if any(size(ampMap) ~= size(in(:,:,1)))
-            error('pars.rgc.impairmentAmplitudeMap must be YxX to match stimulus frame size.');
-        end
-        out = out .* repmat(ampMap, [1 1 size(out, 3)]);
-    end
-
-    if isfield(rgcPars, 'impairmentDelayMap') && ~isempty(rgcPars.impairmentDelayMap)
-        delayMap = rgcPars.impairmentDelayMap;
-        if any(size(delayMap) ~= size(in(:,:,1)))
-            error('pars.rgc.impairmentDelayMap must be YxX to match stimulus frame size.');
-        end
-        if any(delayMap(:) ~= round(delayMap(:)))
-            error('pars.rgc.impairmentDelayMap must contain integer frame delays.');
-        end
-        out = localApplyDelayMap(out, delayMap);
-    end
-end
-
 function out = localSeparableSpatialSame(in, filt)
     out = convn(in, reshape(filt, [length(filt) 1 1]), 'same');
     out = convn(out, reshape(filt, [1 length(filt) 1]), 'same');
-end
-
-function out = localApplyDelayMap(in, delayMap)
-    out = zeros(size(in));
-    uniqueDelays = unique(delayMap(:));
-
-    for i = 1:length(uniqueDelays)
-        d = uniqueDelays(i);
-        shifted = localShiftFrames(in, d);
-        mask = repmat(delayMap == d, [1 1 size(in, 3)]);
-        out(mask) = shifted(mask);
-    end
 end
 
 function out = localShiftFrames(in, delayFrames)

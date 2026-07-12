@@ -25,6 +25,7 @@ function [S, ind, nCols] = shClassV1Basis(M, pars)
     chTrim = cell(1, nClass);
     for c = 1:nClass
         ch = localClassChannel(M, classes(c));
+        ch = shApplyRgcImpairment(ch, pars.rgc);   % optic-neuritis deficit (no-op unless enabled)
         ch = ch(:, :, fsz:end);
         off = classes(c).readoutOffset;
         if numel(off) == 2 && any(off ~= 0)
