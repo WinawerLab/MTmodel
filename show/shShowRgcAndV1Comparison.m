@@ -83,7 +83,7 @@ function report = shShowRgcAndV1Comparison(stimulus, pars, showMovies)
     midT = round(size(stimulus, 3) / 2);
     centerPatch = localCenterPatch(stimulus, rgcMovieForPlots);
 
-    figure('Name', 'RGC output overview', 'Color', 'w');
+    overviewFig = figure('Name', 'RGC output overview', 'Color', 'w');
     subplot(2, 2, 1);
     imagesc(stimulus(:, :, midT)); axis image off; colormap gray;
     title(sprintf('Input frame t=%d', midT));
@@ -106,6 +106,7 @@ function report = shShowRgcAndV1Comparison(stimulus, pars, showMovies)
         end
     end
 
+    figure(overviewFig);
     subplot(2, 2, 3);
     plot(centerPatch.inputTrace, 'k', 'LineWidth', 1.4); hold on;
     plot(centerPatch.rgcTrace, 'r', 'LineWidth', 1.4); hold off;

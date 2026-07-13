@@ -221,3 +221,179 @@ schema) are good.
 **Open TODO surfaced but not resolved:** confirm the model's intended **frame
 rate**, needed to place Chariker's 10 ms / Kling's time-to-peak on the model's
 frame axis.
+
+---
+
+# Session 2026-07-12: the reversion worry and the scope pivot
+
+Date: 2026-07-12. Participants: J. Winawer + Claude (Opus 4.8). This session
+started as a visualization pass (comparing derivative vs midget/parasol RFs) and
+turned into a re-examination of *why* we are building a biological front-end at
+all. It substantially revises the direction set in §8 above.
+
+## 9. The orientation clue and a corrected diagnosis
+
+**JW (observing the fitted midget/parasol V1 RFs):** neurons 8 and 22 are oblique
+(~45°, ~135°) in the derivative preset but come out ~vertical in midget/parasol;
+neurons 1 and 15 match better. What causes this?
+
+**Claude (first, overconfident, answer):** the ON/OFF spatial offset is fixed
+horizontal (`readoutOffset = [0 ±2]`, same for every neuron and never rotated), so
+it can only manufacture one orientation of DS and biases oblique neurons toward
+vertical.
+
+**The control experiment (`explore/probeOffsetOrientation.m`) refuted the clean
+version of that story.** Refitting with the offset along X, along Y, and removed
+entirely, and measuring RF orientation (structure tensor) against the derivative
+preset as ground truth:
+
+| neuron | derivative (truth) | offset-X (current) | offset-Y | offset-none |
+|---|---|---|---|---|
+| 1  | 133° | 131° | 140° | 134° |
+| 8  | 123° | 100° | 107° | 117° |
+| 15 | 133° | 126° | 113° | 125° |
+| 22 |  57° |  89° | 109° |  67° |
+| **mean \|err\| vs truth** | — | **16°** | **24°** | **6°** |
+
+Corrected reading: rotating the offset does **not** cleanly rotate orientation
+(so "axis-locked to vertical" was wrong), but the fixed *translational* offset
+**does distort** orientation, and **removing it recovers orientation best** (6° vs
+16°/24°). The offset's job is DS, not orientation; it trades orientation fidelity
+for a spatial phase, and — per the F&A quote JW raised — it does so with a
+*translation* (linear-phase, frequency-dependent, orientation-distorting) instead
+of a proper steerable *quadrature* (constant-phase). Lesson recorded so we don't
+repeat the overclaim: **diagnose with the control before asserting the mechanism.**
+
+## 10. JW's two doubts
+
+**JW (1):** if we keep biologically-informed sizes (OFF smaller than ON), an
+even/odd spatial quadrature is not *pure* — one lobe is blurrier than the other.
+How much does that hurt?
+
+**Claude:** it is the exact spatial analog of §2.7's pure-delay problem: a true
+quadrature needs a shared amplitude spectrum (Hilbert only rotates phase);
+different-sized DoGs mismatch the amplitude spectrum, so DS becomes
+frequency-dependent / narrower. Clean fix: keep ON/OFF **size-matched within a
+quadrature pair** (the current preset already does — `parasolOn/Off` share
+`parasolRF`), and let the **midget-vs-parasol** size difference do the SF tiling.
+Biological ON/OFF size asymmetry is then an optional, small knob, not a
+foundation.
+
+**JW (2), the important one:** "I have a sneaking suspicion that as we go down the
+midget/parasol path we keep hitting problems like this and keep reverting closer
+to SH, until we just have the same model twice. What are the desired properties of
+a midget/parasol preset, and how do they differ from SH *without* breaking the
+SF/TF tiling MT needs?"
+
+## 11. The reversion ratchet, and its actual engine
+
+The worry is correct, and the ratchet has a specific driver: **the
+machine-precision healthy-equivalence constraint.** "Healthy must match legacy to
+~1e-16" forces the basis toward the *pure* temporal-derivative channels, because
+only those reconstruct SH exactly — and a pure derivative channel is exactly the
+thing with no biology in it. So exactness and biological honesty are in direct
+opposition:
+
+- the derivative preset hits 1e-16 **by being SH** (biological names on orders
+  0–3);
+- the midget/parasol preset stays biologically honest (real difference-of-gamma
+  kernels) but therefore caps at ~0.70.
+
+JW's "same model twice" endpoint is precisely the fixed point the exactness
+requirement pulls toward. Every local problem (impure quadrature, orientation
+distortion, TF gap) is an instance of the same pull: fix it "properly" and you
+step back toward the abstract SH channel.
+
+## 12. The escape: value lives in the *perturbation axes*, not the healthy output
+
+The reframe that dissolves the worry: **a biological front-end's value is not a
+different healthy computation — it is a different *parameterization* of (nearly)
+the same computation, along axes you can physically damage.** SH's order-0..3
+channels have no biological identity, so you cannot express "delay the parasols by
+10 ms." The biological layer supplies exactly that: identifiable populations
+(midget/parasol × ON/OFF × timing) carrying lesionable parameters (kernel
+time-to-peak, amplitude, RF size). Under this framing, **healthy midget/parasol
+converging toward SH is success, not failure** — the payoff is entirely in what
+happens when you perturb it.
+
+Two commitments create the ratchet, and **neither is required by the actual goal
+(model optic-neuritis deficits):**
+
+1. **Exact healthy equivalence on the biological path.** Not needed. Keep the
+   derivative preset as the machine-precision oracle (regression guard). Let the
+   biological path be an *approximate* baseline. Optic neuritis is studied as a
+   within-subject **delta** (affected vs fellow eye; pre vs post), so the signal
+   is the lesion-induced *change*, not the absolute healthy match. A ~0.70
+   baseline is fine if the delta is meaningful. Relaxing this removes the main
+   engine of the ratchet.
+2. **Reproducing DS via the biological ON/OFF offset/quadrature mechanism.** This
+   is the sub-goal most prone to vacuous reversion, it is actively distorting
+   orientation (§9), and it fights a battle SH wins for free via steering. Drop
+   it; let DS come from the V1 read-out as in SH. JW's Point (1) — impure
+   quadrature — then simply *evaporates*, because there is no spatial quadrature
+   to keep pure.
+
+**Why the result is then non-vacuous.** A real parasol kernel is a
+difference-of-gammas — inherently a *mixture* of SH's derivative orders, not a
+pure one. A conduction delay is a time-shift of that mixture, and a time-shift
+mixes derivative orders (the shift operator is `exp(-τ d/dt) = Σ (-τ)ⁿ/n! dⁿ/dtⁿ`).
+So "delay the parasols by 10 ms" traces a specific trajectory *across* SH's orders
+that you would never natively write down in SH (whose only obvious lesion is
+"scale order k"). The biology earns its keep in the *directions you can damage*,
+not the healthy output — provided you do **not** force the biological channels to
+become pure SH orders (which exact healthy-matching would).
+
+## 13. The decisive, falsifiable test
+
+Rather than argue, make the worry empirical: apply a biological lesion (a parasol
+conduction delay) to the midget/parasol front-end, compute the V1/MT **delta**,
+and test whether that delta is reproducible by *any* rescaling of SH's four
+channels (the only lesion SH natively exposes, via `channelGain`). If the delta
+has a large component orthogonal to the SH-rescaling space → the biological layer
+is non-vacuous and the project is justified. If it is fully reproducible by
+rescaling → JW's suspicion is confirmed and we should stop.
+
+Script: `explore/lesionDeltaTest.m`. **Result (2026-07-12): non-vacuous.** The
+test asks the sharp version — is a conduction *delay* reducible to an *amplitude*
+rescale? — by projecting each lesion's V1 delta onto the front-end's own
+amplitude-rescaling space (each biological channel's contribution).
+
+- **Positive control:** a parasol *amplitude* lesion lands in that space with
+  **R² = 1.000** (both stimulus classes) — an amplitude deficit *is* a rescale, so
+  the method correctly reports "fully reproducible."
+- **A parasol conduction delay is largely irreducible**, and — a real insight —
+  *how* irreducible depends on stimulus bandwidth. A delay only phase-shifts a
+  *narrowband* (grating) response, and a phase shift partially aliases into a
+  rescale (a half-period delay = negation = ×−1); but for a *broadband/transient*
+  (dot) stimulus a time-shift is genuinely not a rescale. At the smallest
+  (most physiological) 1-frame delay, the fraction of the delay's V1 effect that
+  **no** amplitude rescaling can reproduce is **~0.85 for dots vs ~0.71 for
+  gratings**; the gap persists across delays. (Large delays alias back toward
+  rescales, sharply so for gratings.)
+
+**Conclusion.** SH's native lesion vocabulary is amplitude-only (`channelGain`),
+so it *cannot* express a conduction delay; the biological parameterization can,
+and that delay produces a V1 change ~85% orthogonal to any amplitude rescaling in
+the broadband/transient regime — which is exactly where optic neuritis is measured
+clinically (transient-VEP P100 latency). The biological layer is **not** "SH
+twice": its value is a timing lesion axis SH does not have. This clears the §14
+scope pivot to proceed.
+
+## 14. Decisions reached this session (revise §8)
+
+1. **Demote the biological DS mechanism (ON/OFF offset/quadrature) from a goal to
+   an optional side-quest.** DS for the healthy baseline comes from the SH
+   steerable read-out. This retires the orientation-distortion and
+   quadrature-purity problems.
+2. **Drop machine-precision healthy-equivalence as a requirement for the
+   biological path.** Keep the derivative preset as the exact oracle; the
+   biological path is an approximate baseline whose job is realistic lesion
+   *deltas*, not absolute healthy match.
+3. **The primary deliverable is lesion modeling (Goal A):** a biologically
+   identifiable, lesionable channel set that (a) gives a good-enough healthy
+   baseline and (b) still tiles SF/TF for MT. The §2.4 TF-coverage gap — real
+   single RGC kernels only reach orders 0–1 — is the real remaining tension, to be
+   met either by adding timing subtypes/lagged channels (synthesize high-TF) or by
+   accepting a narrower TF range as a testable prediction (narrowed speed tuning
+   in ON patients).
+4. **Gate further midget/parasol investment on the §13 lesion-delta test.**
