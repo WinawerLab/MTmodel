@@ -446,3 +446,22 @@ Takeaways:
 (option i), not by narrowing the range. This also gives the biological path a
 route to high healthy fidelity if/when wanted, without abandoning biological
 honesty.
+
+**Confirmed in the real (nonlinear) model** — `pars/shRgcClassesMidgetParasolLagged.m`
+(biological midget/parasol, DoG RFs, ON/OFF rectification; **no offset/quadrature**
+per §14; lagged copies per §15) vs its no-lag version, held-out legacy-V1
+correlation by temporal frequency (`explore/testLaggedBiologicalFidelity.m`):
+
+| preset | mean corr | low TF (0.06) | high TF (0.20) |
+|---|---|---|---|
+| midgetParasol (offset+quadrature, original) | 0.68 | 0.59 | 0.84 |
+| lagged preset, **no lags** [0] | 0.68 | 0.69 | **0.58** |
+| lagged preset, **lags [0 1 2 3]** | **0.985** | 0.99 | 0.98 |
+
+The kernel-reconstruction prediction holds end-to-end: adding lags lifts healthy
+fidelity from ~0.68 to **~0.985, flat across TF**. The no-lag biological preset
+*declines at high TF* (0.69 → 0.58) — the §2.4 gap, live in the full model — which
+the lags remove. Two corollaries land as predicted: (a) the ~0.70 ceiling was a
+preset artifact, not a biological wall; (b) dropping the DS offset/quadrature (§14)
+did not cost fidelity — the offset-free lagged preset (0.985) far exceeds the
+offset+quadrature one (0.68), so the pivot *helped*. `runAllTests` stays 14/14.
