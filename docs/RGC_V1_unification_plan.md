@@ -184,10 +184,16 @@ spatial-offset mechanism) are **retired**. Why:
   read-out already yields for free — building it biologically fights that.
 - The real value of a biological front-end is **not a different healthy
   computation** but a biologically-identifiable, **lesionable parameterization**
-  (optic-neuritis timing/amplitude deficits). A conduction *delay* is ~85%
-  irreducible to any amplitude rescale for broadband/transient stimuli
-  (`explore/lesionDeltaTest.m`) — a lesion axis SH's amplitude-only `channelGain`
-  cannot express — so the layer is **not "SH twice."**
+  (optic-neuritis timing/amplitude deficits) — a *physically-grounded lesion model*
+  (which cells co-vary under an insult, with kernels constrained to measured
+  physiology), **not a mathematically richer lesion space** than SH. NOTE
+  (corrected 2026-07-13, design-discussion §16): the earlier claim that a
+  conduction delay is "a lesion axis SH cannot express" (from
+  `explore/lesionDeltaTest.m`) was **oversold**. That test's 85% measures
+  delay-vs-amplitude *within* the biological model; SH's basis regrouped by
+  temporal order supports the same delay lesion, and in the adopted *lagged* preset
+  a delay is ≈ a reweighting of the lag channels. A genuine biological-vs-SH
+  non-vacuousness test (exploiting the ON/OFF rectification SH lacks) is still TODO.
 - The §2.4 high-TF gap is **closed by lags**, not by exotic biology: a bank of
   mono/biphasic kernels + small lags reconstructs SH's order 0–3 basis to
   R² ≥ 0.975 (`explore/temporalTilingFromLags.m`), and in the *real* model a

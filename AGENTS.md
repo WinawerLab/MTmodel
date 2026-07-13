@@ -45,13 +45,16 @@ legacy behavior. The legacy (RGC-disabled) path is the machine-precision oracle.
   `help/shFitRgcV1Weights.m` are deleted; `shModelV1LinearFromRgc` is retired
   from the live dispatch and kept only as the fourPop regression oracle.
   `tests/runAllTests.m` is 14/14.
-- **Scope pivot (2026-07-12) — read `docs/RGC_V1_design_discussion.md` §14–15 and
-  plan doc §3.5 before continuing.** The biological direction-selectivity direction
+- **Scope pivot (2026-07-12, corrected 2026-07-13) — read
+  `docs/RGC_V1_design_discussion.md` §14–16 and plan doc §3.5 before continuing.** The biological direction-selectivity direction
   (ON/OFF spatial offset + temporal quadrature) is **retired**: the offset distorts
   orientation and fights the SH steerable read-out, which already yields DS. The
   biological front-end's value is instead a **lesionable parameterization** for
-  optic neuritis — a conduction *delay* is ~85% irreducible to any amplitude
-  rescale for broadband stimuli, so it is not "SH twice." The §2.4 high-TF gap is
+  optic neuritis — a *physically-grounded lesion model*, not a mathematically
+  richer lesion space than SH. (The earlier "conduction delay is a lesion axis SH
+  cannot express" claim was corrected 2026-07-13 as oversold — see design-discussion
+  §16; a genuine biological-vs-SH test via the ON/OFF rectification SH lacks is
+  TODO.) The §2.4 high-TF gap is
   closed by **lags**: `pars/shRgcClassesMidgetParasolLagged.m` (biological, no
   offset/quadrature, lagged copies) reaches ~0.985 legacy-V1 correlation flat
   across TF (vs ~0.70 for the offset/quadrature `shRgcClassesMidgetParasol`).

@@ -371,13 +371,16 @@ amplitude-rescaling space (each biological channel's contribution).
   gratings**; the gap persists across delays. (Large delays alias back toward
   rescales, sharply so for gratings.)
 
-**Conclusion.** SH's native lesion vocabulary is amplitude-only (`channelGain`),
-so it *cannot* express a conduction delay; the biological parameterization can,
-and that delay produces a V1 change ~85% orthogonal to any amplitude rescaling in
-the broadband/transient regime — which is exactly where optic neuritis is measured
-clinically (transient-VEP P100 latency). The biological layer is **not** "SH
-twice": its value is a timing lesion axis SH does not have. This clears the §14
-scope pivot to proceed.
+**Conclusion (2026-07-12) — OVERSOLD; corrected in §16 (2026-07-13).** The
+original claim was: "SH's native lesion vocabulary is amplitude-only
+(`channelGain`), so it cannot express a conduction delay; the biological layer is
+*not* 'SH twice' — its value is a timing lesion axis SH does not have." This
+overreached. The 85% measures *delay ≠ amplitude* **within the biological model**
+(projection onto the biological channels' own amplitude space); it does **not**
+compare biology to SH. SH's basis regrouped into 4 temporal-order classes supports
+the *same* delay lesion, and the test used the *no-lag* `shRgcClassesMidgetParasol`
+preset — in the adopted *lagged* preset a delay is ≈ a reweighting of the lag
+channels, so it is not even an independent axis from amplitude there. See §16.
 
 ## 14. Decisions reached this session (revise §8)
 
@@ -397,6 +400,9 @@ scope pivot to proceed.
    accepting a narrower TF range as a testable prediction (narrowed speed tuning
    in ON patients).
 4. **Gate further midget/parasol investment on the §13 lesion-delta test.**
+   *(2026-07-13: this gate is retracted — the §13 test does not establish
+   non-vacuousness vs SH; see §16. The scope pivot (1–3) still stands, but on the
+   narrower interpretive justification, not on §13's "timing axis SH lacks.")*
 
 ## 15. The TF-tiling tension is resolved: lags synthesize the high-TF orders
 
@@ -465,3 +471,55 @@ the lags remove. Two corollaries land as predicted: (a) the ~0.70 ceiling was a
 preset artifact, not a biological wall; (b) dropping the DS offset/quadrature (§14)
 did not cost fidelity — the offset-free lagged preset (0.985) far exceeds the
 offset+quadrature one (0.68), so the pivot *helped*. `runAllTests` stays 14/14.
+
+## 16. Correction (2026-07-13): the §13 lesion-delta result was oversold
+
+JW pushed on the §13 conclusion and found a real hole. Two independent problems,
+both of which retract the claim "the biological layer is non-vacuous *relative to
+SH* — a timing lesion axis SH lacks." (The §13 number itself is fine; its
+*interpretation* was wrong.)
+
+**What the 85% actually measures.** The test freezes the fitted V1 wiring, applies
+a parasol conduction delay (prepend D zero taps to the parasol temporal kernels),
+and projects the resulting V1 change onto the span of the biological channels' own
+amplitude-rescaling contributions. `1 − R² = 0.85` = the fraction of the delay's
+V1-change energy orthogonal to any *gain rescaling of those channels*. So it is a
+**delay-vs-amplitude** statement (two lesion *types*) computed **entirely within
+the biological model** — it never involves SH.
+
+**Problem 1 — SH supports the same delay lesion (JW's Q2).** Regroup SH's 10
+basis functions by temporal order into 4 "classes," each sharing one temporal
+kernel (the 0th–3rd derivative). Delaying one class's kernel is the *same*
+operation as delaying a biological class, and — a time-shift not being a gain
+change — is *equally* irreducible to amplitude rescaling. So the 85% does not
+distinguish the two parameterizations; "SH's only native lesion is amplitude
+(`channelGain`)" referred to the existing code hook, not a mathematical limit, and
+was misleading. Mathematically, for delay and amplitude lesions the two lesion
+spaces are essentially equivalent.
+
+**Problem 2 — the result is specific to the NO-LAG preset.** The §13 test used
+`shRgcClassesMidgetParasol` (offset+quadrature, no lags). A delay `k(t) → k(t−D)`
+in a bank that *contains lagged copies* is ≈ "move weight to the more-lagged copy"
+= a reweighting of channels already present. So in the **adopted lagged preset**
+(§15), a conduction delay is largely an amplitude reweighting of the lag channels
+— i.e. timing is not even an independent axis from amplitude there. The lags that
+buy healthy fidelity also make delays ≈ rescalings. (Not yet measured; predicted
+to substantially collapse the 85%. Worth a direct check: rerun `lesionDeltaTest`
+with `shRgcClassesMidgetParasolLagged`.)
+
+**The honest, narrower position.** The biological front-end does **not** offer a
+mathematically richer lesion space than a regrouped SH. Its value is
+**physical/interpretive**: it specifies *which* channels co-vary under a real
+insult and *by how much*, with kernels constrained to measured physiology
+(Kling) — a testable *lesion model*, not a bigger lesion space. You could delay
+"SH temporal-order 2," but there is no cell it names, no principled delay value,
+and no reason to group it so. This is close to JW's original "SH twice" suspicion:
+the distinction is scientific, not mathematical.
+
+**Where a genuine mathematical distinction might still live — untested.** The one
+structural thing SH's linear derivative basis lacks is the **ON/OFF half-wave
+rectification**. A lesion that acts *through* that nonlinearity — e.g. an ON-vs-OFF
+*asymmetric* amplitude loss — could produce a V1 change no linear SH manipulation
+(rescale or delay of any regrouping) can reproduce. That, not the delay, is the
+right test for biological-vs-SH non-vacuousness. **TODO: run the ON/OFF-asymmetry
+test; until then the pivot rests on the interpretive justification only.**
