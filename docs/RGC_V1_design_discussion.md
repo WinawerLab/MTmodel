@@ -397,3 +397,52 @@ scope pivot to proceed.
    accepting a narrower TF range as a testable prediction (narrowed speed tuning
    in ON patients).
 4. **Gate further midget/parasol investment on the §13 lesion-delta test.**
+
+## 15. The TF-tiling tension is resolved: lags synthesize the high-TF orders
+
+The §14.3 fork on the §2.4 TF-coverage gap — synthesize the high-TF (order 2–3)
+channels from biological pieces, or accept a narrower range — is settled in favor
+of **synthesis, and cheaply.** Script: `explore/temporalTilingFromLags.m`.
+
+Idea: a difference of two *lagged* biphasic kernels approximates a temporal
+derivative (`k(t) − k(t−D) ≈ D·dk/dt`), so a bank of mono/biphasic channels +
+small lags should span the higher derivative orders — with **each channel staying
+mono/biphasic** (Kling-plausible); the tri/quad-phasic structure lives in the
+linear combination (the V1 read-out), not in any single cell. Reconstructing SH's
+four temporal-derivative kernels from biological banks, R² by order [0 1 2 3]:
+
+| bank | channels | R² order 0 | 1 | 2 | 3 |
+|---|---|---|---|---|---|
+| 2 kernels, **no lags** (current preset) | 2 | 0.80 | 0.16 | 0.29 | **0.005** |
+| 2 timescales × lags 0–3 | 8 | 1.00 | 0.99 | **0.98** | **0.98** |
+| 5 timescales × lags 0–4 | 25 | 1.00 | 1.00 | 1.00 | 0.99 |
+
+Takeaways:
+
+- **The gap is real without lags** (order-3 R² = 0.005 for the current 2-kernel
+  preset — this *is* the §2.4 concern) but **closed by just 8 channels** (the two
+  existing biphasic kernels × lags 0–3): all four SH orders reconstruct to
+  R² ≥ 0.975. Not trivial spanning — 8 channels span only an 8-D subspace of the
+  20-D space, and the SH basis genuinely lies within the *biological* lagged
+  subspace.
+- **Biologically grounded:** lags = lagged excitation/inhibition (Chariker's
+  ON-lag; delayed retinal/LGN inhibition generally). No exotic cell needed.
+- **Bonus — the healthy-equivalence ceiling was an artifact of the preset, not
+  biology.** The ~0.70 midget/parasol ceiling came from using only 2 *unlagged*
+  kernels; with lags the biological bank spans SH's temporal basis, so the healthy
+  reconstruction can be driven far higher. (Consistent with §12: don't force exact
+  match, but note it is *reachable* — biology is a genuinely different basis over
+  the same space, not a barrier.)
+- **The mechanism already exists in code:** `fourPop`'s `fastLag`/`slowLag` and
+  `shRgcClassesFourPop`'s zero-padded lag classes are exactly this construction —
+  so adding lagged classes to a midget/parasol preset is a small step.
+- **Caveat (the standing frame-rate TODO):** the *specific* lags (0–3 frames) that
+  reconstruct SH depend on SH's kernel timescale (9 taps); whether those map to
+  plausible delays (a few ms vs tens of ms) needs the model's frame rate pinned
+  down. The qualitative result — lags synthesize high-TF with few plausible
+  channels — is robust to that.
+
+**Decision:** meet the MT TF-tiling requirement by adding lagged biphasic classes
+(option i), not by narrowing the range. This also gives the biological path a
+route to high healthy fidelity if/when wanted, without abandoning biological
+honesty.
