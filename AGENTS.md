@@ -45,9 +45,21 @@ legacy behavior. The legacy (RGC-disabled) path is the machine-precision oracle.
   `help/shFitRgcV1Weights.m` are deleted; `shModelV1LinearFromRgc` is retired
   from the live dispatch and kept only as the fourPop regression oracle.
   `tests/runAllTests.m` is 14/14.
-- **Next: Increment 3d** — measure the front-end's *intrinsic* DS (wire V1
-  from ON/OFF directly, not by fitting to legacy); calibrate to a frame rate
-  and Kling (2020). (See the plan doc.)
+- **Scope pivot (2026-07-12) — read `docs/RGC_V1_design_discussion.md` §14–15 and
+  plan doc §3.5 before continuing.** The biological direction-selectivity direction
+  (ON/OFF spatial offset + temporal quadrature) is **retired**: the offset distorts
+  orientation and fights the SH steerable read-out, which already yields DS. The
+  biological front-end's value is instead a **lesionable parameterization** for
+  optic neuritis — a conduction *delay* is ~85% irreducible to any amplitude
+  rescale for broadband stimuli, so it is not "SH twice." The §2.4 high-TF gap is
+  closed by **lags**: `pars/shRgcClassesMidgetParasolLagged.m` (biological, no
+  offset/quadrature, lagged copies) reaches ~0.985 legacy-V1 correlation flat
+  across TF (vs ~0.70 for the offset/quadrature `shRgcClassesMidgetParasol`).
+- **Next:** (1) pin down the frame rate (gates whether lags/delays are
+  physiological); (2) wire the lagged preset through to MT and check speed tuning;
+  (3) optic-neuritis lesion studies (per-class delays/amplitude via the lagged
+  preset + `shApplyRgcImpairment`, reporting within-subject deltas). See plan doc
+  §4.
 
 ## Running the model & tests
 

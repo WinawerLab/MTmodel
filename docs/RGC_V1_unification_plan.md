@@ -172,6 +172,49 @@ together they broaden TF coverage for MT.
 6. If explicit ON/OFF spatial-offset wiring becomes cumbersome, fall back to a
    clean Adelson–Bergen skeleton (even/odd spatial × 2 temporal phases).
 
+## 3.5 SCOPE PIVOT (2026-07-12) — supersedes decisions 3, 4, 6 above
+
+Full reasoning: `RGC_V1_design_discussion.md` §9–15. In brief, decisions 3/4/6
+(build direction selectivity biologically via an ON/OFF temporal-quadrature +
+spatial-offset mechanism) are **retired**. Why:
+
+- The fixed translational ON/OFF offset **distorts V1 orientation** and does not
+  cleanly rotate with a neuron's preferred direction (`explore/probeOffsetOrientation.m`);
+  removing it recovers orientation *best*. DS is something the SH steerable
+  read-out already yields for free — building it biologically fights that.
+- The real value of a biological front-end is **not a different healthy
+  computation** but a biologically-identifiable, **lesionable parameterization**
+  (optic-neuritis timing/amplitude deficits). A conduction *delay* is ~85%
+  irreducible to any amplitude rescale for broadband/transient stimuli
+  (`explore/lesionDeltaTest.m`) — a lesion axis SH's amplitude-only `channelGain`
+  cannot express — so the layer is **not "SH twice."**
+- The §2.4 high-TF gap is **closed by lags**, not by exotic biology: a bank of
+  mono/biphasic kernels + small lags reconstructs SH's order 0–3 basis to
+  R² ≥ 0.975 (`explore/temporalTilingFromLags.m`), and in the *real* model a
+  **lagged** biological preset (no offset/quadrature) reaches **~0.985** legacy-V1
+  correlation, flat across TF, vs ~0.68 for the offset+quadrature preset
+  (`explore/testLaggedBiologicalFidelity.m`). The ~0.70 "biological ceiling" was a
+  preset artifact (2 unlagged kernels), not a biological wall.
+
+**Revised decisions (supersede 3, 4, 6):**
+
+3′. DS for the healthy baseline comes from the **SH steerable read-out**, as in the
+   derivative preset — not from an ON/OFF offset/quadrature mechanism. The
+   biological-DS question (Chariker/Shapley) is an optional side-quest, not on the
+   critical path.
+4′. **Drop machine-precision healthy-equivalence as a requirement for the
+   biological path.** Keep the derivative preset as the exact oracle; the
+   biological path is an approximate baseline whose job is realistic lesion
+   *deltas* (optic neuritis is a within-subject delta anyway). High fidelity is
+   nonetheless *reachable* with lags (~0.985).
+6′. Meet MT's SF/TF tiling by **adding lagged biphasic classes** (option i in
+   decision 5), not by narrowing the range. New preset:
+   `pars/shRgcClassesMidgetParasolLagged.m` (biological midget/parasol, DoG RFs,
+   ON/OFF, **no offset/quadrature**, lagged copies).
+
+Decisions 1, 2, 5 stand. Increments 1–3c (the unification refactor) are unaffected
+and remain the current architecture.
+
 ## 4. Next steps (do these next)
 
 **(2) Write the unified `pars.rgc.classes` schema.** Each class entry carries:
@@ -283,24 +326,46 @@ viewer (`shV1Rf` / `shShowV1Rf`, class-agnostic — the two-view viz in
     the oracle for the derivative preset). `model/innerworkings/shModelRgc.m`
     (raw fourPop channel builder) is unchanged and still used directly by a
     few `show/` scripts for channel visualization.
-- **Increment 3d — TODO.** Measure *intrinsic* DS of the biological front-end by
-  wiring V1 neurons directly from ON/OFF (Chariker), not by fitting to legacy --
-  fitting to legacy inherits legacy's DS and does not test the mechanism. Calibrate
-  kernels/offset to a frame rate and to Kling (2020).
+- **Increment 3d — REDEFINED by the §3.5 pivot; the original (measure intrinsic
+  biological DS) is retired.** What was done instead (2026-07-12): established that
+  the biological front-end is non-vacuous as a *lesion* parameterization
+  (`explore/lesionDeltaTest.m`), that lags close the §2.4 TF gap
+  (`explore/temporalTilingFromLags.m`), and built + validated the lagged biological
+  preset `pars/shRgcClassesMidgetParasolLagged.m` (~0.985 legacy-V1 correlation,
+  flat across TF; `explore/testLaggedBiologicalFidelity.m`). `runAllTests` 14/14.
 
-**(1) Prototype the ON/OFF DS mechanism — DONE (2026-07-10).** See §2.7 and
-`explore/prototypeOnOffDelayDS.m`. Conclusion: a pure delay → narrowband (high-TF)
-DS; a constant-phase (quadrature) ON/OFF kernel difference → broadband DS. Both
-the temporal difference and the spatial offset are required. Remaining refinement
-for the real implementation: use a *causal* quadrature-approximating ON kernel
-(Chariker Mechanism #2), and calibrate to a frame rate.
+**Next steps (post-pivot, do these next):**
+
+1. **Pin down the frame rate** (the standing TODO below). It gates whether the
+   lags (0–3 frames) and Kling/Chariker time constants map to physiological delays
+   (a few ms vs tens of ms). Everything timing-related — lags, optic-neuritis
+   conduction delays — needs this to be quantitative rather than in arbitrary
+   frames.
+2. **Wire the lagged preset through to MT and check speed tuning directly** —
+   confirm the restored high-TF coverage actually yields SH-like MT speed tuning
+   (the point of tiling TF). Note: running a custom preset through the full
+   `shModel` (MT) currently needs `pars.rgc.classesMode` to match the dispatch
+   mode; the dispatch has no clean "use my custom classes as-is" path — consider
+   adding one (e.g. a `'custom'`/`'classes'` mode that never rebuilds).
+3. **Lesion studies (the primary deliverable):** use the lagged biological preset +
+   `shApplyRgcImpairment` (per-class conduction delays + amplitude deficits) to
+   model optic-neuritis, reporting within-subject V1/MT **deltas** (affected vs
+   fellow eye). Per-class impairment currently requires a per-class mechanism —
+   `shApplyRgcImpairment` is applied uniformly to every class in `shClassV1Basis`;
+   add per-class targeting (e.g. delay only parasol classes), or bake the lesion
+   into the class kernels as `lesionDeltaTest.m` does.
+
+**(1) Prototype the ON/OFF DS mechanism — DONE (2026-07-10), now a side-quest.**
+See §2.7 and `explore/prototypeOnOffDelayDS.m`. Kept for reference; per §3.5 the
+biological-DS direction is off the critical path.
 
 **Guardrails:**
 - Keep the legacy (RGC-disabled) path as the oracle. The derivative preset must
-  still reproduce it to ~1e-16 at `nScales = 1`. Run `tests/runAllTests.m`.
+  still reproduce it to ~1e-16 at `nScales = 1`. Run `tests/runAllTests.m`
+  (currently 14/14).
 - Convert relative timing to frames using the model's frame duration (TODO:
-  confirm the intended frame rate — needed to place Chariker's 10 ms / Kling's
-  time-to-peak on the model's frame axis).
+  confirm the intended frame rate — now the top next-step; needed to make lags and
+  conduction delays physiological rather than arbitrary-frame).
 
 ## 5. Environment / workflow notes (READ if on a new machine)
 
