@@ -61,8 +61,11 @@ legacy behavior. The legacy (RGC-disabled) path is the machine-precision oracle.
 - **Next:** (1) pin down the frame rate (gates whether lags/delays are
   physiological); (2) wire the lagged preset through to MT and check speed tuning;
   (3) optic-neuritis lesion studies (per-class delays/amplitude via the lagged
-  preset + `shApplyRgcImpairment`, reporting within-subject deltas). See plan doc
-  §4.
+  preset + `shApplyRgcImpairment`, reporting within-subject deltas); **(4)
+  recommended before scaling lesion work: visual validation against Simoncelli &
+  Heeger 1998 Figs. 9–14** — reproduce the published V1/MT benchmark phenomena
+  with legacy SH, derivative preset, and lagged biological preset, then assess
+  lesion impacts on these figures. See plan doc §4 for the full 4-part protocol.
 
 ## Running the model & tests
 

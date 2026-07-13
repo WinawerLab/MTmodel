@@ -53,10 +53,10 @@ available *analytically* (`shSwts`) instead of fitted.
 **Experiment (`explore/unifyDerivativeVsFourPop.m`):** run the identical
 40-feature projection + ridge fit, swapping only the RGC classes.
 
-| RGC classes | held-out test corr vs legacy | NRMSE |
-|---|---|---|
+| RGC classes                                 | held-out test corr vs legacy     | NRMSE  |
+| ------------------------------------------- | -------------------------------- | ------ |
 | derivative (delta × SH temporal-derivative) | **0.99991** (1.0 modulo ridge λ) | 0.0015 |
-| fourPop (DoG × biphasic) | 0.693 | 0.079 |
+| fourPop (DoG × biphasic)                    | 0.693                            | 0.079  |
 
 Cross-check: the derivative 40-feature projection *contains the exact 10-column
 structured basis* as a sub-selection (err = 0). **Conclusion: the two "modes" are
@@ -360,6 +360,75 @@ viewer (`shV1Rf` / `shShowV1Rf`, class-agnostic — the two-view viz in
    `shApplyRgcImpairment` is applied uniformly to every class in `shClassV1Basis`;
    add per-class targeting (e.g. delay only parasol classes), or bake the lesion
    into the class kernels as `lesionDeltaTest.m` does.
+4. **Visual validation against SH paper benchmarks (Simoncelli & Heeger 1998 Figs.
+   9–14) — recommended before scaling lesion studies.** Validate that the three
+   model paths (legacy SH, derivative preset, lagged biological preset) reproduce
+   the published V1/MT phenomena, then assess lesion effects visually:
+   
+   a. **Reproduce Figs. 9–14 with legacy SH** (`pars.rgc.enabled=0`). Each figure
+      shows real data + model output for key phenomena: direction/speed tuning
+      (V1/MT), pattern vs. component selectivity (MT), contrast response, etc.
+      Establish the baseline model behavior.
+   
+   b. **Confirm derivative-preset equivalence:** rerun with `pars.rgc.mode='derivative'`.
+      Since the derivative preset is machine-exact to legacy (err=0), this should
+      reproduce (a) exactly and serves as a sanity check that the class-based path
+      preserves MT behavior.
+   
+   c. **Assess lagged biological-preset fidelity:** rerun with
+      `pars.rgc.classes = shRgcClassesMidgetParasolLagged(pars, [0 1 2 3])` and
+      `pars.rgc.combine='weights'` (fitted). The ~0.985 V1lin correlation (§3.5,
+      `explore/testLaggedBiologicalFidelity.m`) suggests outputs should be close;
+      quantify per-figure how well the biological front-end preserves each
+      phenomenon. Note: currently requires `pars.rgc.classesMode='custom'` to
+      prevent the dispatch from rebuilding classes (see item 2 re: adding a clean
+      custom-classes mode).
+   
+   d. **Lesion effects (amplitude + latency):** for both the derivative preset
+      (control) and the lagged biological preset, apply per-class amplitude and
+      latency lesions (via `shApplyRgcImpairment` or by modifying class
+      `gain`/`temporalKernel` fields as in `explore/testONOFFAsymmetryNonvacuousness.m`
+      and `explore/lesionDeltaTest.m`). Visualize how the Figs. 9–14 outputs
+      degrade under lesions. This provides interpretable, visually grounded
+      validation of the lesion parameterization before investing in full
+      optic-neuritis within-subject delta studies.
+   
+   **Rationale:** Anchoring validation to the published benchmark figures ensures
+   the model still captures the key V1/MT phenomenology the SH paper established,
+   provides concrete visual deliverables for assessing biological-preset fidelity,
+   and grounds lesion impacts in interpretable perceptual/neural outputs rather
+   than abstract correlation metrics. Completing this step confirms the foundation
+   is sound before scaling to the full lesion-study pipeline (item 3).
+
+5. **Rectification non-vacuousness refinement (lower priority, theoretical
+   validation).** The current `explore/testONOFFAsymmetryNonvacuousness.m`
+   (2026-07-13) established that timing lesions (ON-only, OFF-only, uniform) are
+   ~90% irreducible to SH amplitude rescaling, confirming timing ≠ amplitude.
+   However, all three lesion types showed similar irreducibility (~89–96%), so the
+   test doesn't isolate a rectification-specific signature. To test whether
+   ON/OFF-asymmetric timing exploits the rectification nonlinearity in a way that
+   uniform timing + amplitude cannot:
+   
+   - Build a richer SH comparison basis that includes both amplitude rescaling
+     (current 4-column basis: one delta per temporal order) AND a uniform-delay
+     delta (all RGC classes or all SH temporal orders delayed together by 1 frame
+     — expressible in SH by delaying the stimulus input or equivalently
+     circshifting all `v1TemporalFilters` columns).
+   - Project the ON-only and OFF-only latency deltas onto this augmented basis.
+   - If ON-only/OFF-only remain highly irreducible (high 1-R²) while the uniform
+     lesion becomes mostly reproducible (low 1-R²), that isolates the rectification
+     signature: asymmetric timing creates a V1 pattern that no combination of SH's
+     linear operations (amplitude rescaling + uniform delay) can reproduce, because
+     it acts through the ON/OFF separation + rectification that SH's linear basis
+     lacks.
+   
+   **Why lower priority:** This is a theoretical validation question ("does the
+   biological model offer mathematical expressiveness SH lacks?") rather than a
+   step toward the optic-neuritis lesion deliverable. The current result already
+   confirms timing is a distinct axis from amplitude, which suffices for practical
+   lesion parameterization. Pursue this if/when there's interest in the deeper
+   "is biology non-vacuous relative to SH?" question beyond the applied lesion
+   model.
 
 **(1) Prototype the ON/OFF DS mechanism — DONE (2026-07-10), now a side-quest.**
 See §2.7 and `explore/prototypeOnOffDelayDS.m`. Kept for reference; per §3.5 the
