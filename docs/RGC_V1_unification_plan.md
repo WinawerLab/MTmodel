@@ -339,6 +339,25 @@ viewer (`shV1Rf` / `shShowV1Rf`, class-agnostic — the two-view viz in
   (`explore/temporalTilingFromLags.m`), and built + validated the lagged biological
   preset `pars/shRgcClassesMidgetParasolLagged.m` (~0.985 legacy-V1 correlation,
   flat across TF; `explore/testLaggedBiologicalFidelity.m`). `runAllTests` 14/14.
+- **Increment 4 — DONE (2026-07-16).** Added the clean "use my custom classes
+  as-is" dispatch mode that item 2 (below) had flagged as missing —
+  `shModelV1Linear.m` gets an explicit `'custom'` case alongside `'derivative'`/
+  `'fourpop'`, so a pars that fully configures `classes`/`combine` itself is used
+  without being rebuilt. This turned out to be more than a convenience: without
+  it, the existing `pars.rgc.classesMode='custom'` convention (used by the lagged
+  preset since increment 3d) did **not** prevent the rebuild — `pars.rgc.mode`
+  defaults to `'derivative'` when unset, so `shModelV1Linear` was silently
+  rebuilding the lagged preset's classes as plain derivative on every call,
+  discarding the fitted `v1Weights` and any lesion edits with them. This had been
+  running unnoticed through `testLaggedBiologicalFidelity.m`'s ~0.985 correlation
+  number (unaffected — that test calls `shModelV1LinearFromClasses` directly,
+  bypassing the dispatch) but silently corrupted every `shTuneGratingDirection`/
+  `shTuneBarSpeed`/etc. call on the lagged preset (i.e. anything going through
+  `shModel`/`shModelV1Linear`) — caught via item 4's visual-validation pass
+  producing bit-identical "lagged" and "derivative" results. Fixed, and
+  `pars.rgc.mode = 'custom'` added wherever the lagged preset is built
+  (`explore/validateSHFigs9to14*.m`, `explore/quantitativeAnalysisFigs9to14.m`).
+  Verified no regression to the `'derivative'`/`'fourpop'` paths.
 
 **Next steps (post-pivot, do these next):**
 
@@ -346,59 +365,81 @@ viewer (`shV1Rf` / `shShowV1Rf`, class-agnostic — the two-view viz in
    lags (0–3 frames) and Kling/Chariker time constants map to physiological delays
    (a few ms vs tens of ms). Everything timing-related — lags, optic-neuritis
    conduction delays — needs this to be quantitative rather than in arbitrary
-   frames.
-2. **Wire the lagged preset through to MT and check speed tuning directly** —
-   confirm the restored high-TF coverage actually yields SH-like MT speed tuning
-   (the point of tiling TF). Note: running a custom preset through the full
-   `shModel` (MT) currently needs `pars.rgc.classesMode` to match the dispatch
-   mode; the dispatch has no clean "use my custom classes as-is" path — consider
-   adding one (e.g. a `'custom'`/`'classes'` mode that never rebuilds).
+   frames. **Still open.**
+
+2. **Wire the lagged preset through to MT and check speed tuning directly — DONE
+   (2026-07-16).** The dispatch gap flagged below (no clean "use my custom classes
+   as-is" path) was real and worse than suspected: without it, `shModelV1Linear`
+   didn't just need help finding the custom classes, it silently *discarded* them,
+   rebuilding `pars.rgc.classes` from `shRgcClassesDerivative(pars)` whenever
+   `pars.rgc.mode` wasn't explicitly set — which every caller of the lagged preset
+   had been hitting. Fixed by adding an explicit `'custom'` case to
+   `shModelV1Linear`'s mode dispatch (use `pars.rgc.classes`/`combine` as-is, no
+   rebuild) and setting `pars.rgc.mode = 'custom'` wherever the lagged preset is
+   built. Verified: derivative-mode output unchanged; lagged now genuinely differs
+   from derivative (Fig 9 direction-tuning curve correlation 0.995, consistent with
+   but not identical to the ~0.985 legacy-V1 fidelity). MT speed tuning (Fig 10)
+   confirmed via `explore/quantitativeAnalysisFigs9to14.m` — see item 4.
+
 3. **Lesion studies (the primary deliverable):** use the lagged biological preset +
    `shApplyRgcImpairment` (per-class conduction delays + amplitude deficits) to
    model optic-neuritis, reporting within-subject V1/MT **deltas** (affected vs
-   fellow eye). Per-class impairment currently requires a per-class mechanism —
-   `shApplyRgcImpairment` is applied uniformly to every class in `shClassV1Basis`;
-   add per-class targeting (e.g. delay only parasol classes), or bake the lesion
-   into the class kernels as `lesionDeltaTest.m` does.
+   fellow eye). **Prerequisites substantially advanced (2026-07-16), full
+   affected-vs-fellow-eye study still open.** Per-class targeting (e.g. delay only
+   parasol classes, delay only ON classes) is now built and validated — not by
+   extending `shApplyRgcImpairment` itself, but by editing
+   `pars.rgc.classes(i).gain`/`.temporalKernel` directly before the forward pass
+   (`explore/validateSHFigs9to14_lesions.m`'s `lesionAmplitudeParasol`/
+   `lesionDelayONOnly`). Spatial heterogeneity (different visual-field locations
+   getting different deficits, via `shApplyRgcImpairment`'s amplitude/delay maps)
+   is also built and validated (`explore/validateSHFigs9to14_lesions_stochastic.m`,
+   5 lesion types). Quantified in `explore/quantitativeAnalysisFigs9to14.m` — see
+   item 4's conclusions. What's still open: an actual within-subject
+   affected-vs-fellow-eye study design (this work used synthetic SH benchmark
+   stimuli, not patient-eye-pair data).
+
 4. **Visual validation against SH paper benchmarks (Simoncelli & Heeger 1998 Figs.
-   9–14) — recommended before scaling lesion studies.** Validate that the three
-   model paths (legacy SH, derivative preset, lagged biological preset) reproduce
-   the published V1/MT phenomena, then assess lesion effects visually:
-   
-   a. **Reproduce Figs. 9–14 with legacy SH** (`pars.rgc.enabled=0`). Each figure
-      shows real data + model output for key phenomena: direction/speed tuning
-      (V1/MT), pattern vs. component selectivity (MT), contrast response, etc.
-      Establish the baseline model behavior.
-   
-   b. **Confirm derivative-preset equivalence:** rerun with `pars.rgc.mode='derivative'`.
-      Since the derivative preset is machine-exact to legacy (err=0), this should
-      reproduce (a) exactly and serves as a sanity check that the class-based path
-      preserves MT behavior.
-   
-   c. **Assess lagged biological-preset fidelity:** rerun with
-      `pars.rgc.classes = shRgcClassesMidgetParasolLagged(pars, [0 1 2 3])` and
-      `pars.rgc.combine='weights'` (fitted). The ~0.985 V1lin correlation (§3.5,
-      `explore/testLaggedBiologicalFidelity.m`) suggests outputs should be close;
-      quantify per-figure how well the biological front-end preserves each
-      phenomenon. Note: currently requires `pars.rgc.classesMode='custom'` to
-      prevent the dispatch from rebuilding classes (see item 2 re: adding a clean
-      custom-classes mode).
-   
-   d. **Lesion effects (amplitude + latency):** for both the derivative preset
-      (control) and the lagged biological preset, apply per-class amplitude and
-      latency lesions (via `shApplyRgcImpairment` or by modifying class
-      `gain`/`temporalKernel` fields as in `explore/testONOFFAsymmetryNonvacuousness.m`
-      and `explore/lesionDeltaTest.m`). Visualize how the Figs. 9–14 outputs
-      degrade under lesions. This provides interpretable, visually grounded
-      validation of the lesion parameterization before investing in full
-      optic-neuritis within-subject delta studies.
-   
-   **Rationale:** Anchoring validation to the published benchmark figures ensures
-   the model still captures the key V1/MT phenomenology the SH paper established,
-   provides concrete visual deliverables for assessing biological-preset fidelity,
-   and grounds lesion impacts in interpretable perceptual/neural outputs rather
-   than abstract correlation metrics. Completing this step confirms the foundation
-   is sound before scaling to the full lesion-study pipeline (item 3).
+   9–14) — DONE (2026-07-16).** All four sub-steps below completed; see
+   `explore/VALIDATION_SUMMARY.md` for the full writeup and
+   `explore/_figs/` for all 114 figures + the quantitative analysis output
+   (gitignored — regenerate via the scripts named below).
+
+   a. **Reproduce Figs. 9–14 with legacy SH** — done,
+      `explore/validateSHFigs9to14.m`, 18 figures in
+      `explore/_figs/MTmodel_validation_figs/`.
+
+   b. **Confirm derivative-preset equivalence** — done, same script; reproduces
+      legacy exactly as expected.
+
+   c. **Assess lagged biological-preset fidelity** — done, but this is where the
+      item-2 dispatch bug was caught: the "lagged" panels were bit-identical to
+      derivative (impossible for a nonlinear model), because
+      `pars.rgc.classesMode='custom'` alone does **not** prevent the dispatch from
+      rebuilding — `pars.rgc.mode` must also be set to `'custom'` (the note here
+      that flagged this as a known gap undersold it; the workaround it assumed
+      would suffice actually did nothing). Fixed per item 2; lagged now genuinely
+      differs from derivative (0.995 curve correlation) across all three figure
+      scripts.
+
+   d. **Lesion effects (amplitude + latency)** — done, uniform + biological
+      (`explore/validateSHFigs9to14_lesions.m`, 36 figures) and stochastic/spatial
+      (`explore/validateSHFigs9to14_lesions_stochastic.m`, 60 figures), plus
+      quantitative metrics across all 19 conditions
+      (`explore/quantitativeAnalysisFigs9to14.m`: direction peak/DSI/FWHM, speed
+      peak/preferred-speed, coherence peak/slope).
+
+   **Key quantitative finding:** for **amplitude**-type lesions, uniform and
+   stochastic (random/patchy/coupled) versions produce comparable disruption
+   (~9–18% coherence-peak drop). For **delay**-type lesions they diverge sharply:
+   a spatially *random* delay devastates coherence (−39% to −59%) and high-pass
+   speed tuning (−55% to −64%), while a spatially *uniform* delay of the same
+   average magnitude does almost nothing, and a spatially *correlated* (patchy)
+   delay tracks the uniform case. **It's spatial heterogeneity in conduction
+   delay — not delay magnitude itself — that disrupts motion/coherence pooling.**
+   A biological parasol-only 70% amplitude knockout also produced a qualitatively
+   distinct signature from a uniform amplitude lesion (raised peak response,
+   broadened tuning, degraded DSI and coherence sensitivity together), rather than
+   a simple scaled-down version of the uniform effect.
 
 5. **Rectification non-vacuousness refinement (lower priority, theoretical
    validation).** The current `explore/testONOFFAsymmetryNonvacuousness.m`

@@ -1,6 +1,6 @@
 # MTmodel — Agent Guide (START HERE)
 
-Last updated: 2026-07-12
+Last updated: 2026-07-16
 
 This is the entry point for any agent (or person) picking up work on this repo.
 Read it first, then follow the reading order below.
@@ -26,7 +26,7 @@ legacy behavior. The legacy (RGC-disabled) path is the machine-precision oracle.
 4. **README** — base-toolbox usage (install, `tut/shTutorial1.m`, references).
    **literature/** — the papers the design is grounded in.
 
-## Current status (2026-07-12) — summary; see the plan doc for detail
+## Current status (2026-07-16) — summary; see the plan doc for detail
 
 - The RGC layer is enabled by default (`pars.rgc.enabled = 1`). Both legacy modes
   (`pars.rgc.mode = 'derivative'` and `'fourPop'`) are now **unified onto one
@@ -58,14 +58,29 @@ legacy behavior. The legacy (RGC-disabled) path is the machine-precision oracle.
   closed by **lags**: `pars/shRgcClassesMidgetParasolLagged.m` (biological, no
   offset/quadrature, lagged copies) reaches ~0.985 legacy-V1 correlation flat
   across TF (vs ~0.70 for the offset/quadrature `shRgcClassesMidgetParasol`).
+- **Visual validation + quantitative lesion analysis — DONE (2026-07-16).**
+  Simoncelli & Heeger 1998 Figs. 9–14 reproduced across legacy SH, derivative
+  preset, and lagged biological preset, then assessed under uniform, biological,
+  and spatially-stochastic lesions (114 figures total) plus a quantitative
+  metrics pass across all 19 conditions. See `explore/VALIDATION_SUMMARY.md` and
+  `explore/_figs/` (gitignored — regenerate via the scripts it names). Headline
+  finding: spatially heterogeneous conduction delay is far more disruptive to
+  coherence/speed tuning than a uniform delay of the same average magnitude,
+  while amplitude-type lesions (uniform vs. stochastic) are comparable.
+- **Bug found + fixed along the way:** `shModelV1Linear`'s mode dispatch defaulted
+  to `'derivative'` whenever `pars.rgc.mode` was unset, silently rebuilding
+  `pars.rgc.classes` from scratch whenever `classesMode` wasn't `'derivative'` —
+  discarding the lagged preset's custom classes/weights (and any lesion edits)
+  on every call. Every "lagged" condition in the Figs. 9–14 scripts had been
+  silently computing the plain derivative preset. Fixed by adding an explicit
+  `'custom'` case to the dispatch (`pars.rgc.mode = 'custom'` now required
+  wherever the lagged preset is built) — see plan doc §4 Increment 4.
 - **Next:** (1) pin down the frame rate (gates whether lags/delays are
-  physiological); (2) wire the lagged preset through to MT and check speed tuning;
-  (3) optic-neuritis lesion studies (per-class delays/amplitude via the lagged
-  preset + `shApplyRgcImpairment`, reporting within-subject deltas); **(4)
-  recommended before scaling lesion work: visual validation against Simoncelli &
-  Heeger 1998 Figs. 9–14** — reproduce the published V1/MT benchmark phenomena
-  with legacy SH, derivative preset, and lagged biological preset, then assess
-  lesion impacts on these figures. See plan doc §4 for the full 4-part protocol.
+  physiological); (2) optic-neuritis lesion studies proper — the per-class and
+  spatial lesion machinery is now built and validated (above), but the
+  within-subject affected-vs-fellow-eye study itself is still open; (3)
+  rectification non-vacuousness refinement (lower priority). See plan doc §4 for
+  detail.
 
 ## Running the model & tests
 
