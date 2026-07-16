@@ -1,13 +1,14 @@
 # MTmodel Visual Validation Summary
 
-**Date:** 2026-07-13  
-**Purpose:** Validate Simoncelli & Heeger 1998 Figures 9-14 across model paths and lesion conditions
+**Date:** 2026-07-13 (started), completed and corrected 2026-07-16
+**Purpose:** Validate Simoncelli & Heeger 1998 Figures 9-14 across model paths and lesion conditions, then quantify lesion effects.
+**Status: All phases complete.** Phase 1/2/2b figures (114 total) generated and regenerated after a bug fix (see below); quantitative analysis complete.
 
 ---
 
 ## Overview
 
-This document summarizes the visual validation work implementing the plan described in `docs/RGC_V1_unification_plan.md` §4 (item 4). We validate that three model paths reproduce published V1/MT phenomena, then assess lesion effects.
+This document summarizes the visual + quantitative validation work implementing the plan described in `docs/RGC_V1_unification_plan.md` §4 (item 4). We validate that three model paths reproduce published V1/MT phenomena, then assess lesion effects, then quantify them.
 
 ### Three Model Paths Tested
 
@@ -28,126 +29,190 @@ This document summarizes the visual validation work implementing the plan descri
    - Lags close TF gap: ~0.985 legacy V1 correlation (vs ~0.68 without lags)
    - V1 weights: fitted via ridge regression, **cached** to disk
    - File: `pars/shRgcClassesMidgetParasolLagged_v1Weights_lag0123.mat`
+   - Requires `pars.rgc.mode = 'custom'` (see bug note below) - without it, the lagged
+     classes are silently discarded and the model computes the derivative preset instead.
+
+---
+
+## Critical bug found and fixed (2026-07-16)
+
+While building the quantitative analysis (below), the "lagged" and "derivative" conditions
+turned out to be **bit-identical to 14 significant digits** on every Fig 9/10 metric -
+impossible for a nonlinear model unless the lagged classes never reached the computation.
+
+**Root cause:** `model/innerworkings/shModelV1Linear.m` dispatches on `pars.rgc.mode`,
+defaulting to `'derivative'` whenever that field is unset. The lagged preset's setup
+function sets `pars.rgc.classesMode = 'custom'` and `pars.rgc.combine = 'weights'` but
+never set `pars.rgc.mode` - so the dispatch fell into its `'derivative'` case, saw
+`classesMode ~= 'derivative'`, and **rebuilt `pars.rgc.classes` from scratch** via
+`shRgcClassesDerivative(pars)`, discarding the custom lagged classes, the fitted
+`v1Weights`, and (in the lesion scripts) any per-class `gain`/`temporalKernel` lesion
+edits already applied.
+
+This means every "lagged" condition in all three figure scripts below - and the earlier
+draft of the quantitative analysis - was **silently computing the plain derivative
+preset**, mislabeled as lagged. The line below (from the original 2026-07-13 draft of
+this doc) was describing that bug, not a real finding:
+
+> ~~Figs 9-10: All three paths appear identical (derivative/lagged match legacy exactly
+> or imperceptibly)~~ - **this was the bug**, not validation of high fidelity.
+
+**Fix:** added an explicit `'custom'` case to the mode dispatch in `shModelV1Linear.m`
+(commit `40c7dff`) so pars that fully configure `classes`/`combine` themselves are used
+as-is, no rebuild; then added `pars.rgc.mode = 'custom'` to `setupLaggedBiological()` in
+all three figure scripts + the quantitative analysis script (commit `f87b05d`), and
+regenerated all figures.
+
+**Post-fix sanity check:** derivative-mode output is unchanged (no regression); the
+lagged preset now genuinely differs from derivative (Fig 9 direction-tuning curve
+correlation 0.995 - consistent with, not identical to, the documented ~0.985 legacy-V1
+fidelity). Spot-checked visually in `fig9_derivative.png` vs `fig9_lagged_midget_parasol.png`
+(see locations below): baselines look close but not pixel-identical, and the
+parasol-lesion panel shows a visibly larger MT response scale, matching the quantitative
++22% peak-response finding.
 
 ---
 
 ## Phase 1: Baseline Validation (No Lesions)
 
-**Script:** `explore/validateSHFigs9to14.m`  
-**Status:** ✅ Completed  
-**Output:** 18 figures (3 configs × 6 figures) in `/tmp/MTmodel_validation_figs/`
+**Script:** `explore/validateSHFigs9to14.m`
+**Status:** Complete (regenerated post-fix 2026-07-16)
+**Output:** 18 figures (3 configs x 6 figures) in `explore/_figs/MTmodel_validation_figs/`
 
 ### Figures Generated
 
-**Figure 9:** Direction tuning (V1/MT) for gratings and plaids
-- Tests pattern vs component selectivity in MT
-- **Observation:** All three paths appear identical (derivative/lagged match legacy exactly or imperceptibly)
+**Figure 9:** Direction tuning (V1/MT) for gratings and plaids - pattern vs component selectivity in MT.
+**Figure 10:** Speed tuning curves (bandpass/lowpass/highpass MT neurons) - temporal frequency tiling via speed selectivity.
+**Figure 11:** Dot coherence tuning (MT) - response to motion coherence (preferred vs antipreferred).
+**Figure 12:** Dot mixture responses (MT) - preferred + antipreferred dot combinations.
+**Figure 13:** Mask direction tuning (MT) - response to preferred dots + mask at varying directions.
+**Figure 14:** Direction tuning with antipreferred mask (MT) - masking effects on direction selectivity.
 
-**Figure 10:** Speed tuning curves (bandpass/lowpass/highpass MT neurons)
-- Tests temporal frequency tiling via speed selectivity
-- **Observation:** All three paths appear identical
-- **Interpretation:** Coarse tuning properties preserved at ~0.985 correlation
+### Key Findings (post-fix)
 
-**Figure 11:** Dot coherence tuning (MT)
-- Tests response to motion coherence (preferred vs antipreferred)
-- Shows some differences between paths (expected for random dot stimuli)
-
-**Figure 12:** Dot mixture responses (MT)
-- Tests preferred + antipreferred dot combinations
-- Shows variability across paths
-
-**Figure 13:** Mask direction tuning (MT)
-- Tests response to preferred dots + mask at varying directions
-- Shows differences across paths
-
-**Figure 14:** Direction tuning with antipreferred mask (MT)
-- Tests masking effects on direction selectivity
-- Shows differences across paths
-
-### Key Findings
-
-1. **Figs 9-10 (coarse tuning):** Legacy ≈ derivative ≈ lagged (imperceptible differences)
-2. **Figs 11-14 (complex stimuli):** More variability, revealing the ~1.5% V1 deviation
-3. **Lagged preset validation:** High fidelity to legacy across phenomena
-4. **Weights cached:** Future runs load pre-fitted weights (~instant vs ~30 sec fitting)
+1. Derivative reproduces legacy exactly (by construction).
+2. Lagged is close to but genuinely distinct from derivative/legacy (~0.985-0.995
+   correlation on coarse tuning, more visible divergence on the complex Figs 11-14
+   stimuli) - a real fidelity result now, not an artifact of the mode-dispatch bug.
+3. Weights cached: future runs load pre-fitted weights (~instant vs ~30 sec fitting).
 
 ---
 
 ## Phase 2: Uniform Lesion Effects
 
-**Script:** `explore/validateSHFigs9to14_lesions.m`  
-**Status:** 🔄 In progress (PID 13050)  
-**Output:** 36 figures (2 presets × {2 universal + 2 biological} × 6 figs) in `/tmp/MTmodel_lesion_figs/`
+**Script:** `explore/validateSHFigs9to14_lesions.m`
+**Status:** Complete (regenerated post-fix 2026-07-16)
+**Output:** 36 figures (2 presets x {2 universal + 2 biological} x 6 figs) in `explore/_figs/MTmodel_lesion_figs/`
 
 ### Lesion Types Tested
 
 #### Universal Lesions (both presets)
 
-1. **Uniform 50% amplitude**
-   - All RGC classes reduced to 50% gain
-   - Tests overall signal reduction
-
-2. **Uniform 2-frame delay**
-   - All RGC classes delayed by 2 frames (conduction deficit)
-   - Tests synchrony disruption
+1. **Uniform 50% amplitude** - all RGC classes reduced to 50% gain. Tests overall signal reduction.
+2. **Uniform 2-frame delay** - all RGC classes delayed by 2 frames (conduction deficit). Tests synchrony disruption.
 
 #### Biological Lesions (lagged midget/parasol only)
 
-3. **Parasol-only 70% amplitude**
-   - Only parasol classes reduced to 30% (midgets spared)
-   - Tests cell-type-specific deficits
-
-4. **ON-only 1-frame delay**
-   - Only ON pathway delayed by 1 frame (OFF normal)
-   - Tests ON/OFF asymmetry effects
+3. **Parasol-only 70% amplitude** - only parasol classes reduced to 30% (midgets spared). Tests cell-type-specific deficits.
+4. **ON-only 1-frame delay** - only ON pathway delayed by 1 frame (OFF normal). Tests ON/OFF asymmetry effects.
 
 ### Design Notes
 
-- **Fixed V1 weights:** No refitting after lesions (within-subject comparison)
-- **Lesions modify RGC layer only:** Via `pars.rgc.classes(i).gain` and `temporalKernel`
-- **Derivative preset:** Only universal lesions (no biological cell types)
-- **Lagged preset:** All 4 lesion types (has parasol/midget, ON/OFF distinction)
+- Fixed V1 weights: no refitting after lesions (within-subject comparison).
+- Lesions modify RGC layer only, via `pars.rgc.classes(i).gain` and `.temporalKernel`.
+- Derivative preset: only universal lesions (no biological cell types).
+- Lagged preset: all 4 lesion types (has parasol/midget, ON/OFF distinction).
 
 ---
 
 ## Phase 2b: Stochastic Lesion Effects
 
-**Script:** `explore/validateSHFigs9to14_lesions_stochastic.m`  
-**Status:** 📝 Ready to run  
-**Output:** 60 figures (2 presets × 5 lesions × 6 figs) in `/tmp/MTmodel_stochastic_lesion_figs/`
+**Script:** `explore/validateSHFigs9to14_lesions_stochastic.m`
+**Status:** Complete (run 2026-07-16, post-fix)
+**Output:** 60 figures (2 presets x 5 lesions x 6 figs) in `explore/_figs/MTmodel_stochastic_lesion_figs/`
 
 ### Stochastic Lesion Types
 
 All lesions use **spatial heterogeneity** - different visual field locations get different deficits (more realistic for optic neuritis).
 
-1. **Random uncorrelated amplitude**
-   - Each pixel: Uniform(0.3, 0.7) gain, independent
-   - Tests pixel-level noise
-
-2. **Random uncorrelated delay**
-   - Each pixel: {0, 1, 2, 3} frames, independent
-   - Tests asynchronous input
-
-3. **Patchy correlated amplitude**
-   - Gaussian-smoothed random field (σ=3.0)
-   - Creates ~6-9 pixel damage clusters (realistic)
-   - Range: [0.3, 0.7]
-
-4. **Patchy correlated delay**
-   - Gaussian-smoothed, thresholded into {0, 1, 2, 3}
-   - Creates synchronized delay patches
-
-5. **Coupled amplitude-delay** (most realistic)
-   - Low amplitude → high delay (damage correlation)
-   - Amplitude [0.3, 0.7] mapped to delay {3, 2, 1, 0}
-   - Tests whether correlated deficits are more disruptive
+1. **Random uncorrelated amplitude** - each pixel: Uniform(0.3, 0.7) gain, independent.
+2. **Random uncorrelated delay** - each pixel: {0, 1, 2, 3} frames, independent.
+3. **Patchy correlated amplitude** - Gaussian-smoothed random field (sigma=3.0), ~6-9 pixel damage clusters, range [0.3, 0.7].
+4. **Patchy correlated delay** - Gaussian-smoothed, thresholded into {0, 1, 2, 3}, synchronized delay patches.
+5. **Coupled amplitude-delay** (most realistic) - low amplitude -> high delay (damage correlation).
 
 ### Implementation Details
 
-- **Mechanism:** `shApplyRgcImpairment` with spatial maps
-- **Fields:** `pars.rgc.impairmentAmplitudeMap` [Y×X], `pars.rgc.impairmentDelayMap` [Y×X]
-- **Deterministic:** Fixed RNG seeds (42-46) for reproducibility
-- **Dependencies:** Requires Image Processing Toolbox (`imgaussfilt`)
+- Mechanism: `shApplyRgcImpairment` with spatial maps (`pars.rgc.impairmentAmplitudeMap`/`impairmentDelayMap`).
+- Each Fig 9-14 panel builds a differently-sized stimulus (19x19 up to 51x51); a single
+  FIELD_SIZE=51x51 physical damage field is defined once per lesion and center-cropped
+  per call (`cropLesionForCall`) to match whatever size that panel's stimulus needs -
+  so every panel is measuring the same physical lesion.
+- Deterministic: fixed RNG seeds (42-46) for reproducibility.
+- Dependencies: requires Image Processing Toolbox (`imgaussfilt`).
+
+---
+
+## Quantitative Analysis
+
+**Script:** `explore/quantitativeAnalysisFigs9to14.m`
+**Status:** Complete (2026-07-16)
+**Output:** `explore/_figs/MTmodel_quantitative_analysis/`
+- `all_conditions_metrics.csv` - raw metrics, one row per condition (19 total: 3 baseline + 6 uniform/biological + 10 stochastic)
+- `pct_change_vs_baseline.csv` - % change (or octave shift for preferred-speed) vs. matched-preset baseline
+- `uniform_vs_stochastic_comparison.csv` - amplitude-type and delay-type lesions side by side
+- `lesion_comparison_bars.png` - grouped bar summary (direction peak, DSI, FWHM, coherence peak)
+
+Metrics computed per condition (mtPattern stage): direction-tuning peak/DSI/FWHM (Fig 9),
+speed-tuning peak + preferred speed for bandpass/lowpass/highpass MT cells (Fig 10),
+coherence-tuning peak/slope (Fig 11). Runs in a few minutes (not the ~90-120 min the
+Phase 2b figure-rendering script takes), since it extracts numbers directly from the
+tuning functions instead of rendering 60 figures.
+
+### Key Conclusions
+
+- **Lagged vs. derivative baseline:** direction peak 1.033 vs 1.120 (curve correlation
+  0.995), FWHM slightly broader (176 deg vs 164 deg), coherence peak lower (1.37 vs 1.53)
+  - a real, modest fidelity gap, not the zero-gap the pre-fix bug implied.
+- **Uniform delay** (2-frame, all classes): ~0% effect on direction/speed peak/DSI/FWHM
+  for both presets - expected, since a uniform phase shift doesn't change the
+  time-averaged response to a periodic drifting grating.
+- **Uniform amplitude** (50% gain): cuts speed-tuning peaks substantially (-35% to -49%)
+  and coherence peak (-9% to -18%), but barely touches direction peak/DSI/FWHM.
+- **Parasol-only 70% knockout** (biological, lagged only) is qualitatively different from
+  uniform amplitude: it *raises* direction peak (+22%) while broadening tuning (FWHM
+  +7.4%), degrading DSI (-3.2%), and crashing coherence sensitivity (-52%) - consistent
+  with losing the parasol pathway's fast, high-gain contribution shifting the population
+  toward slower, broader, midget-dominated responses.
+- **Uniform vs. stochastic, the core question:** for **amplitude**-type lesions, uniform
+  and stochastic (random/patchy/coupled) land in a similar range (~9-18% coherence-peak
+  drop). For **delay**-type lesions they diverge sharply: `delay_random` devastates
+  coherence (-59% derivative, -39% lagged) and high-pass speed tuning (-64%/-55%), while
+  `delay_uniform` does almost nothing, and `delay_patchy` (spatially correlated, not
+  fully random) tracks close to uniform. **Conclusion: it's spatial heterogeneity /
+  decorrelation in conduction delay - not delay magnitude itself - that disrupts
+  motion/coherence pooling**, since desynchronized timing across space breaks the
+  spatial pooling that coherence and speed tuning depend on.
+
+---
+
+## Figure & Data Locations
+
+All generated output now lives under `explore/_figs/` (gitignored - regenerate via the
+scripts below, don't expect it to be present after a fresh clone):
+
+| Phase | Script | Location | Count |
+|---|---|---|---|
+| 1 (baseline) | `validateSHFigs9to14.m` | `explore/_figs/MTmodel_validation_figs/` | 18 |
+| 2 (uniform/biological lesions) | `validateSHFigs9to14_lesions.m` | `explore/_figs/MTmodel_lesion_figs/` | 36 |
+| 2b (stochastic lesions) | `validateSHFigs9to14_lesions_stochastic.m` | `explore/_figs/MTmodel_stochastic_lesion_figs/` | 60 |
+| Quantitative analysis | `quantitativeAnalysisFigs9to14.m` | `explore/_figs/MTmodel_quantitative_analysis/` | 4 files (3 CSV + 1 PNG) |
+
+**Total: 114 figures + 4 analysis files.**
+
+The scripts themselves write to `tempdir` (`/tmp/MTmodel_*` on macOS/Linux) by default -
+that's ephemeral. Copy to `explore/_figs/` (as done here) for anything you want to keep
+past a reboot.
 
 ---
 
@@ -156,41 +221,35 @@ All lesions use **spatial heterogeneity** - different visual field locations get
 ### Phase 1 (Baseline - one-time)
 
 ```matlab
-% From MTmodel root
 run('explore/validateSHFigs9to14.m')
 ```
-
-- Runtime: ~30-45 min
-- Fits and caches lagged weights on first run
-- Output: 18 baseline figures
+Fits and caches lagged weights on first run. Output: 18 baseline figures.
 
 ### Phase 2 (Uniform lesions)
 
 ```matlab
 run('explore/validateSHFigs9to14_lesions.m')
 ```
-
-- Runtime: ~60-75 min  
-- Requires Phase 1 cached weights
-- Output: 36 lesioned figures
+Requires Phase 1 cached weights. Output: 36 lesioned figures.
 
 ### Phase 2b (Stochastic lesions)
 
 ```matlab
 run('explore/validateSHFigs9to14_lesions_stochastic.m')
 ```
+Requires Phase 1 cached weights and the Image Processing Toolbox. Output: 60 stochastic lesion figures.
 
-- Runtime: ~90-120 min
-- Requires Phase 1 cached weights
-- Output: 60 stochastic lesion figures
+### Quantitative analysis
+
+```matlab
+run('explore/quantitativeAnalysisFigs9to14.m')
+```
+Requires Phase 1 cached weights. Output: metrics CSVs + summary bar chart (a few minutes).
 
 ### Viewing Results
 
 ```matlab
-% Figure locations printed at script start
-% Example: /tmp/MTmodel_validation_figs/
-% Open in Finder to view side-by-side:
-system('open /tmp/MTmodel_validation_figs/')
+system('open explore/_figs/MTmodel_validation_figs/')
 ```
 
 ---
@@ -198,13 +257,10 @@ system('open /tmp/MTmodel_validation_figs/')
 ## Output File Naming
 
 ### Phase 1 (Baseline)
-- `fig{9-14}_legacy.png` - Original SH model
-- `fig{9-14}_derivative.png` - Derivative preset
-- `fig{9-14}_lagged_midget_parasol.png` - Lagged biological
+- `fig{9-14}_legacy.png`, `fig{9-14}_derivative.png`, `fig{9-14}_lagged_midget_parasol.png`
 
-### Phase 2 (Uniform)
-- `fig{9-14}_derivative_amplitude_uniform.png`
-- `fig{9-14}_derivative_delay_uniform.png`
+### Phase 2 (Uniform/biological)
+- `fig{9-14}_derivative_{amplitude_uniform|delay_uniform}.png`
 - `fig{9-14}_lagged_midget_parasol_{amplitude_uniform|delay_uniform|amplitude_parasol|delay_ON_only}.png`
 
 ### Phase 2b (Stochastic)
@@ -212,120 +268,83 @@ system('open /tmp/MTmodel_validation_figs/')
 
 ---
 
-## Interpreting Results
-
-### What to Look For
-
-1. **Baseline validation (Phase 1)**
-   - Derivative should match legacy exactly (sanity check)
-   - Lagged should be very close (validates ~0.985 correlation)
-   - Differences in Figs 11-14 are expected (complex stimuli)
-
-2. **Uniform lesions (Phase 2)**
-   - How do tuning curves degrade? (shift, broaden, reduce peak?)
-   - Amplitude vs delay: which is more disruptive?
-   - Cell-specific (parasol, ON): selective vs global damage
-
-3. **Stochastic lesions (Phase 2b)**
-   - Random vs patchy: is spatial correlation more/less disruptive?
-   - Coupled: does correlated amplitude+delay worsen effects?
-   - Compare to uniform: is heterogeneity itself problematic?
-
-### Quantitative Comparisons
-
-For rigorous analysis, extract tuning curves from figures and compute:
-- Peak response reduction
-- Tuning width changes (FWHM)
-- Direction/speed bias shifts
-- Selectivity indices (DSI, etc.)
-
----
-
 ## Scientific Rationale (per RGC_V1_unification_plan.md §4)
 
-**Why these figures?**
-- Anchors validation to **published benchmarks** (SH 1998)
-- Tests key V1/MT phenomena: direction/speed tuning, pattern selectivity, masking
-- **Visual validation** before scaling to full lesion studies
+**Why these figures?** Anchors validation to published benchmarks (SH 1998); tests key
+V1/MT phenomena (direction/speed tuning, pattern selectivity, masking) before scaling to
+full lesion studies.
 
-**Why lesions?**
-- Optic neuritis = within-subject deficit (lesioned vs healthy)
-- Fixed weights = pure RGC effect (not V1 adaptation)
-- Uniform → stochastic progression tests realism
+**Why lesions?** Optic neuritis is a within-subject deficit (lesioned vs healthy); fixed
+weights isolate the pure RGC effect (not V1 adaptation); uniform -> stochastic
+progression tests realism.
 
-**Why lagged preset?**
-- Closes TF gap (~0.985 vs ~0.68 without lags)
-- Biologically parameterized (midget/parasol, ON/OFF)
-- Lesionable via cell-type and timing parameters
+**Why lagged preset?** Closes the TF gap (~0.985 vs ~0.68 without lags); biologically
+parameterized (midget/parasol, ON/OFF); lesionable via cell-type and timing parameters.
 
 ---
 
 ## Next Steps
 
-### Immediate (from plan doc §4)
-1. ✅ Visual validation baseline (Phase 1) - **DONE**
-2. 🔄 Uniform lesion validation (Phase 2) - **IN PROGRESS**
-3. 📝 Stochastic lesion validation (Phase 2b) - **READY**
-4. 📊 Quantitative comparison (extract curves, compute metrics)
+### From plan doc (docs/RGC_V1_unification_plan.md §4, items 1-3, 5) - not yet addressed here
+1. **Pin down frame rate** - convert frame delays to physiological timing (ms).
+2. **Optic-neuritis lesion studies proper** - within-subject deltas (affected vs fellow eye), building on the lesion machinery validated here.
+3. **Rectification non-vacuousness refinement** (lower priority).
 
-### Future (from plan doc, items 1-3, 5)
-1. **Pin down frame rate** - convert frame delays to physiological timing (ms)
-2. **Wire lagged preset through MT** - check speed tuning directly
-3. **Optic neuritis lesion studies** - within-subject deltas (affected vs fellow eye)
-4. **Rectification non-vacuousness test** - refine ON/OFF asymmetry uniqueness
+Note: `AGENTS.md` and the plan doc's own status notes still describe this Figs 9-14
+validation (item 4) as pending/in-progress as of their last update (2026-07-12) - they
+haven't been synced to this completed status yet.
 
 ---
 
-## Files Created
+## Files
 
 ### Scripts
 - `explore/validateSHFigs9to14.m` - Phase 1 baseline
-- `explore/validateSHFigs9to14_lesions.m` - Phase 2 uniform lesions
-- `explore/validateSHFigs9to14_lesions_stochastic.m` - Phase 2b stochastic
-- `explore/stochastic_lesion_functions.m` - Standalone stochastic lesion functions (reference)
+- `explore/validateSHFigs9to14_lesions.m` - Phase 2 uniform/biological lesions
+- `explore/validateSHFigs9to14_lesions_stochastic.m` - Phase 2b stochastic lesions
+- `explore/quantitativeAnalysisFigs9to14.m` - quantitative metrics across all 19 conditions
+- `explore/stochastic_lesion_functions.m` - standalone stochastic lesion functions (reference)
+
+### Model fix
+- `model/innerworkings/shModelV1Linear.m` - added `'custom'` mode-dispatch case (commit `40c7dff`)
 
 ### Data
-- `pars/shRgcClassesMidgetParasolLagged_v1Weights_lag0123.mat` - Cached fitted weights (28×160)
+- `pars/shRgcClassesMidgetParasolLagged_v1Weights_lag0123.mat` - cached fitted weights (28x160)
 
 ### Documentation
 - This file: `explore/VALIDATION_SUMMARY.md`
+- `explore/SESSION_PROGRESS_2026-07-13.md` - session log (see 2026-07-16 update at top)
 
 ---
 
 ## Technical Notes
 
 ### Cached Weights
-- **Why:** Fitting takes ~30 sec; loading takes <1 sec
-- **When fitted:** First run of Phase 1
-- **Deterministic:** RNG seed 42 (reproducible across machines)
-- **Invalidate:** Delete `.mat` file to refit
+- Fitting takes ~30 sec; loading takes <1 sec. Fitted on first Phase 1 run, RNG seed 42
+  (reproducible). Delete the `.mat` file to refit.
 
 ### MATLAB Requirements
-- Base MATLAB (tested on R2026a)
-- Image Processing Toolbox (for stochastic lesions only)
-- MTmodel toolbox in path
+- Base MATLAB (tested on R2026a); Image Processing Toolbox (stochastic lesions only); MTmodel toolbox in path.
 
-### Performance
-- Phase 1: ~30-45 min (18 figs)
-- Phase 2: ~60-75 min (36 figs)
-- Phase 2b: ~90-120 min (60 figs)
-- **Bottleneck:** Figure 10 speed tuning (shTuneBarSpeed is slow)
+### Performance (observed 2026-07-16, faster than originally estimated)
+- Phase 1: well under the originally-estimated 30-45 min.
+- Phase 2: well under the originally-estimated 60-75 min.
+- Phase 2b: well under the originally-estimated 90-120 min.
+- Quantitative analysis: a few minutes for all 19 conditions.
 
 ### Reproducibility
-- All scripts use fixed RNG seeds
-- Figures set to 'Visible', 'off' (faster, no display)
-- Output locations printed at start
+- All scripts use fixed RNG seeds; figures set to `'Visible', 'off'` (faster, no display); output locations printed at start.
 
 ---
 
 ## Contact / Issues
 
-For questions about this validation work:
-- See `docs/RGC_V1_unification_plan.md` for design rationale
-- See `docs/RGC_V1_design_discussion.md` for background
-- See `AGENTS.md` for current project status
+- See `docs/RGC_V1_unification_plan.md` for design rationale.
+- See `docs/RGC_V1_design_discussion.md` for background.
+- See `AGENTS.md` for project status (not yet synced to this completed validation - see Next Steps above).
 
 **Common issues:**
-- "Cached weights not found" → Run Phase 1 first
-- "imgaussfilt undefined" → Image Processing Toolbox needed (Phase 2b only)
-- Figures not appearing → Check temp dir path printed at script start
+- "Cached weights not found" -> run Phase 1 first.
+- "imgaussfilt undefined" -> Image Processing Toolbox needed (Phase 2b only).
+- "Lagged" condition looks identical to "derivative" -> check `pars.rgc.mode = 'custom'`
+  is set (see bug note above); without it, the lagged classes are silently discarded.

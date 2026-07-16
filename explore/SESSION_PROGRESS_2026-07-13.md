@@ -1,6 +1,35 @@
 # Session Progress - 2026-07-13
 
-## Completed Today
+## Update — 2026-07-16 (everything below this box is complete)
+
+**Everything this file originally listed as "ready to run" / "next steps" is done.**
+Phase 2b ran, quantitative analysis is complete, and a real bug was found and fixed
+along the way. See `explore/VALIDATION_SUMMARY.md` for the full writeup - short version:
+
+- **Bug found & fixed:** the "lagged" preset never set `pars.rgc.mode`, so
+  `shModelV1Linear` silently rebuilt it as the plain derivative preset on every call -
+  meaning the "Figs 9-10: all three paths appear identical" note below (line ~11) was
+  documenting *the bug*, not a real finding. Fixed in `model/innerworkings/shModelV1Linear.m`
+  (commit `40c7dff`), then propagated to all three figure scripts + regenerated
+  (commit `f87b05d`). Lagged now genuinely differs from derivative (~0.985-0.995
+  correlation, not identical).
+- **Phase 2b ran:** 60 stochastic-lesion figures generated (was "ready, not run yet" below).
+- **Quantitative analysis done:** `explore/quantitativeAnalysisFigs9to14.m` (commit
+  `5bc5431`) - direction/speed/coherence tuning metrics across all 19 conditions.
+  Headline finding: spatially heterogeneous (random) conduction delay is far more
+  disruptive to coherence/speed tuning than a uniform delay of the same average
+  magnitude, while amplitude-type lesions (uniform vs. stochastic) are comparable.
+- **All 114 figures + 4 analysis files now live in `explore/_figs/`** (gitignored,
+  regenerable - see table in VALIDATION_SUMMARY.md), not the `/tmp/` paths referenced
+  throughout the rest of this file.
+
+The "Known Issues" and "Next Steps" sections below are historical (as of 2026-07-13) -
+the Phase 2b / quantitative-analysis items are resolved; the plan-doc items (frame rate,
+optic-neuritis lesion studies proper, rectification refinement) are still open.
+
+---
+
+## Completed Today (2026-07-13, historical)
 
 ### Phase 1: Baseline Validation ✅
 - **Script:** `explore/validateSHFigs9to14.m`
