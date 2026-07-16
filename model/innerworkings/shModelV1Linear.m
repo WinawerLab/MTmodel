@@ -58,8 +58,21 @@ if isfield(pars, 'rgc') && isfield(pars.rgc, 'enabled') && pars.rgc.enabled == 1
                 pars.rgc.classesMode = 'fourpop';
             end
             rgcFun = @shModelV1LinearFromClasses;
+        case 'custom'
+            % Caller has already fully configured pars.rgc.classes/combine
+            % (e.g. shRgcClassesMidgetParasolLagged with combine='weights'
+            % and v1Weights fitted separately) - use as-is, no rebuild. Without
+            % this case, any classesMode other than 'derivative'/'fourpop'
+            % would silently fall through to the 'derivative' branch above
+            % (since mode defaults to 'derivative' when pars.rgc.mode is
+            % unset) and have its custom classes/weights discarded.
+            if ~isfield(pars.rgc, 'classes') || isempty(pars.rgc.classes)
+                error('shModelV1Linear:customNoClasses', ...
+                      'pars.rgc.mode is ''custom'' but pars.rgc.classes is not set.');
+            end
+            rgcFun = @shModelV1LinearFromClasses;
         otherwise
-            error('pars.rgc.mode must be ''derivative'' or ''fourPop''.');
+            error('pars.rgc.mode must be ''derivative'', ''fourPop'', or ''custom''.');
     end
     if nargin > 2
         [varargout{1:nargout}] = rgcFun(M, pars, varargin{3});
