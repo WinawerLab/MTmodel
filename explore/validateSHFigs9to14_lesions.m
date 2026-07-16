@@ -96,6 +96,7 @@ function pars = setupLaggedBiological()
 % Load cached weights (fitted in Phase 1)
 pars = shPars;
 pars.rgc.enabled = 1;
+pars.rgc.mode = 'custom'; % prevent shModelV1Linear from rebuilding these classes
 pars.rgc.classes = shRgcClassesMidgetParasolLagged(pars, [0 1 2 3]);
 pars.rgc.combine = 'weights';
 pars.rgc.classesMode = 'custom';

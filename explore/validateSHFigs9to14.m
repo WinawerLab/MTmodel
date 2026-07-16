@@ -70,10 +70,11 @@ function pars = setupLaggedBiological()
 % Lagged biological preset: midget/parasol with lags
 pars = shPars;
 pars.rgc.enabled = 1;
+pars.rgc.mode = 'custom'; % prevent shModelV1Linear from rebuilding these classes
 % Build lagged biological classes with lags [0 1 2 3] frames
 pars.rgc.classes = shRgcClassesMidgetParasolLagged(pars, [0 1 2 3]);
 pars.rgc.combine = 'weights';
-pars.rgc.classesMode = 'custom'; % prevent dispatch from rebuilding
+pars.rgc.classesMode = 'custom';
 % Fit weights to legacy V1
 fprintf('  Fitting lagged biological weights to legacy V1...\n');
 pars = fitLaggedWeights(pars);
