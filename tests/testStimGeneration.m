@@ -45,3 +45,13 @@ shAssert(g(2) > 0 && g(3) > 0,      'v12sin sf and tf must be positive');
 m = mt2sin([0, 1]);
 shAssert(numel(m) == 3,              'mt2sin must return 3-element vector');
 shAssert(all(isfinite(m)),            'mt2sin must be finite');
+
+% mkMotionLetter (small, fast)
+mlSz = [120 160 24];
+[ml, mlInfo] = mkMotionLetter(mlSz, 'C', 'seed', 1, 'fCovered', 0.15, ...
+    'letterSizePx', 80, 'dotSpeedPxPerFrame', 0.5);
+shAssert(isequal(size(ml), mlSz),     'mkMotionLetter: wrong size');
+shAssert(all(isfinite(ml(:))),         'mkMotionLetter: non-finite values');
+shAssert(min(ml(:)) >= 0 && max(ml(:)) <= 1, 'mkMotionLetter: values outside [0,1]');
+shAssert(mlInfo.pixelsPerLetter > 0,  'mkMotionLetter: letter mask must be non-empty');
+shAssert(strcmp(mlInfo.letter, 'C'),   'mkMotionLetter: letter metadata wrong');
