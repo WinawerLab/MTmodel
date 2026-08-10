@@ -49,7 +49,7 @@ shAssert(all(isfinite(m)),            'mt2sin must be finite');
 % mkMotionLetter (small, fast)
 mlSz = [120 160 24];
 [ml, mlInfo] = mkMotionLetter(mlSz, 'C', 'seed', 1, 'fCovered', 0.15, ...
-    'letterSizePx', 80, 'dotSpeedPxPerFrame', 0.5);
+    'letterSizePx', 80, 'dotSpeedPxPerFrame', 0.5, 'referenceDisplaySize', []);
 shAssert(isequal(size(ml), mlSz),     'mkMotionLetter: wrong size');
 shAssert(all(isfinite(ml(:))),         'mkMotionLetter: non-finite values');
 shAssert(min(ml(:)) >= 0 && max(ml(:)) <= 1, 'mkMotionLetter: values outside [0,1]');

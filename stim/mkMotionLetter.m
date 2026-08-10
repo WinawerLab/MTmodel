@@ -1,45 +1,16 @@
 % [stim, info] = mkMotionLetter(stimSz, letter, ...)
 %
-% Motion-defined letter stimulus (Regan-style): two dot fields drift horizontally
-% in opposite directions. Letter dots move right; background dots move left.
-% Letter dots are visible only where they fall inside a Sloan-letter mask;
-% background dots are visible only outside the mask (optional, as in the
-% contrast staircase block).
+% Motion-defined letter stimulus (Regan-style): letter dots drift right,
+% background dots drift left; each is visible only inside/outside the letter mask.
 %
-% Port of the dot/mask logic in runSingleTrial.m (Psychtoolbox experiment).
-% Output is a [Y X T] movie in [0, 1] suitable for shModel.
+% When referenceDisplaySize is set (default [960 1280], matching Experiment.m),
+% dot size, letter size, and speed are scaled to stimSz so proportions match
+% the booth display. The letter mask is rendered at the output field size with
+% a proportionally scaled Sloan (or fallback) font — the mask is never
+% imresize'd from booth resolution (that blurs Sloan letterforms).
+% Pass referenceDisplaySize = [] to build directly at stimSz with no scaling.
 %
-% Required arguments:
-%   stimSz   [Y X T] stimulus size (frames = stimSz(3))
-%   letter   single character (e.g. 'C')
-%
-% Optional name/value pairs (experiment defaults in brackets):
-%   'dotSpeedDegS'        dot speed in deg/s [0.45]  (used if dotSpeedPxPerFrame unset)
-%   'dotSpeedPxPerFrame'  override speed in pixels/frame (model-native units)
-%   'letterSizeArcmin'    letter size in arcmin [168]
-%   'letterSizePx'        letter TextSize in pixels (overrides arcmin)
-%   'dotContrast'         dot contrast 0–1; alpha-blended on grey [1]
-%   'dotSize'             dot diameter in pixels [4]
-%   'dotShape'            'square' (pixel-aligned block) or 'disk' [square]
-%   'fCovered'            fraction of screen area covered by dots [0.5]
-%   'drawBackgroundDots'  draw background dots outside letter [true]
-%   'fontName'            letter font ['Sloan']
-%   'background'          grey level [0.5]
-%   'frameRate'           frames/s for deg/s conversion [60]
-%   'ppd'                 pixels/deg (if unset, computed from screenWidthCm/viewDistCm)
-%   'screenWidthCm'       for ppd [39]
-%   'viewDistCm'          for ppd [175]
-%   'seed'                RNG seed (omit = don't reset RNG)
-%
-% Outputs:
-%   stim     [Y X T] double in [0, 1]
-%   info     struct with parameters, binaryMask, letterContrast, etc.
-%
-% Example (experiment-like, 1280×960 px field, 4 s @ 60 Hz):
-%   stim = mkMotionLetter([960 1280 240], 'C', 'dotSpeedDegS', 0.45, ...
-%       'letterSizeArcmin', 168, 'dotContrast', 1, 'ppd', 32);
-%
-% See also: explore/showMotionLetter.m, flipBook
+% See also: explore/showMotionLetter.m, playStimMovie, playStimMovieCompare
 
 function [stim, info] = mkMotionLetter(stimSz, letter, varargin)
 
@@ -51,6 +22,7 @@ function [stim, info] = mkMotionLetter(stimSz, letter, varargin)
     p.addParameter('dotContrast', 1.0);
     p.addParameter('dotSize', 4);
     p.addParameter('dotShape', 'square');
+    p.addParameter('referenceDisplaySize', [960 1280]);
     p.addParameter('fCovered', 0.5);
     p.addParameter('drawBackgroundDots', true);
     p.addParameter('fontName', 'Sloan');
@@ -66,86 +38,132 @@ function [stim, info] = mkMotionLetter(stimSz, letter, varargin)
     if numel(stimSz) ~= 3
         error('mkMotionLetter:stimSz', 'stimSz must be [Y X T].');
     end
-    if ~ischar(letter) && ~(isstring(letter) && isscalar(letter))
-        error('mkMotionLetter:letter', 'letter must be a single character.');
-    end
     letter = char(letter);
     if numel(letter) ~= 1
         error('mkMotionLetter:letter', 'letter must be a single character.');
     end
 
-    screenY = stimSz(1);
-    screenX = stimSz(2);
+    genY = stimSz(1);
+    genX = stimSz(2);
     numFrames = stimSz(3);
 
     if ~isempty(opts.seed)
         rng(opts.seed);
     end
 
+    refSize = opts.referenceDisplaySize;
+    if isempty(refSize)
+        fieldScale = 1;
+        ppdRef = localPpd(genX, opts.screenWidthCm, opts.viewDistCm);
+    else
+        if numel(refSize) ~= 2
+            error('mkMotionLetter:referenceDisplaySize', 'referenceDisplaySize must be [Y X].');
+        end
+        fieldScale = min(genY / refSize(1), genX / refSize(2));
+        ppdRef = localPpd(refSize(2), opts.screenWidthCm, opts.viewDistCm);
+    end
+
     ppd = opts.ppd;
     if isempty(ppd)
-        ppd = localPpd(screenX, opts.screenWidthCm, opts.viewDistCm);
+        ppd = ppdRef;
     end
 
     if ~isempty(opts.letterSizePx)
-        letterSizePx = round(opts.letterSizePx);
+        letterSizeBooth = round(opts.letterSizePx);
     else
-        letterSizePx = round((opts.letterSizeArcmin / 60) * ppd);
+        letterSizeBooth = round((opts.letterSizeArcmin / 60) * ppdRef);
     end
-    letterSizePx = max(letterSizePx, 8);
+    letterSizeBooth = max(letterSizeBooth, 8);
+
+    dotSizePx = max(1, round(opts.dotSize * fieldScale));
 
     if ~isempty(opts.dotSpeedPxPerFrame)
-        speedPxPerFrame = opts.dotSpeedPxPerFrame;
-        speedPxPerSec = speedPxPerFrame * opts.frameRate;
-        dotSpeedDegS = speedPxPerSec / ppd;
+        speedPxPerSec = opts.dotSpeedPxPerFrame * opts.frameRate;
+        dotSpeedDegS = speedPxPerSec / (ppdRef * max(fieldScale, eps));
     else
         dotSpeedDegS = opts.dotSpeedDegS;
-        speedPxPerSec = dotSpeedDegS * ppd;
-        speedPxPerFrame = speedPxPerSec / opts.frameRate;
+        speedPxPerSec = dotSpeedDegS * ppdRef * fieldScale;
     end
+    speedPxPerFrame = speedPxPerSec / opts.frameRate;
 
     grey = opts.background;
-    white = 1.0;
-    dotValue = grey + opts.dotContrast * (white - grey);
+    dotValue = grey + opts.dotContrast * (1 - grey);
 
-    screenArea = screenX * screenY;
-    dotArea = pi * (opts.dotSize / 2)^2;
-    numDots = max(1, round(opts.fCovered * screenArea / dotArea));
-
-    [binaryMask, fontUsed] = localLetterMask(screenY, screenX, letter, ...
+    letterSizePx = max(8, round(letterSizeBooth * fieldScale));
+    [binaryMask, fontUsed] = localLetterMask(genY, genX, letter, ...
         letterSizePx, opts.fontName, grey);
 
-    offX = (screenX - size(binaryMask, 2)) / 2;
-    offY = (screenY - size(binaryMask, 1)) / 2;
+    [stim, buildInfo] = localBuildMovie(genY, genX, numFrames, ...
+        binaryMask, dotSizePx, opts.dotShape, opts.fCovered, ...
+        grey, dotValue, speedPxPerSec, opts.frameRate, opts.drawBackgroundDots);
 
-    initialLtX = rand(1, numDots) * screenX;
-    initialLtY = rand(1, numDots) * screenY;
-    initialBgX = rand(1, numDots) * screenX;
-    initialBgY = rand(1, numDots) * screenY;
+    info = buildInfo;
+    info.letter = letter;
+    info.letterSizePx = letterSizePx;
+    info.letterSizeBoothPx = letterSizeBooth;
+    info.letterSizeArcmin = opts.letterSizeArcmin;
+    info.dotSpeedDegS = dotSpeedDegS;
+    info.dotSpeedPxPerSec = speedPxPerSec;
+    info.dotSpeedPxPerFrame = speedPxPerFrame;
+    info.dotContrast = opts.dotContrast;
+    info.dotSize = dotSizePx;
+    info.dotSizeNominal = opts.dotSize;
+    info.fieldScale = fieldScale;
+    info.referenceDisplaySize = refSize;
+    info.dotShape = opts.dotShape;
+    info.fCovered = opts.fCovered;
+    info.drawBackgroundDots = opts.drawBackgroundDots;
+    info.frameRate = opts.frameRate;
+    info.ppd = ppdRef;
+    info.fontName = fontUsed;
+    info.background = grey;
+    info.dotValue = dotValue;
+    info.binaryMask = binaryMask;
+    info.pixelsPerLetter = sum(binaryMask(:));
+    info.outputSize = [genY genX numFrames];
 
-    dotTpl = localDotTemplate(opts.dotSize, opts.dotShape);
+end
 
-    stim = repmat(grey, [screenY, screenX, numFrames]);
+% -------------------------------------------------------------------------
+function [stim, info] = localBuildMovie(genY, genX, numFrames, binaryMask, ...
+        dotSizePx, dotShape, fCovered, grey, dotValue, speedPxPerSec, ...
+        frameRate, drawBackgroundDots)
+
+    screenArea = genX * genY;
+    dotArea = pi * (dotSizePx / 2)^2;
+    numDots = max(1, round(fCovered * screenArea / dotArea));
+
+    offX = (genX - size(binaryMask, 2)) / 2;
+    offY = (genY - size(binaryMask, 1)) / 2;
+
+    initialLtX = rand(1, numDots) * genX;
+    initialLtY = rand(1, numDots) * genY;
+    initialBgX = rand(1, numDots) * genX;
+    initialBgY = rand(1, numDots) * genY;
+
+    dotTpl = localDotTemplate(dotSizePx, dotShape);
+
+    stim = repmat(grey, [genY, genX, numFrames]);
     letterContrastFrame = zeros(1, numFrames);
     N_letterPixels = sum(binaryMask(:));
-    pixelsPerDot = pi * (opts.dotSize / 2)^2;
+    pixelsPerDot = pi * (dotSizePx / 2)^2;
 
     for t = 1:numFrames
-        elapsed = (t - 1) / opts.frameRate;
-        ltX = mod(initialLtX + speedPxPerSec * elapsed, screenX);
+        elapsed = (t - 1) / frameRate;
+        ltX = mod(initialLtX + speedPxPerSec * elapsed, genX);
         ltY = initialLtY;
-        bgX = mod(initialBgX - speedPxPerSec * elapsed, screenX);
+        bgX = mod(initialBgX - speedPxPerSec * elapsed, genX);
         bgY = initialBgY;
 
-        frame = repmat(grey, screenY, screenX);
+        frame = repmat(grey, genY, genX);
 
-        if opts.drawBackgroundDots
+        if drawBackgroundDots
             outside = localDotsOutsideLetter(bgX, bgY, binaryMask, offX, offY);
-            frame = localStampDots(frame, bgX(outside), bgY(outside), dotTpl, dotValue, screenX, screenY);
+            frame = localStampDots(frame, bgX(outside), bgY(outside), dotTpl, dotValue, genX, genY);
         end
 
         inside = localDotsInsideLetter(ltX, ltY, binaryMask, offX, offY);
-        frame = localStampDots(frame, ltX(inside), ltY(inside), dotTpl, dotValue, screenX, screenY);
+        frame = localStampDots(frame, ltX(inside), ltY(inside), dotTpl, dotValue, genX, genY);
 
         if N_letterPixels > 0
             nDotsInLetter = sum(inside);
@@ -156,47 +174,28 @@ function [stim, info] = mkMotionLetter(stimSz, letter, varargin)
     end
 
     info = struct();
-    info.letter = letter;
     info.numDots = numDots;
-    info.letterSizePx = letterSizePx;
-    info.letterSizeArcmin = opts.letterSizeArcmin;
-    info.dotSpeedDegS = dotSpeedDegS;
-    info.dotSpeedPxPerSec = speedPxPerSec;
-    info.dotSpeedPxPerFrame = speedPxPerFrame;
-    info.dotContrast = opts.dotContrast;
-    info.dotSize = opts.dotSize;
-    info.dotShape = opts.dotShape;
-    info.fCovered = opts.fCovered;
-    info.drawBackgroundDots = opts.drawBackgroundDots;
-    info.frameRate = opts.frameRate;
-    info.ppd = ppd;
-    info.fontName = fontUsed;
-    info.background = grey;
-    info.dotValue = dotValue;
-    info.binaryMask = binaryMask;
-    info.pixelsPerLetter = N_letterPixels;
     info.letterContrast = mean(letterContrastFrame);
     info.letterContrastFrame = letterContrastFrame;
 
 end
 
-% -------------------------------------------------------------------------
 function ppd = localPpd(screenWidthPx, screenWidthCm, viewDistCm)
     ppd = pi * screenWidthPx / (atan(screenWidthCm / (2 * viewDistCm)) * 360);
 end
 
 function [mask, fontUsed] = localLetterMask(screenY, screenX, letter, letterSizePx, fontName, grey)
-    fontUsed = fontName;
-    img = localRenderLetter(screenY, screenX, letter, letterSizePx, fontUsed, grey);
-    if ~any(img(:) > grey + 0.05)
-        fontUsed = 'Arial';
-        img = localRenderLetter(screenY, screenX, letter, letterSizePx, fontUsed, grey);
+    [img, fontUsed] = localRenderLetter(screenY, screenX, letter, letterSizePx, fontName, grey);
+    thresh = grey * 255 + 10;
+    if ~any(img(:, :, 1) > thresh)
+        warning('mkMotionLetter:fontFallback', ...
+            'Font ''%s'' did not render; falling back to Arial.', fontName);
+        [img, fontUsed] = localRenderLetter(screenY, screenX, letter, letterSizePx, 'Arial', grey);
     end
-    greyLevel = grey * 255;
-    mask = img(:,:,1) > greyLevel + 10;
+    mask = img(:, :, 1) > thresh;
 end
 
-function img = localRenderLetter(screenY, screenX, letter, letterSizePx, fontName, grey)
+function [img, fontUsed] = localRenderLetter(screenY, screenX, letter, letterSizePx, fontName, grey)
     fig = figure('Visible', 'off', 'Units', 'pixels', ...
         'Position', [100 100 screenX screenY], ...
         'Color', [grey grey grey], 'MenuBar', 'none', 'ToolBar', 'none', ...
@@ -205,14 +204,13 @@ function img = localRenderLetter(screenY, screenX, letter, letterSizePx, fontNam
         'Visible', 'off');
     axis(cax, [0 screenX 0 screenY]);
     set(cax, 'YDir', 'reverse');
-    hold(cax, 'on');
-    text(cax, screenX / 2, screenY / 2, letter, ...
+    hText = text(cax, screenX / 2, screenY / 2, letter, ...
         'FontUnits', 'pixels', 'FontSize', letterSizePx, ...
         'FontName', fontName, 'HorizontalAlignment', 'center', ...
         'VerticalAlignment', 'middle', 'Color', [1 1 1]);
     drawnow;
-    fr = getframe(fig);
-    img = fr.cdata;
+    fontUsed = hText.FontName;
+    img = getframe(fig).cdata;
     close(fig);
     if size(img, 1) ~= screenY || size(img, 2) ~= screenX
         img = imresize(img, [screenY screenX]);
@@ -243,22 +241,17 @@ function frame = localStampDots(frame, xs, ys, tpl, dotValue, screenX, screenY)
     for k = 1:numel(xs)
         cx = localWrapIndex(round(xs(k)), screenX);
         cy = localWrapIndex(round(ys(k)), screenY);
-
         cols = cx + dx;
         rows = cy + dy;
-
         valid = cols >= 1 & cols <= screenX & rows >= 1 & rows <= screenY;
         subMask = mask & valid;
         if ~any(subMask(:)), continue; end
-
         frame(sub2ind(size(frame), rows(subMask), cols(subMask))) = dotValue;
     end
 end
 
 function idx = localWrapIndex(idx, n)
-    if idx < 1
-        idx = mod(idx - 1, n) + 1;
-    elseif idx > n
+    if idx < 1 || idx > n
         idx = mod(idx - 1, n) + 1;
     end
 end

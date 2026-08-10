@@ -17,16 +17,23 @@
 %     channel stays mono/biphasic (Kling-plausible); high order lives in the
 %     linear combination.
 %
+% Healthy lagged copies are NOT pathological conduction delay — use
+% pars.rgc.impairmentDelayMap for optic-neuritis timing deficits.
+%
 % Classes = {parasol,midget} x {On,Off} x lags. With the default lags = [0 1 2 3]
 % that is 2 x 2 x 4 = 16 classes, each feeding read-out orders 0..3 (10 combos) ->
 % 160 features. Use pars.rgc.combine = 'weights' (fit via shFitClassV1Weights).
 %
 % Optional arguments:
-% lags   vector of integer frame delays for the lagged copies. [ [0 1 2 3] ]
+% lags   vector of integer frame lags for the lagged copies. [ [0 1 2 3] ]
+%
+% See also: shRgcClassesMidgetParasolTiled (deprecated alias)
 
 function classes = shRgcClassesMidgetParasolLagged(pars, lags) %#ok<INUSL>
 
-    if nargin < 2 || isempty(lags), lags = [0 1 2 3]; end
+    if nargin < 2 || isempty(lags)
+        lags = [0 1 2 3];
+    end
 
     parasolK = localBiGamma(0.6, 1.2, 0.45, 2, 24);   % fast / magno
     midgetK  = localBiGamma(2.0, 4.0, 0.15, 2, 24);   % slow / parvo
@@ -37,16 +44,16 @@ function classes = shRgcClassesMidgetParasolLagged(pars, lags) %#ok<INUSL>
     types = { 'parasol', parasolK, parasolRF; 'midget', midgetK, midgetRF };
     pols  = { 'On', 'onHalf'; 'Off', 'offHalf' };
 
-    classes = shRgcClass('placeholder', 1);   % seed; overwritten below
+    classes = shRgcClass('placeholder', 1);
     n = 0;
-    for t = 1:size(types,1)
-        for p = 1:size(pols,1)
+    for t = 1:size(types, 1)
+        for p = 1:size(pols, 1)
             for d = lags(:)'
-                k = [zeros(d,1); types{t,2}(:)];
-                nm = sprintf('%s%s_lag%d', types{t,1}, pols{p,1}, d);
+                k = [zeros(d, 1); types{t, 2}(:)];
+                nm = sprintf('%s%s_lag%d', types{t, 1}, pols{p, 1}, d);
                 n = n + 1;
-                classes(n) = shRgcClass(nm, k, 'spatialRF', types{t,3}, ...
-                                        'rectify', pols{p,2}, 'readoutOffset', [0 0]);
+                classes(n) = shRgcClass(nm, k, 'spatialRF', types{t, 3}, ...
+                    'rectify', pols{p, 2}, 'readoutOffset', [0 0]);
             end
         end
     end
