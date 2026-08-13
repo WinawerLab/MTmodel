@@ -2,7 +2,7 @@
 %
 % Unified class-based V1 linear stage. Consumes pars.rgc.classes (an array of
 % RGC-class specs from shRgcClass / a preset such as shRgcClassesDerivative or
-% shRgcClassesMidgetParasol) and computes V1 linear responses as:
+% shRgcClassesMidgetParasolLagged) and computes V1 linear responses as:
 %
 %   1. for each class, filter the stimulus by the class's spatiotemporal RF and
 %      rectification, causal-trim, and apply its ON/OFF readout offset;

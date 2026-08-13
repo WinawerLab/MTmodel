@@ -4,7 +4,8 @@
 % (docs/RGC_V1_design_discussion.md §14-15): ON/OFF x midget/parasol, each with
 % a center-surround (DoG) spatial RF and a causal difference-of-gamma temporal
 % kernel, PLUS lagged copies of every class. Two design choices distinguish it
-% from shRgcClassesMidgetParasol:
+% from the retired offset+quadrature preset (now in
+% explore/_archive/shRgcClassesMidgetParasol.m):
 %
 %   * NO ON/OFF spatial read-out offset and NO ON quadrature kernel. The
 %     biological direction-selectivity mechanism was demoted to a side-quest

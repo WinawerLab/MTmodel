@@ -179,7 +179,7 @@ Full reasoning: `RGC_V1_design_discussion.md` §9–15. In brief, decisions 3/4/
 spatial-offset mechanism) are **retired**. Why:
 
 - The fixed translational ON/OFF offset **distorts V1 orientation** and does not
-  cleanly rotate with a neuron's preferred direction (`explore/probeOffsetOrientation.m`);
+  cleanly rotate with a neuron's preferred direction (`explore/_archive/probeOffsetOrientation.m`);
   removing it recovers orientation *best*. DS is something the SH steerable
   read-out already yields for free — building it biologically fights that.
 - The real value of a biological front-end is **not a different healthy
@@ -189,7 +189,7 @@ spatial-offset mechanism) are **retired**. Why:
   physiology), **not a mathematically richer lesion space** than SH. NOTE
   (corrected 2026-07-13, design-discussion §16): the earlier claim that a
   conduction delay is "a lesion axis SH cannot express" (from
-  `explore/lesionDeltaTest.m`) was **oversold**. That test's 85% measures
+  `explore/_archive/lesionDeltaTest.m`) was **oversold**. That test's 85% measures
   delay-vs-amplitude *within* the biological model; SH's basis regrouped by
   temporal order supports the same delay lesion, and in the adopted *lagged* preset
   a delay is ≈ a reweighting of the lag channels. A genuine biological-vs-SH
@@ -199,7 +199,7 @@ spatial-offset mechanism) are **retired**. Why:
   R² ≥ 0.975 (`explore/temporalTilingFromLags.m`), and in the *real* model a
   **lagged** biological preset (no offset/quadrature) reaches **~0.985** legacy-V1
   correlation, flat across TF, vs ~0.68 for the offset+quadrature preset
-  (`explore/testLaggedBiologicalFidelity.m`). The ~0.70 "biological ceiling" was a
+  (`explore/_archive/testLaggedBiologicalFidelity.m`). The ~0.70 "biological ceiling" was a
   preset artifact (2 unlagged kernels), not a biological wall.
 
 **Revised decisions (supersede 3, 4, 6):**
@@ -259,7 +259,7 @@ viewer (`shV1Rf` / `shShowV1Rf`, class-agnostic — the two-view viz in
   phase partner), `pars/shRgcClassesMidgetParasol.m` (ON/OFF x midget/parasol with
   quadrature ON kernels + spatial offset -> 4 classes x 10 read-outs = 40
   features), and `help/shFitClassV1Weights.m` (ridge fit for `combine='weights'`).
-  Verified end-to-end (`explore/verifyClassPathBiological.m`, `tests/testClassPathBiological.m`,
+  Verified end-to-end (`explore/_archive/verifyClassPathBiological.m`, `tests/testClassPathBiological.m`,
   11/11 pass): held-out legacy-V1 correlation ~0.70, on par with the old fourPop
   ceiling (~0.69), finite. As expected, the quadrature aids DS but cannot recover
   the missing high-TF orders, so legacy reconstruction still caps ~0.7. Existing
@@ -335,10 +335,10 @@ viewer (`shV1Rf` / `shShowV1Rf`, class-agnostic — the two-view viz in
 - **Increment 3d — REDEFINED by the §3.5 pivot; the original (measure intrinsic
   biological DS) is retired.** What was done instead (2026-07-12): established that
   the biological front-end is non-vacuous as a *lesion* parameterization
-  (`explore/lesionDeltaTest.m`), that lags close the §2.4 TF gap
+  (`explore/_archive/lesionDeltaTest.m`), that lags close the §2.4 TF gap
   (`explore/temporalTilingFromLags.m`), and built + validated the lagged biological
   preset `pars/shRgcClassesMidgetParasolLagged.m` (~0.985 legacy-V1 correlation,
-  flat across TF; `explore/testLaggedBiologicalFidelity.m`). `runAllTests` 14/14.
+  flat across TF; `explore/_archive/testLaggedBiologicalFidelity.m`). `runAllTests` 14/14.
 - **Increment 4 — DONE (2026-07-16).** Added the clean "use my custom classes
   as-is" dispatch mode that item 2 (below) had flagged as missing —
   `shModelV1Linear.m` gets an explicit `'custom'` case alongside `'derivative'`/

@@ -16,7 +16,7 @@ maxerr = 0;
 for j = 1:size(pars.v1PopulationDirections, 1)
     [RFrgc, RFstim] = shV1Rf(pars, j);
     shAssert(isequal(size(RFrgc), [fsz fsz 4]), 'RFrgc must be fsz x fsz x 4 (derivative)');
-    Kabs = flip(RFstim, 3);                  % lag axis <-> absolute-frame axis
+    Kabs = flip(RFstim, 3);                  % time axis <-> absolute-frame axis
     pred = scale * sum(Kabs(:) .* M(:));
     maxerr = max(maxerr, abs(pred - pop(j)));
 end
@@ -24,13 +24,16 @@ shAssert(maxerr < 1e-10, sprintf('shV1Rf derivative RFstim vs model too far: %.3
 
 % --- biological: runs, finite, right shapes ---
 parsB = shPars;
-parsB.rgc.classes = shRgcClassesMidgetParasol(parsB);
+parsB.rgc.classes = shRgcClassesMidgetParasolLagged(parsB);
 parsB.rgc.combine = 'weights';
+nClassB = numel(parsB.rgc.classes);
 dims = shGetDims(parsB, 'mtPattern', [1 1 18]);
 stimSet = { mkDots(dims,0,1,0.12,1), mkSin(dims,0,0.9,0.10,1), mkSin(dims,pi/3,1.4,0.12,1) };
 parsB.rgc.v1Weights = shFitClassV1Weights(parsB, stimSet);
 
 [RFrgcB, RFstimB, infoB] = shV1Rf(parsB, 5);
-shAssert(isequal(size(RFrgcB), [fsz fsz 4]), 'biological RFrgc must be fsz x fsz x 4');
+shAssert(isequal(size(RFrgcB), [fsz fsz nClassB]), ...
+         sprintf('biological RFrgc must be fsz x fsz x %d', nClassB));
 shAssert(all(isfinite(RFrgcB(:))) && all(isfinite(RFstimB(:))), 'biological RF arrays must be finite');
-shAssert(numel(infoB.classNames) == 4, 'biological info must list 4 class names');
+shAssert(numel(infoB.classNames) == nClassB, ...
+         sprintf('biological info must list %d class names', nClassB));

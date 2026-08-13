@@ -242,7 +242,7 @@ horizontal (`readoutOffset = [0 ±2]`, same for every neuron and never rotated),
 it can only manufacture one orientation of DS and biases oblique neurons toward
 vertical.
 
-**The control experiment (`explore/probeOffsetOrientation.m`) refuted the clean
+**The control experiment (`explore/_archive/probeOffsetOrientation.m`) refuted the clean
 version of that story.** Refitting with the offset along X, along Y, and removed
 entirely, and measuring RF orientation (structure tensor) against the derivative
 preset as ground truth:
@@ -353,7 +353,7 @@ has a large component orthogonal to the SH-rescaling space → the biological la
 is non-vacuous and the project is justified. If it is fully reproducible by
 rescaling → JW's suspicion is confirmed and we should stop.
 
-Script: `explore/lesionDeltaTest.m`. **Result (2026-07-12): non-vacuous.** The
+Script: `explore/_archive/lesionDeltaTest.m`. **Result (2026-07-12): non-vacuous.** The
 test asks the sharp version — is a conduction *delay* reducible to an *amplitude*
 rescale? — by projecting each lesion's V1 delta onto the front-end's own
 amplitude-rescaling space (each biological channel's contribution).
@@ -456,7 +456,7 @@ honesty.
 **Confirmed in the real (nonlinear) model** — `pars/shRgcClassesMidgetParasolLagged.m`
 (biological midget/parasol, DoG RFs, ON/OFF rectification; **no offset/quadrature**
 per §14; lagged copies per §15) vs its no-lag version, held-out legacy-V1
-correlation by temporal frequency (`explore/testLaggedBiologicalFidelity.m`):
+correlation by temporal frequency (`explore/_archive/testLaggedBiologicalFidelity.m`):
 
 | preset | mean corr | low TF (0.06) | high TF (0.20) |
 |---|---|---|---|

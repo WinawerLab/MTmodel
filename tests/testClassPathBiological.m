@@ -1,15 +1,18 @@
 % testClassPathBiological  Guardrail for the biological midget/parasol preset on
-% the unified class path (increment 2): the DoG + rectification + ON/OFF
-% quadrature/offset machinery must run end-to-end, fit legacy V1 to a sensible
-% level, and stay finite. See docs/RGC_V1_unification_plan.md.
+% the unified class path (increment 2): the DoG + rectification + lagged-class
+% machinery must run end-to-end, fit legacy V1 to a sensible level, and stay
+% finite. Uses the adopted lagged preset (no ON/OFF offset or quadrature; see
+% docs/RGC_V1_unification_plan.md §3.5). The retired offset+quadrature preset
+% lives in explore/_archive/.
 
 rng(0);
 pars = shPars;
 parsLeg = pars; parsLeg.rgc.enabled = 0;
 
 parsBio = pars;
-parsBio.rgc.classes = shRgcClassesMidgetParasol(parsBio);
+parsBio.rgc.classes = shRgcClassesMidgetParasolLagged(parsBio);
 parsBio.rgc.combine = 'weights';
+nClass = numel(parsBio.rgc.classes);
 
 dims = shGetDims(pars, 'mtPattern', [1 1 18]);
 % varied grating + dot training set (directions/SF/TF) so the 40-feature fit
@@ -33,7 +36,8 @@ shAssert(threw, 'biological class path must error when combine=weights but no v1
 
 % fit and evaluate
 parsBio.rgc.v1Weights = shFitClassV1Weights(parsBio, trainSet);
-shAssert(isequal(size(parsBio.rgc.v1Weights), [28 40]), 'fitted class weights must be 28x40');
+shAssert(isequal(size(parsBio.rgc.v1Weights), [28 nClass * 10]), ...
+         sprintf('fitted class weights must be 28x%d', nClass * 10));
 
 P = []; T = [];
 for i = 1:numel(testSet)
@@ -45,4 +49,6 @@ for i = 1:numel(testSet)
 end
 
 c = corr(P, T);
-shAssert(c > 0.6, sprintf('biological class path legacy-V1 correlation too low: %.3f', c));
+% The lagged preset reaches ~0.984 here (the retired offset+quadrature preset
+% capped out near 0.68, hence the old 0.6 threshold). Guard the lagged level.
+shAssert(c > 0.95, sprintf('biological class path legacy-V1 correlation too low: %.3f', c));

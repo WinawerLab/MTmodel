@@ -93,8 +93,8 @@ function pars = shPars
     % modes. 'derivative' needs no fitted weights -- it reconstructs the
     % legacy basis exactly (see shModelV1LinearFromClasses). The biological
     % 'fourPop' mode needs a numerically fitted channel-to-V1 weight matrix
-    % (edit pars.rgc.classes, or swap in shRgcClassesMidgetParasol, to change
-    % the front-end).
+    % (edit pars.rgc.classes, or swap in shRgcClassesMidgetParasolLagged, to
+    % change the front-end).
     if strcmpi(pars.rgc.mode, 'derivative')
         pars.rgc.classes = shRgcClassesDerivative(pars);
         pars.rgc.combine = 'steer';
