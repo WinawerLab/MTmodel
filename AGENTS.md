@@ -75,12 +75,22 @@ legacy behavior. The legacy (RGC-disabled) path is the machine-precision oracle.
   silently computing the plain derivative preset. Fixed by adding an explicit
   `'custom'` case to the dispatch (`pars.rgc.mode = 'custom'` now required
   wherever the lagged preset is built) — see plan doc §4 Increment 4.
-- **Next:** (1) pin down the frame rate (gates whether lags/delays are
-  physiological); (2) optic-neuritis lesion studies proper — the per-class and
-  spatial lesion machinery is now built and validated (above), but the
-  within-subject affected-vs-fellow-eye study itself is still open; (3)
-  rectification non-vacuousness refinement (lower priority). See plan doc §4 for
-  detail.
+- **Next: see `docs/TODO.md`** (created 2026-08-13) — the parked items and the
+  optic-neuritis work plan, ordered by bearing on the driving question ("can an
+  RGC lesion explain increased VEP latency + reduced motion-defined-form
+  recognition at low speeds?"). Headline items: the fitted weights make MT
+  **midget**-dominated, contradicting Maunsell et al. (1990) and SH's own p. 754
+  premise (constraining the fit is parked by JW); VEP latency *is* approachable
+  since the temporal kernels are causal — what's missing is cortical
+  normalization **dynamics**, not latency per se; and the heterogeneous-delay
+  result that crushes motion hits **high** speeds, while the clinical deficit is
+  at **low** speeds — the key experiment to run next.
+- **Frame rate: RESOLVED** (2026-08-13). SH Appendix I p. 761 pins the units:
+  1 pixel = 0.430 deg, 1 frame = 26.9 ms (37.2 fps), 1 pixel/frame = 16 deg/sec.
+  Derivation in `docs/RGC_lagged_preset_summary.md` §7.1. Item (1) below is done.
+- Still open from the older list: optic-neuritis within-subject
+  affected-vs-fellow-eye study; rectification non-vacuousness refinement (lower
+  priority). See plan doc §4 for detail.
 
 ## Running the model & tests
 
