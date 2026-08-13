@@ -6,11 +6,15 @@
 %
 %   RFrgc   [fsz x fsz x nClass]  RGC-referred: the neuron's spatial weighting of
 %           each RGC class channel (independent of the class's own RF/kernel).
-%   RFstim  [fsz x fsz x nLag]    stimulus-referred: the linear space-time RF,
+%   RFstim  [fsz x fsz x nTime]   stimulus-referred: the linear space-time RF,
 %           RFrgc_c convolved with each class's spatial RF (if any) and combined
-%           with its temporal kernel, summed over classes. NOTE: for biological
-%           presets this is the LINEAR kernel only (it ignores the ON/OFF
-%           rectification, which is nonlinear).
+%           with its temporal kernel, summed over classes. The third dimension is
+%           TIME in frames. NOTE: for biological presets this is the LINEAR kernel
+%           only (it ignores the ON/OFF rectification, which is nonlinear).
+%
+% Terminology: the third dimension of RFstim is TIME. Reserve "lag" for the
+% population delays of the lagged biological preset (shRgcClassesMidgetParasolLagged,
+% lags 0-3) -- the two are different quantities and were previously conflated.
 %
 % The per-neuron weights come from the combine mode: 'steer' -> shSwts(direction)
 % (derivative diagonal), 'weights' -> pars.rgc.v1Weights(neuronIdx,:).
@@ -73,9 +77,9 @@ function [RFrgc, RFstim, info] = shV1Rf(pars, neuronIdx)
 
     % Stimulus-referred (linear) RF: convolve each class map with its spatial RF
     % (if any) and combine with its temporal kernel, then sum over classes.
-    nLag = 0;
-    for c = 1:nClass, nLag = max(nLag, numel(classes(c).temporalKernel)); end
-    RFstim = zeros(fsz, fsz, nLag);
+    nTime = 0;
+    for c = 1:nClass, nTime = max(nTime, numel(classes(c).temporalKernel)); end
+    RFstim = zeros(fsz, fsz, nTime);
     for c = 1:nClass
         spatialMap = RFrgc(:, :, c);
         if ~isempty(classes(c).spatialRF)

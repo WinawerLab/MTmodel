@@ -13,8 +13,9 @@
 %
 % Optional name/value arguments (defaults in brackets):
 % 'spatialRF'      [] = delta (single-pixel, i.e. no spatial filtering). Otherwise
-%                  a struct describing a spatial RF (reserved for biological
-%                  presets; not yet consumed by the forward). [ [] ]
+%                  a center-surround DoG struct with fields centerSigma,
+%                  surroundSigma, surroundWeight (pixels), applied to the
+%                  mean-subtracted movie by shClassV1Basis. [ [] ]
 % 'rectify'        'none' (linear, signed) | 'onHalf' | 'offHalf'. ['none']
 % 'readoutOrders'  vector of V1 spatial-derivative TOTAL orders (x+y) this class
 %                  feeds. Derivative preset: the singleton 3-k. fourPop/biological:
