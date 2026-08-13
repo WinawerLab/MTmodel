@@ -12,8 +12,17 @@ thisFile = mfilename('fullpath');
 repoRoot = fileparts(fileparts(thisFile));
 addpath(genpath(repoRoot));
 
-% Where to save figures
-outDir = fullfile(tempdir, 'MTmodel_validation_figs');
+% Where to save figures. Optional overrides, set in the base workspace BEFORE
+% running this script (all are ignored if undefined, so the default full run is
+% unchanged):
+%   OUT_DIR      char, destination folder for the PNGs
+%   ONLY_CONFIGS cellstr of config names to run, e.g. {'lagged_midget_parasol'}
+%   ONLY_FIGS    vector of figure numbers to generate, e.g. [9 10 11]
+if exist('OUT_DIR', 'var') && ~isempty(OUT_DIR)
+    outDir = OUT_DIR;
+else
+    outDir = fullfile(tempdir, 'MTmodel_validation_figs');
+end
 if ~exist(outDir, 'dir'), mkdir(outDir); end
 
 fprintf('Validation figures will be saved to:\n  %s\n\n', outDir);
@@ -23,6 +32,15 @@ configs = struct(...
     'name', {'legacy', 'derivative', 'lagged_midget_parasol'}, ...
     'description', {'Legacy SH (no RGC)', 'Derivative preset (exact)', 'Lagged midget/parasol (lags 0-3, ~0.985 corr)'}, ...
     'setup', {@setupLegacy, @setupDerivative, @setupLaggedBiological});
+
+if exist('ONLY_CONFIGS', 'var') && ~isempty(ONLY_CONFIGS)
+    configs = configs(ismember({configs.name}, ONLY_CONFIGS));
+end
+if exist('ONLY_FIGS', 'var') && ~isempty(ONLY_FIGS)
+    figsToRun = ONLY_FIGS;
+else
+    figsToRun = 9:14;
+end
 
 %% Loop over each configuration and generate all figures
 for iConfig = 1:length(configs)
@@ -34,13 +52,13 @@ for iConfig = 1:length(configs)
     % Setup parameters for this configuration
     pars = cfg.setup();
 
-    % Generate each figure
-    generateFig9(pars, cfg, outDir);
-    generateFig10(pars, cfg, outDir);
-    generateFig11(pars, cfg, outDir);
-    generateFig12(pars, cfg, outDir);
-    generateFig13(pars, cfg, outDir);
-    generateFig14(pars, cfg, outDir);
+    % Generate each requested figure
+    if ismember(9,  figsToRun), generateFig9(pars, cfg, outDir);  end
+    if ismember(10, figsToRun), generateFig10(pars, cfg, outDir); end
+    if ismember(11, figsToRun), generateFig11(pars, cfg, outDir); end
+    if ismember(12, figsToRun), generateFig12(pars, cfg, outDir); end
+    if ismember(13, figsToRun), generateFig13(pars, cfg, outDir); end
+    if ismember(14, figsToRun), generateFig14(pars, cfg, outDir); end
 
     fprintf('\nCompleted %s\n', cfg.name);
 end

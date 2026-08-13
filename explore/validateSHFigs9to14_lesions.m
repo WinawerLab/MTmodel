@@ -13,9 +13,23 @@ thisFile = mfilename('fullpath');
 repoRoot = fileparts(fileparts(thisFile));
 addpath(genpath(repoRoot));
 
-% Where to save figures
-outDir = fullfile(tempdir, 'MTmodel_lesion_figs');
+% Where to save figures. Optional overrides, set in the base workspace BEFORE
+% running this script (ignored if undefined, so the default full run is unchanged):
+%   OUT_DIR      char, destination folder for the PNGs
+%   ONLY_PRESETS cellstr of preset names, e.g. {'lagged_midget_parasol'}
+%   ONLY_LESIONS cellstr of lesion names, e.g. {'amplitude_parasol'}
+%   ONLY_FIGS    vector of figure numbers, e.g. [9 10 11]
+if exist('OUT_DIR', 'var') && ~isempty(OUT_DIR)
+    outDir = OUT_DIR;
+else
+    outDir = fullfile(tempdir, 'MTmodel_lesion_figs');
+end
 if ~exist(outDir, 'dir'), mkdir(outDir); end
+if exist('ONLY_FIGS', 'var') && ~isempty(ONLY_FIGS)
+    figsToRun = ONLY_FIGS;
+else
+    figsToRun = 9:14;
+end
 
 fprintf('Lesion validation figures will be saved to:\n  %s\n\n', outDir);
 
@@ -23,13 +37,13 @@ fprintf('Lesion validation figures will be saved to:\n  %s\n\n', outDir);
 % Universal lesions (apply to both presets)
 universalLesions = struct(...
     'name', {'amplitude_uniform', 'delay_uniform'}, ...
-    'description', {'Uniform 50%% amplitude', 'Uniform 2-frame delay'}, ...
+    'description', {'Uniform 50% amplitude', 'Uniform 2-frame delay'}, ...
     'applyFn', {@lesionAmplitudeUniform, @lesionDelayUniform});
 
 % Biological lesions (only for lagged midget/parasol preset)
 biologicalLesions = struct(...
     'name', {'amplitude_parasol', 'delay_ON_only'}, ...
-    'description', {'Parasol-only 70%% amplitude', 'ON-only 1-frame delay'}, ...
+    'description', {'Parasol-only 70% amplitude', 'ON-only 1-frame delay'}, ...
     'applyFn', {@lesionAmplitudeParasol, @lesionDelayONOnly});
 
 %% Define model presets to test (derivative and lagged midget/parasol)
@@ -37,6 +51,10 @@ presets = struct(...
     'name', {'derivative', 'lagged_midget_parasol'}, ...
     'description', {'Derivative preset', 'Lagged midget/parasol'}, ...
     'setup', {@setupDerivative, @setupLaggedBiological});
+
+if exist('ONLY_PRESETS', 'var') && ~isempty(ONLY_PRESETS)
+    presets = presets(ismember({presets.name}, ONLY_PRESETS));
+end
 
 %% Loop over each preset and lesion type
 for iPreset = 1:length(presets)
@@ -54,6 +72,9 @@ for iPreset = 1:length(presets)
     else
         lesions = [universalLesions, biologicalLesions]; % All lesions for biological
     end
+    if exist('ONLY_LESIONS', 'var') && ~isempty(ONLY_LESIONS)
+        lesions = lesions(ismember({lesions.name}, ONLY_LESIONS));
+    end
 
     for iLesion = 1:length(lesions)
         lesion = lesions(iLesion);
@@ -64,12 +85,12 @@ for iPreset = 1:length(presets)
 
         % Generate Figures 9-14 with this lesion
         lesionLabel = sprintf('%s_%s', preset.name, lesion.name);
-        generateFig9(pars, lesionLabel, lesion.description, outDir);
-        generateFig10(pars, lesionLabel, lesion.description, outDir);
-        generateFig11(pars, lesionLabel, lesion.description, outDir);
-        generateFig12(pars, lesionLabel, lesion.description, outDir);
-        generateFig13(pars, lesionLabel, lesion.description, outDir);
-        generateFig14(pars, lesionLabel, lesion.description, outDir);
+        if ismember(9,  figsToRun), generateFig9(pars, lesionLabel, lesion.description, outDir);  end
+        if ismember(10, figsToRun), generateFig10(pars, lesionLabel, lesion.description, outDir); end
+        if ismember(11, figsToRun), generateFig11(pars, lesionLabel, lesion.description, outDir); end
+        if ismember(12, figsToRun), generateFig12(pars, lesionLabel, lesion.description, outDir); end
+        if ismember(13, figsToRun), generateFig13(pars, lesionLabel, lesion.description, outDir); end
+        if ismember(14, figsToRun), generateFig14(pars, lesionLabel, lesion.description, outDir); end
 
         fprintf('    Completed %s\n', lesion.name);
     end
