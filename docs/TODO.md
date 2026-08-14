@@ -176,6 +176,65 @@ different measurement (cached weights / different stimulus), so the two are not
 directly comparable. The A-vs-B *contrast* above is internally consistent — both
 fits, both stimuli, one script.
 
+**Check 2 result — measured 2026-08-14 (`explore/knockoutAndAlphaCalibration.m`).**
+**Maunsell reproduced; `alpha = 0.10` adopted (bracket 0.05–0.10).**
+
+First, the old model's backwards result was reproduced almost exactly, which
+validates the harness: parasol knockout *raises* the direction peak by **+25.1%**
+(recorded previously as 1.033 → 1.291 = +25.0%) and cuts coherence by −72.7%
+(previously −74.6%; the small gap is consistent with this script seeding the dot
+stimuli, which the earlier one did not). Midget knockout annihilates it (−100%).
+
+Knockout effects, as % change from each architecture's own intact model. "pop"
+columns are over the 19-neuron MT population; the single-neuron columns use the
+`[0 0.35]` test neuron:
+
+| architecture | knockout | dir_peak | dir_DSI | coh_peak | pop med \|%\| | pop >20% |
+|---|---|---|---|---|---|---|
+| mixed (old) | parasol (M) | **+25.1** | −3.9 | −72.7 | 4.1 | 11% |
+| mixed (old) | midget (P) | **−100.0** | −100.0 | −94.0 | 33.0 | 100% |
+| alpha=0.05 | parasol (M) | −68.2 | −81.7 | −89.2 | 85.4 | 95% |
+| alpha=0.05 | midget (P) | −18.3 | −0.0 | −8.9 | 1.4 | 5% |
+| alpha=0.10 | parasol (M) | −60.1 | −66.6 | −88.3 | 81.0 | 95% |
+| alpha=0.10 | midget (P) | −34.0 | −0.0 | −17.3 | 2.7 | 5% |
+| alpha=0.10 | both | −78.7 | −100.0 | −90.5 | 89.5 | 100% |
+| alpha=0.20 | midget (P) | −58.5 | −0.0 | −32.7 | 5.7 | 37% |
+
+Against Maunsell: the M block is "pronounced and often complete" (81% population
+median, 95% of units), the P block has "very little effect" on the typical unit
+(2.7% population median) while being unequivocal for **a minority** (5% = 1 of 19
+units over 20%), and the combined block "essentially eliminates" the response
+(89.5%, DSI −100%). `alpha >= 0.20` breaks this — the P block reaches 37% of units
+and rivals the M block, so the criterion brackets alpha tightly. Both 0.05 and
+0.10 qualify; **0.10** is adopted because it keeps the P contribution real rather
+than vanishing, which is what Maunsell actually reported.
+
+Note the qualitative dissociation, which was not designed in: midget knockout
+leaves **DSI unchanged at every alpha** (−0.0%) — it scales MT down without
+disturbing direction tuning — whereas parasol knockout destroys it (−100% at
+alpha = 0). The two pathways are not interchangeable in this model any more.
+
+**Check 1.6 — first evidence, and it is positive.** Midget dependence concentrates
+sharply at low preferred speed. Median midget-knockout effect by MT preferred
+speed (px/frame; 1 px/frame = 16 deg/s):
+
+| pref speed | alpha=0.05 | alpha=0.10 |
+|---|---|---|
+| 0 | −25.0% | −45.2% |
+| 1 | −5.4 to −7.8% | −11.4 to −15.3% |
+| 6 | −0.7 to −0.9% | −1.4 to −1.9% |
+
+Monotonic, roughly a 10–30x gradient from slowest to fastest. This is the
+mechanism item 3 needs: an insult to the midget pathway would preferentially cost
+**low**-speed motion, which is where the clinical deficit is.
+
+*Caveat, and it matters:* every MT neuron here was probed with the **same** grating,
+optimal for the slow `[0 0.35]` test neuron, so the fast-preferring units were
+driven off-peak and their small effects are partly confounded with that. This is
+suggestive, not settled. The proper test is per-neuron speed tuning
+(`shTuneBarSpeed`, as in `quantitativeAnalysisFigs9to14`) with alpha on vs off —
+which is exactly the item 1.6 / item 3 experiment, now well motivated.
+
 **Machinery built 2026-08-14:**
 - `help/shClassFeatureMask.m` — logical column mask from a class-name regexp.
 - `help/shFitClassV1Weights.m` — optional third argument `mask`; excluded columns
