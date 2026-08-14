@@ -26,28 +26,177 @@ neuron spans 1–10 px/frame = 16–160 deg/s.
 
 ---
 
-## 1. Constrain the weight fit toward magno-dominance *(parked — JW, 2026-08-13)*
+## 1. Give the M/P distinction meaning: masked refit + slow midget drive *(started 2026-08-14)*
 
-**Status: parked deliberately.** Possibly complicated; not to be started without
-a decision to take it on.
+**Status: unparked and in progress.** The two Nassi & Callaway papers added on
+2026-08-14 turned this from an open-ended fitting problem into a bounded change
+with **one new fit and one new scalar**. This supersedes the earlier
+"constrain the weight fit toward magno-dominance" framing and its three
+unevaluated approaches, none of which are being pursued as written.
 
-**Why it matters.** The fitted 28×160 weight matrix makes this model's MT
+**The problem (unchanged).** The fitted 28×160 weight matrix makes this model's MT
 **midget-dominated**: zeroing midget classes collapses MT direction tuning, while
 zeroing parasol classes leaves it intact (and raises the peak). That is the
 opposite of Maunsell et al. (1990), and contradicts SH's own p. 754 premise that
 most MT afferents are magnocellular. The weights were fit to reproduce SH's V1,
 which has no M/P distinction, so nothing in the objective encodes magno-dominance
 — the midget/parasol labels are currently decorative with respect to the fit.
+Every cell-type-specific lesion result from this preset therefore reflects an
+arbitrary fitting outcome rather than biology.
 
-**Consequence if left alone:** every cell-type-specific lesion result from this
-preset reflects an arbitrary fitting outcome rather than biology. Any claim of the
-form "parasol damage causes X" is not currently trustworthy.
+### 1.1 The architectural fact that makes this cheap
 
-Possible approaches, unevaluated:
-- Penalise midget weight on MT-relevant channels in `shFitClassV1Weights`.
-- Fit V1 and MT stages with separate objectives rather than one V1 reconstruction.
-- Accept mixed V1 but constrain the **MT** pooling weights (`shMtWts`) instead —
-  closer to the anatomy, where mixing happens in V1 but MT samples selectively.
+`shMtWts` computes the V1→MT weights **analytically** from the direction geometry:
+
+```matlab
+tmp = sum(shQwts(dirs) * pinv(shQwts(pars.v1PopulationDirections)));
+```
+
+Nothing there is fit, and it carries no cell-type information — it depends only on
+`v1PopulationDirections`. So **MT's M/P dependence is determined entirely by the
+RGC→V1 weight matrix**, provided the direction tiling stays complete. The V1→MT
+pathway needs no new parameters, and the original plan not to touch it survives.
+
+Corollary, and a trap to avoid: this cannot be done by **subsetting** the 28 V1
+neurons. The `pinv` needs the full tiling; dropping rows would wreck MT tuning for
+geometric reasons unrelated to biology. Change *what drives* the 28, never *which*
+of the 28.
+
+### 1.2 What Nassi & Callaway constrain
+
+- **Nassi & Callaway (2006)**, Fig 7A: disynaptic label in layer 4C after an MT
+  injection is **~96–97% in M-dominated 4Cα, ~3% in P-dominated 4Cβ** (V3 is
+  98/1). V2 is the mixed one: ~70% 4Cα / ~29% 4Cβ for blob-unbiased injections.
+- **Nassi & Callaway (2006)**, 6-day survival: MT *does* receive substantial P
+  input, but by a **3–5 synapse** detour — 4Cβ → layer 4B pyramids → V2 thick
+  stripes → MT — bypassing the 4B stellates entirely.
+- **Nassi & Callaway (2007)**: MT-projecting layer 4B cells are **76% spiny
+  stellate** (which receive input only from 4Cα), with >2× the soma area
+  (329 vs 146 µm²), more total dendrite (6908 vs 4163 µm), ~20% of dendritic
+  length in 4Cα, and located deeper in 4B. V2-projecting 4B cells are **83%
+  pyramidal** and integrate mixed M and P. Their Fig 5: ~20% of layer 4B projects
+  to MT (M-dominated), ~80% to V2 (mixed).
+
+Their conclusion: MT-projecting cells are specialized for **fast transmission of
+M-pathway signals**; V2-projecting cells do slower computations on mixed M and P.
+
+The key structural point: **biology puts M/P selectivity in two distinct
+populations, not in a graded weighting.** This model currently has one, and it is
+the mixed one.
+
+### 1.3 The design
+
+**Population A ("4B → MT").** Refit the same 28 neurons against the same SH target
+with the feature matrix masked to the **80 parasol columns** (8 parasol classes ×
+10 read-out orders, of 160). Parasol share = 1.0 by construction. `shMtWts` and the
+direction tiling are untouched.
+
+**Population B ("→ V2 → MT", the slow minority drive).** This is the **existing
+mixed fit, unchanged** — no new fitting. Justified by §1.2: the V2 relay carries
+*mixed* M and P (70/29), which is what `pars.rgc.v1Weights` already is. Population B
+also remains the validated V1 stage, so nothing is duplicated.
+
+**The mix**, applied to the post-normalization V1 population response just before
+`shModelMtLinear`'s `pop*shMtWts(...)'`:
+
+```
+popMT = (1 - alpha)*popA + alpha*shift(popB, d)
+```
+
+Post-normalization, not at the linear stage, so the two streams do not share a V1
+normalization pool — the faithful choice for two anatomically separate populations.
+Because the MT stage is linear in `pop`, this is exactly
+`(1-alpha)*MT(popA) + alpha*MT(popB delayed)`, so the streams can be computed
+separately and combined, which makes knockout bookkeeping trivial.
+
+**Why the midget drive is imposed and never fit.** Unmasking midget columns in
+`shFitClassV1Weights` — even only the long-lag ones — would let ridge regression
+use them to reduce SH reconstruction error, with nothing in the objective keeping
+them small. That re-inflates the midget share and restores the original problem
+with a delay bolted on. Fixed small amplitude only. This also matches the anatomy,
+where the P route converges *on MT* rather than mixing inside the 4B cells.
+
+### 1.4 Parameters
+
+**`d` (delay): 0 frames. Costs nothing.** The P route is ~2–3 synapses longer than
+the M route ≈ 5–10 ms, but **1 frame = 26.9 ms**, so the detour is *below the
+model's temporal resolution* — the same trap already flagged below for the 0–3
+frame lags. The latency separation is instead already present for free: the midget
+kernel peaks at ~107 ms vs the parasol kernel's ~27 ms (`literature/NOTES.md`),
+i.e. ~3 frames of intrinsic lateness from parvo RGC dynamics, not from synapse
+count. `d = 1` is the minimum representable if the detour is wanted explicitly,
+and already overstates it.
+
+**`alpha` (mixing weight): the only new free parameter.** Do *not* read it off the
+96/4 figure — that is the proportion of disynaptic retrograde *label* at 3-day
+survival, which measures the fast route's purity, not the slow route's synaptic
+strength (that only appeared at 6-day survival, and label density is not a weight).
+Calibrate instead against Maunsell et al. (1990): parvocellular block "rarely
+produced striking changes" and "typically had very little effect," but gave
+unequivocal contributions for a **minority** of MT responses. So choose `alpha`
+such that midget knockout is small for most MT units and detectable for a minority.
+Monotone effect → bisection, a few runs. Start at `alpha ≈ 0.1`.
+
+### 1.5 Stopping criteria — pre-registered
+
+1. **Masked fit quality.** Report per-neuron *r* of population A against the SH
+   targets. A partial failure is expected and is a *result*, not a rabbit hole:
+   the parasol kernel is fast (τ = 0.6/1.2) and may not build the sustained low-TF
+   V1 neurons — which are the ones MT cares least about. If so, score *r* on the
+   MT-relevant subset of the tiling rather than demanding the whole tiling.
+2. **Maunsell reproduction.** Re-run the two knockouts. Pass = parasol knockout
+   collapses MT direction tuning; midget knockout leaves it largely intact, with a
+   detectable effect on a minority. That is the whole point of the exercise.
+
+Terminates after one fit plus one knockout run, plus the `alpha` bisection.
+
+**Check 1 result — measured 2026-08-14 (`explore/fitMagnoMtPopulation.m`).**
+The predicted partial failure happened, and it fell exactly where predicted.
+Population B reproduced the previously recorded parasol share (0.249–0.377,
+median 0.316), confirming the setup matches the existing fit; population A is
+1.000 by construction. Reconstruction of the legacy V1 target on a held-out
+stimulus, **binned by the neuron's tf/sf preference**:
+
+| tf/sf band | neurons | median *r*, B (mixed) | median *r*, A (parasol) | loss |
+|---|---|---|---|---|
+| 0.22–0.30 (slow)  | 12 | 0.95 | ~0.55 | ~0.40 |
+| 0.43–0.81 (mid)   | 9  | 0.93 | ~0.75 | ~0.17 |
+| 1.41–1.63 (fast)  | 7  | 0.90 | ~0.82 | ~0.07 |
+
+Monotonic in tf/sf. The parasol-only basis is a **good** V1 model for the fast
+neurons — the ones MT weights most — and a poor one for the slow, sustained
+neurons. That is precisely the Nassi & Callaway division of labour: the fast M
+stream goes to MT, the slow/mixed computation goes to V2. So check 1 passes under
+the pre-registered "score the MT-relevant subset" reading, and the whole-tiling
+median (0.930 → 0.706) should **not** be quoted as the headline.
+
+*Caveat on absolute numbers:* population B's median *r* here is 0.93–0.95, below
+the ~0.985 quoted elsewhere in these docs. That earlier figure came from a
+different measurement (cached weights / different stimulus), so the two are not
+directly comparable. The A-vs-B *contrast* above is internally consistent — both
+fits, both stimuli, one script.
+
+**Machinery built 2026-08-14:**
+- `help/shClassFeatureMask.m` — logical column mask from a class-name regexp.
+- `help/shFitClassV1Weights.m` — optional third argument `mask`; excluded columns
+  are dropped from the regression and returned as exact zeros, at full width.
+- `model/innerworkings/shModelV1ComplexForMt.m` — the two-stream mixture.
+- `model/shModel.m` — the five MT cases now call it; `v1complex` is untouched, so
+  the validated V1 stage is unchanged.
+
+Plumbing verified by two bit-exact identities (`mtMix` with stream A set to the
+default weights reproduces the no-mix baseline at both `alpha = 0` and
+`alpha = 1`), and the full test suite passes 14/14.
+
+### 1.6 Payoff to check immediately afterward
+
+If MT's fast drive is parasol and its slow minority drive is midget, the **low-speed**
+end of MT speed tuning may lean disproportionately on the midget term (slow,
+sustained, long integration) while the high-speed end is parasol-driven. That would
+be a candidate mechanism for deficit (b) and would resolve the tension in item 3
+below, where the heterogeneous-delay result hits *high* speeds while the clinic
+reports *low*. Hypothesis, not a prediction to bank — but cheap to test on the same
+machinery: zero `alpha` and compare low-pass vs high-pass MT speed tuning.
 
 Evidence and citations: `literature/NOTES.md`.
 

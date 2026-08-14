@@ -151,10 +151,10 @@ function varargout = shModel(varargin)
             end
 
         case {'mtlin'}
-            [pop, ind] = shModelV1Linear(stimulusForV1, pars);
-            [pop, ind] = shModelFullWaveRectification(pop, ind, pars);
-            [pop, ind] = shModelV1Blur(pop, ind, pars);
-            [pop, ind, nume, deno] = shModelV1Normalization(pop, ind, pars);
+            % V1 complex population that MT pools over. Identical to the inline
+            % block unless pars.rgc.mtMix is set, in which case MT pools the
+            % two-stream magno/mixed mixture (docs/TODO.md item 1).
+            [pop, ind] = shModelV1ComplexForMt(stimulusForV1, pars);
 
             if nargin > 3
                 [pop, ind, res] = shModelMtLinear(pop, ind, pars, varargin{4});
@@ -168,10 +168,10 @@ function varargout = shModel(varargin)
             end
 
         case {'mtprepool'}
-            [pop, ind] = shModelV1Linear(stimulusForV1, pars);
-            [pop, ind] = shModelFullWaveRectification(pop, ind, pars);
-            [pop, ind] = shModelV1Blur(pop, ind, pars);
-            [pop, ind, nume, deno] = shModelV1Normalization(pop, ind, pars);
+            % V1 complex population that MT pools over. Identical to the inline
+            % block unless pars.rgc.mtMix is set, in which case MT pools the
+            % two-stream magno/mixed mixture (docs/TODO.md item 1).
+            [pop, ind] = shModelV1ComplexForMt(stimulusForV1, pars);
 
             if nargin > 3
                 [pop, ind, res] = shModelMtLinear(pop, ind, pars, varargin{4});
@@ -188,10 +188,10 @@ function varargout = shModel(varargin)
             end
 
         case {'mthalfrect'}
-            [pop, ind] = shModelV1Linear(stimulusForV1, pars);
-            [pop, ind] = shModelFullWaveRectification(pop, ind, pars);
-            [pop, ind] = shModelV1Blur(pop, ind, pars);
-            [pop, ind, nume, deno] = shModelV1Normalization(pop, ind, pars);
+            % V1 complex population that MT pools over. Identical to the inline
+            % block unless pars.rgc.mtMix is set, in which case MT pools the
+            % two-stream magno/mixed mixture (docs/TODO.md item 1).
+            [pop, ind] = shModelV1ComplexForMt(stimulusForV1, pars);
 
             if nargin > 3
                 [pop, ind, res] = shModelMtLinear(pop, ind, pars, varargin{4});
@@ -210,10 +210,10 @@ function varargout = shModel(varargin)
             end
 
         case {'mtpostpool'}
-            [pop, ind] = shModelV1Linear(stimulusForV1, pars);
-            [pop, ind] = shModelFullWaveRectification(pop, ind, pars);
-            [pop, ind] = shModelV1Blur(pop, ind, pars);
-            [pop, ind, nume, deno] = shModelV1Normalization(pop, ind, pars);
+            % V1 complex population that MT pools over. Identical to the inline
+            % block unless pars.rgc.mtMix is set, in which case MT pools the
+            % two-stream magno/mixed mixture (docs/TODO.md item 1).
+            [pop, ind] = shModelV1ComplexForMt(stimulusForV1, pars);
 
             if nargin > 3
                 [pop, ind, res] = shModelMtLinear(pop, ind, pars, varargin{4});
@@ -234,11 +234,10 @@ function varargout = shModel(varargin)
             end
 
         case {'mtpattern'}
-            [pop, ind] = shModelV1Linear(stimulusForV1, pars);
-            [pop, ind] = shModelFullWaveRectification(pop, ind, pars);
-            [pop, ind] = shModelV1Blur(pop, ind, pars);           % 160
-            [pop, ind, nume, deno] = shModelV1Normalization(pop, ind, pars);
-
+            % V1 complex population that MT pools over. Identical to the inline
+            % block unless pars.rgc.mtMix is set, in which case MT pools the
+            % two-stream magno/mixed mixture (docs/TODO.md item 1).
+            [pop, ind] = shModelV1ComplexForMt(stimulusForV1, pars);
 
             if nargin > 3
                 [pop, ind, res] = shModelMtLinear(pop, ind, pars, varargin{4});
