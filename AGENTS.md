@@ -26,7 +26,7 @@ legacy behavior. The legacy (RGC-disabled) path is the machine-precision oracle.
 4. **README** — base-toolbox usage (install, `tut/shTutorial1.m`, references).
    **literature/** — the papers the design is grounded in.
 
-## Current status (2026-07-16) — summary; see the plan doc for detail
+## Current status (2026-08-14) — summary; see the plan doc for detail
 
 - The RGC layer is enabled by default (`pars.rgc.enabled = 1`). Both legacy modes
   (`pars.rgc.mode = 'derivative'` and `'fourPop'`) are now **unified onto one
@@ -75,16 +75,38 @@ legacy behavior. The legacy (RGC-disabled) path is the machine-precision oracle.
   silently computing the plain derivative preset. Fixed by adding an explicit
   `'custom'` case to the dispatch (`pars.rgc.mode = 'custom'` now required
   wherever the lagged preset is built) — see plan doc §4 Increment 4.
-- **Next: see `docs/TODO.md`** (created 2026-08-13) — the parked items and the
-  optic-neuritis work plan, ordered by bearing on the driving question ("can an
-  RGC lesion explain increased VEP latency + reduced motion-defined-form
-  recognition at low speeds?"). Headline items: the fitted weights make MT
-  **midget**-dominated, contradicting Maunsell et al. (1990) and SH's own p. 754
-  premise (constraining the fit is parked by JW); VEP latency *is* approachable
-  since the temporal kernels are causal — what's missing is cortical
-  normalization **dynamics**, not latency per se; and the heterogeneous-delay
-  result that crushes motion hits **high** speeds, while the clinical deficit is
-  at **low** speeds — the key experiment to run next.
+- **M/P now means something — DONE (2026-08-14), `docs/TODO.md` item 1.**
+  Superseded the earlier status here, which said MT was midget-dominated and that
+  constraining the fit was parked. It is no longer parked and no longer true.
+  Grounded in Nassi & Callaway (2006, 2007): `shMtWts` is analytic in the
+  direction geometry and carries no cell-type information, so MT's M/P dependence
+  is set **entirely** by the RGC→V1 weight matrix — mask the *features*, never
+  subset the neurons (the `pinv` needs the full direction tiling). MT now pools a
+  two-stream mixture, `popMT = (1-alpha)*popA + alpha*delay(popB, d)`:
+  - **popA** "4B→MT", the fast magno drive — `shFitClassV1Weights` with a
+    `shClassFeatureMask(pars, '^parasol')`, so it is magnocellular by construction.
+  - **popB** "→V2→MT", the slow minority drive — the **existing mixed fit**, since
+    the V2 relay carries mixed M and P. No second fit needed.
+  - Formed post-normalization in `shModelV1ComplexForMt`, so the streams don't
+    share a normalization pool. `alpha = 0.10`, `d = 0` (the V2 detour is ~5–10 ms,
+    well under one 26.9 ms frame; the lateness is already in the midget kernel).
+  **Maunsell et al. (1990) is reproduced:** M block pronounced and near-universal
+  (81% population median, 95% of units), P block little effect on the typical unit
+  (2.7% median) but unequivocal for a minority (1 of 19), combined block
+  essentially eliminates the response. The old model had this exactly backwards.
+  `alpha >= 0.20` breaks it, so the criterion brackets alpha to 0.05–0.10.
+  Scripts: `explore/fitMagnoMtPopulation.m`, `explore/knockoutAndAlphaCalibration.m`.
+- **Next: see `docs/TODO.md`** — the remaining items, ordered by bearing on the
+  driving question ("can an RGC lesion explain increased VEP latency + reduced
+  motion-defined-form recognition at low speeds?"). VEP latency *is* approachable
+  since the temporal kernels are causal — what's missing is cortical normalization
+  **dynamics**, not latency per se. The low-speed tension (item 3) is now the key
+  experiment: the heterogeneous-delay result crushes motion at **high** speeds
+  while the clinical deficit is at **low** speeds — but the new architecture gives
+  a candidate mechanism, since midget dependence concentrates sharply at low
+  preferred speed (−45% at 0 px/frame vs −1.7% at 6 px/frame under midget
+  knockout). That measurement used one fixed grating for all MT units, so it needs
+  confirming with per-neuron speed tuning before it is banked.
 - **Frame rate: RESOLVED** (2026-08-13). SH Appendix I p. 761 pins the units:
   1 pixel = 0.430 deg, 1 frame = 26.9 ms (37.2 fps), 1 pixel/frame = 16 deg/sec.
   Derivation in `docs/RGC_lagged_preset_summary.md` §7.1. Item (1) below is done.
@@ -100,6 +122,16 @@ pars = shPars;                         % RGC on, mode 'derivative' (exact)
 [pop, ind] = shModel(stim, pars, 'v1Complex');
 pars.rgc.enabled = 0;                  % legacy (no-RGC) oracle
 run tests/runAllTests.m                % must stay green (currently 14/14)
+```
+
+Magnocellular MT (the two-stream mixture; see the M/P status bullet above). Only
+the MT stages are affected — `'v1Complex'` is untouched, so the validated V1 stage
+is unchanged. Omitting `mtMix` reproduces the previous behavior bit-exactly:
+
+```matlab
+WA = getfield(load('pars/shRgcClassesMidgetParasolLagged_v1WeightsMagnoA_lag0123.mat'), 'v1WeightsMagnoA');
+pars.rgc.mtMix = struct('weightsA', WA, 'alpha', 0.10, 'delay', 0);
+[pop, ind] = shModel(stim, pars, 'mtPattern');   % alpha = 0 gives the pure magno drive
 ```
 
 ## Conventions for agents
