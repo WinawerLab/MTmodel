@@ -37,6 +37,7 @@
 % mkBar             Make a drifting bar stimulus
 % mkDots            make a drifting dot stimulus
 % mkMotionLetter    motion-defined letter (Regan-style opposite dot drift)
+%                   backgroundVelocityScale = +1 gives the no-relative-motion control
 % playStimMovie     play a [Y X T] movie with fixed [0 1] grey-scale display
 % playStimMovieCompare  play two movies side-by-side (booth vs model field)
 % mkFract           make a drifting fractal noise stimulus
@@ -65,6 +66,7 @@
 % ----------------- PARS functions ---------------------------------------
 %
 % mkGaussianFilter          Make a 1D gaussian filter with a given SIGMA.
+% shModelUnits              Pinned physical scale (0.430 deg/px, 26.9 ms/frame, 16 deg/s per px/frame)
 % shPars                    Get a default PARS structure
 % shParsScaleFactors        Set scale factors for the pars structure and pick pars.mtalpha
 % shParsV1PopulationDirections  Get evenly spread V1 neurons for a population

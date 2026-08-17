@@ -26,9 +26,18 @@ neuron spans 1–10 px/frame = 16–160 deg/s.
 
 ---
 
-## 1. Give the M/P distinction meaning: masked refit + slow midget drive *(started 2026-08-14)*
+## 1. Give the M/P distinction meaning: masked refit + slow midget drive *(DONE 2026-08-14)*
 
-**Status: unparked and in progress.** The two Nassi & Callaway papers added on
+**Status: DONE** — landed in `918e24f` (parasol-masked MT population + slow midget
+drive) and `ee8a3ab` (knockout check reproduces Maunsell; `alpha = 0.10` adopted).
+Maunsell et al. (1990) is reproduced: M block pronounced and near-universal (81%
+population median, 95% of units), P block little effect on the typical unit (2.7%
+median) but unequivocal for 1 of 19, combined block essentially eliminates the
+response. `alpha >= 0.20` breaks it, so the criterion brackets alpha to 0.05–0.10.
+See `AGENTS.md` for the summary. The design notes below are kept as the record of
+why it was built this way.
+
+The two Nassi & Callaway papers added on
 2026-08-14 turned this from an open-ended fitting problem into a bounded change
 with **one new fit and one new scalar**. This supersedes the earlier
 "constrain the weight fit toward magno-dominance" framing and its three
@@ -397,6 +406,46 @@ population does not sample the stimulus speed.
    "fixed" -- the preview is now off by default (`SHOW_BOOTH_PREVIEW`), labelled
    as a separate sample, and the false "built at booth, then uniformly resized"
    comment is gone.
+
+### First result: the model recovers a motion-defined letter (2026-08-17)
+
+`explore/runMotionLetterDemo.m` — seeded, 5 deg/s (0.3125 px/frame), letter 'C',
+128x128x120 output, both RGC presets. Figures in `explore/_figs/`
+(gitignored; re-run the script).
+
+| stage | derivative preset | midgetParasolLagged |
+|---|---|---|
+| V1 opponent d' | +0.23 | +0.22 |
+| MT opponent d' | **+1.32** | **+1.32** |
+
+**MT recovers the letterform legibly**; V1's opponent map is weak and noisy. The
+two RGC presets are indistinguishable on this task, which is the expected result
+for a healthy-condition stimulus and a useful baseline for lesioning.
+
+**The segregation is genuinely motion-based**, established by three controls:
+
+| control | MT d' |
+|---|---|
+| opposite drift (Regan stimulus) | +1.32 |
+| static background | +1.30 |
+| **same drift — no relative motion** | **−0.34** |
+
+Static-luminance d' on the time-averaged image is ≈ 0 (−0.008), single-frame
+luminance d' ≈ −0.002, and dot coverage is 0.3025 inside vs 0.3124 outside, so
+there is no static cue to exploit. The same-drift control (new
+`backgroundVelocityScale` option on `mkMotionLetter`, +1 = no relative motion)
+collapses the letter completely — the decisive test.
+
+Note a **discarded control**: temporally scrambling the frame order only drops MT
+d' to +0.86, but that is not evidence of a non-motion cue. Permuting whole frames
+displaces letter and background dots by equal and *opposite* amounts on every
+transition, so relative direction survives scrambling. Do not use frame-scrambling
+as a motion control for this stimulus.
+
+**Next**, now that the healthy baseline is established: run the same stimulus
+under the optic-neuritis lesions (uniform vs spatially heterogeneous delay,
+amplitude) and see whether MT d' drops, and whether it drops preferentially at
+low speeds — which is the section 3 tension stated as a direct test.
 
 **Open decision — spatial scale.** At 2.33 px/deg a clinically sized letter
 (168 arcmin = 2.8 deg) is only **~6.5 pixels**, far too small to be a letter.

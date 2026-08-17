@@ -45,6 +45,12 @@ function [stim, info] = mkMotionLetter(stimSz, letter, varargin)
     p.addParameter('referenceDisplaySize', [960 1280]);
     p.addParameter('fCovered', 0.5);
     p.addParameter('drawBackgroundDots', true);
+    % Background velocity as a multiple of the letter's. -1 = opposite drift
+    % (the Regan stimulus); +1 = SAME drift, which removes all relative motion
+    % and so should make the letter unrecoverable -- the control condition that
+    % shows a model is segregating from motion and not from some other cue;
+    % 0 = static background.
+    p.addParameter('backgroundVelocityScale', -1);
     p.addParameter('fontName', 'Sloan');
     p.addParameter('background', 0.5);
     p.addParameter('frameRate', 60);
@@ -126,7 +132,8 @@ function [stim, info] = mkMotionLetter(stimSz, letter, varargin)
 
     [stim, buildInfo] = localBuildMovie(genY, genX, numFrames, ...
         binaryMask, dotSizePx, opts.dotShape, opts.fCovered, ...
-        grey, dotValue, speedPxPerSec, opts.frameRate, opts.drawBackgroundDots);
+        grey, dotValue, speedPxPerSec, opts.frameRate, opts.drawBackgroundDots, ...
+        opts.backgroundVelocityScale);
 
     info = buildInfo;
     info.letter = letter;
@@ -161,7 +168,7 @@ end
 % -------------------------------------------------------------------------
 function [stim, info] = localBuildMovie(genY, genX, numFrames, binaryMask, ...
         dotSizePx, dotShape, fCovered, grey, dotValue, speedPxPerSec, ...
-        frameRate, drawBackgroundDots)
+        frameRate, drawBackgroundDots, bgVelocityScale)
 
     screenArea = genX * genY;
     dotArea = pi * (dotSizePx / 2)^2;
@@ -186,7 +193,7 @@ function [stim, info] = localBuildMovie(genY, genX, numFrames, binaryMask, ...
         elapsed = (t - 1) / frameRate;
         ltX = mod(initialLtX + speedPxPerSec * elapsed, genX);
         ltY = initialLtY;
-        bgX = mod(initialBgX - speedPxPerSec * elapsed, genX);
+        bgX = mod(initialBgX + bgVelocityScale * speedPxPerSec * elapsed, genX);
         bgY = initialBgY;
 
         frame = repmat(grey, genY, genX);

@@ -96,6 +96,23 @@ legacy behavior. The legacy (RGC-disabled) path is the machine-precision oracle.
   essentially eliminates the response. The old model had this exactly backwards.
   `alpha >= 0.20` breaks it, so the criterion brackets alpha to 0.05–0.10.
   Scripts: `explore/fitMagnoMtPopulation.m`, `explore/knockoutAndAlphaCalibration.m`.
+- **Motion-defined form stimulus merged and validated — DONE (2026-08-17),
+  `docs/TODO.md` item 4.** The `Kristin` branch is merged: `stim/mkMotionLetter.m`
+  (Regan-style motion-defined letter), the `playStimMovie*` helpers, and two
+  explore scripts. Three defects in the merged code were fixed first — an
+  opponent-unit selector that mixed radians with px/frame (and so returned the
+  *static* MT unit as "right-tuned" at slow speeds), angular units converted
+  through display geometry rather than the model's own scale, and a font check
+  that could not detect MATLAB's silent font substitution (runs claimed Sloan
+  while using a substitute; Sloan is now installed). New `pars/shModelUnits.m`
+  pins the SH Appendix I scale: **1 px = 0.430 deg, 1 frame = 26.9 ms,
+  1 px/frame = 16 deg/s**. Use it for any physical-unit conversion.
+  **Result:** MT recovers the letterform (d' = 1.32 at 5 deg/s), V1 barely
+  (d' = 0.23), and the two RGC presets are indistinguishable. Controls confirm
+  it is motion-based: no static cue (d' ≈ 0), and a same-drift control with no
+  relative motion collapses it to −0.34. Run `explore/runMotionLetterDemo.m`.
+  Note MT opponent d' is **flat** from 1 to 48 deg/s — an earlier claim that it
+  improved with speed was an artifact of the broken selector.
 - **Next: see `docs/TODO.md`** — the remaining items, ordered by bearing on the
   driving question ("can an RGC lesion explain increased VEP latency + reduced
   motion-defined-form recognition at low speeds?"). VEP latency *is* approachable
