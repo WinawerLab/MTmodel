@@ -55,3 +55,38 @@ shAssert(all(isfinite(ml(:))),         'mkMotionLetter: non-finite values');
 shAssert(min(ml(:)) >= 0 && max(ml(:)) <= 1, 'mkMotionLetter: values outside [0,1]');
 shAssert(mlInfo.pixelsPerLetter > 0,  'mkMotionLetter: letter mask must be non-empty');
 shAssert(strcmp(mlInfo.letter, 'C'),   'mkMotionLetter: letter metadata wrong');
+shAssert(abs(mlInfo.dotSpeedPxPerFrame - 0.5) < 1e-12, ...
+    'mkMotionLetter: dotSpeedPxPerFrame must pass through unchanged');
+
+% shModelUnits: SH (1998) Appendix I scale, pinned
+u = shModelUnits();
+shAssert(abs(u.degPerPixel - 0.430) < 1e-3,   'shModelUnits: 1 pixel must be 0.430 deg');
+shAssert(abs(u.framesPerSecond - 37.24) < 0.01, 'shModelUnits: must be 37.2 frames/sec');
+shAssert(abs(u.degPerSecPerPixelPerFrame - 16) < 1e-6, ...
+    'shModelUnits: 1 pixel/frame must be 16 deg/sec');
+
+% mkMotionLetter must honour an explicit ppd (it was silently ignored before).
+% A deg/s speed converted in model units must land on the expected px/frame.
+[~, uInfo] = mkMotionLetter([64 64 4], 'C', 'seed', 1, 'referenceDisplaySize', [], ...
+    'ppd', u.pixelsPerDegree, 'frameRate', u.framesPerSecond, ...
+    'dotSpeedDegS', 5, 'letterSizePx', 40);
+shAssert(abs(uInfo.ppd - u.pixelsPerDegree) < 1e-9, ...
+    'mkMotionLetter: explicit ppd must be used, not display geometry');
+shAssert(abs(uInfo.dotSpeedPxPerFrame - 5 / u.degPerSecPerPixelPerFrame) < 1e-9, ...
+    'mkMotionLetter: deg/s must convert through ppd (5 deg/s -> 0.3125 px/frame)');
+shAssert(abs(uInfo.dotSpeedDegS - 5) < 1e-9, ...
+    'mkMotionLetter: requested deg/s must be reported back unchanged');
+shAssert(abs(uInfo.letterSizeDeg - 40 / u.pixelsPerDegree) < 1e-9, ...
+    'mkMotionLetter: letterSizePx is in output-field pixels');
+
+% Display geometry and model units are different conventions, and the gap grows
+% with field size (it is ~43x at full booth resolution). Check the reference
+% display's ppd is the booth's ~100 px/deg, not the model's 2.33 -- converting a
+% deg/s speed through the wrong one is the trap the ppd option exists to avoid.
+[~, bInfo] = mkMotionLetter([64 64 4], 'C', 'seed', 1, 'dotSpeedDegS', 5, 'letterSizePx', 40);
+shAssert(abs(bInfo.ppdReference - 100.6) < 1, ...
+    'mkMotionLetter: booth reference ppd should be ~100 px/deg at 175 cm');
+shAssert(bInfo.ppdReference > 40 * u.pixelsPerDegree, ...
+    'mkMotionLetter: booth ppd should be far finer than the model scale');
+shAssert(abs(bInfo.ppd - bInfo.ppdReference * bInfo.fieldScale) < 1e-9, ...
+    'mkMotionLetter: field ppd must be the reference ppd times fieldScale');

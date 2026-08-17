@@ -15,6 +15,26 @@
 % Tip: start with PRESET = 'quick'. Use 'experiment' once figures look sensible.
 % RGC_PRESET 'derivative' = exact legacy SH; 'midgetParasolLagged' = biological
 % midget/parasol with lagged copies (~0.985 healthy V1 fidelity).
+%
+% UNITS. The stimulus is built in the MODEL's units (shModelUnits: 2.33 px/deg,
+% 37.2 frames/sec), NOT the booth's ~100 px/deg. Converting a deg/s speed with
+% booth geometry makes it ~43x too slow in the units the MT filters live in.
+%
+% SPEED. Set SPEED_DEG_S from the literature band you want to probe:
+%   0.6 - 9.6 deg/s   the clinically interesting low-speed band, and the range
+%                     the Fig-10 "lowpass" neuron spans (0.0375-0.6 px/frame)
+%   16 - 160 deg/s    the "highpass" neuron's range (1-10 px/frame)
+% MT is tuned to speeds {0, 1, 6} px/frame = {0, 16, 96} deg/s, so the whole
+% clinical band sits BELOW MT's slowest non-zero tuned speed. V1 tiles four
+% shells from 0.22 to 1.63 px/frame (3.5-26 deg/s), which reaches lower. Expect
+% weak MT opponency at clinical speeds -- that is a real property of the model,
+% not a bug, and it is the tension recorded in docs/TODO.md section 3.
+%
+% SPATIAL SCALE CAVEAT. At 2.33 px/deg a clinically sized letter (168 arcmin =
+% 2.8 deg) is only ~6.5 pixels -- far too small to be a letter. LETTER_SIZE_PX
+% below therefore sets the letter in model pixels and the script reports the
+% implied angular size, which will be much larger than the booth's. This is the
+% known order-of-magnitude spatial-scale offset (docs/TODO.md smaller items).
 
 thisFile = mfilename('fullpath');
 repoRoot = fileparts(fileparts(thisFile));
@@ -28,29 +48,31 @@ STAGE_MT = 'mtPattern';
 STAGE_V1 = 'v1Complex';
 SEED     = 1;
 
+% Dot speed in deg/s. See the SPEED note in the header for the literature bands.
+SPEED_DEG_S = 5;             % clinical low-speed band (-> 0.3125 px/frame)
+
+% Letter height in MODEL pixels (see SPATIAL SCALE CAVEAT in the header).
+LETTER_SIZE_PX = [];         % [] = 60% of the shorter field dimension
+
 % Desired model *output* spatial size [Y X T] (shGetDims adds convolution padding)
 OUT_SZ   = [96 96 90];       % quick default; increase for finer maps (slower)
-PLAYBACK_FPS = 60;           % stimulus movie playback rate
 PLAY_STIM_MOVIE = true;      % Figure 0 side-by-side movie (after static figures)
-MAX_MOVIE_FRAMES = 120;      % cap preview length (120 = 2 s @ 60 Hz)
+MAX_MOVIE_FRAMES = 120;      % cap preview length
+SHOW_BOOTH_PREVIEW = false;  % booth-resolution preview; costs ~2.3 GB (see below)
 
-% mkMotionLetter args (experiment defaults; overridden by PRESET)
+% mkMotionLetter args shared by both presets
 STIM_ARGS = { ...
-    'dotSpeedDegS', 1, ...
-    'letterSizeArcmin', 168, ...
     'dotContrast', 1.0, ...
     'drawBackgroundDots', true, ...
-    'frameRate', 60, ...
-    'screenWidthCm', 39, ...
-    'viewDistCm', 175, ...
+    'fCovered', 0.3, ...
+    'dotShape', 'square', ...
     'seed', SEED ...
 };
 %% ========================================================================
 
 switch lower(PRESET)
     case 'experiment'
-        OUT_SZ = [384 512 240];   % ~4 s, ~40%% booth scale (4:3 aspect); clearer letter than 128²
-        STIM_ARGS = [STIM_ARGS, {'screenWidthCm', 39}];
+        OUT_SZ = [256 256 160];   % ~4.3 s at 37.2 fps; finer maps than 96²
     otherwise
         % keep OUT_SZ above
 end
@@ -59,24 +81,48 @@ pars = shPars;
 pars = localConfigureRgcPreset(pars, RGC_PRESET, repoRoot);
 stimSz = shGetDims(pars, STAGE_MT, OUT_SZ);
 nFrames = stimSz(3);
-STIM_ARGS = [STIM_ARGS, {'seed', SEED}];
+
+% Build the stimulus in the MODEL's units, not the booth's.
+units = shModelUnits();
+if isempty(LETTER_SIZE_PX)
+    LETTER_SIZE_PX = round(0.6 * min(stimSz(1:2)));
+end
+STIM_ARGS = [STIM_ARGS, { ...
+    'referenceDisplaySize', [], ...
+    'ppd', units.pixelsPerDegree, ...
+    'frameRate', units.framesPerSecond, ...
+    'dotSpeedDegS', SPEED_DEG_S, ...
+    'letterSizePx', LETTER_SIZE_PX, ...
+    'dotSize', 3}];
 
 fprintf('=== Motion letter → model ===\n');
 fprintf('Letter: %s   preset: %s   RGC: %s   stim size: [%d %d %d]   MT output: [%s]\n', ...
     LETTER, PRESET, RGC_PRESET, stimSz(1), stimSz(2), stimSz(3), num2str(OUT_SZ));
+fprintf('Model units: %.2f px/deg, %.1f frames/s, 1 px/frame = %.0f deg/s\n', ...
+    units.pixelsPerDegree, units.framesPerSecond, units.degPerSecPerPixelPerFrame);
 
 fprintf('\n[1/3] Generating stimulus...\n');
 tic;
-% Full booth movie for visual preview (matches Experiment.m display)
-boothSz = [960 1280 stimSz(3)];
-[stimPreview, ~] = mkMotionLetter(boothSz, LETTER, STIM_ARGS{:});
-% Scaled/padded to model input size (built at booth, then uniformly resized)
 [stim, stimInfo] = mkMotionLetter(stimSz, LETTER, STIM_ARGS{:});
 fprintf('      done (%.1f s).  letterContrast = %.3f\n', toc, stimInfo.letterContrast);
-fprintf('      booth gen [%d %d] -> model field [%d %d], fieldScale = %.3f\n', ...
-    960, 1280, stimInfo.outputSize(1), stimInfo.outputSize(2), stimInfo.fieldScale);
-fprintf('      dotSize at model field ~%d px (booth = %d px)\n', ...
-    stimInfo.dotSize, stimInfo.dotSizeNominal);
+fprintf('      speed %.2f deg/s = %.4f px/frame;  letter %d px = %.1f deg;  dot %d px\n', ...
+    stimInfo.dotSpeedDegS, stimInfo.dotSpeedPxPerFrame, ...
+    stimInfo.letterSizePx, stimInfo.letterSizeDeg, stimInfo.dotSize);
+fprintf('      duration %.2f s;  font %s\n', ...
+    stimSz(3) / units.framesPerSecond, stimInfo.fontName);
+
+% Optional booth-resolution preview. This is a display-referred rendering of
+% what the observer saw (booth geometry, 60 Hz) -- an INDEPENDENT dot sample,
+% not the model stimulus resized: mkMotionLetter builds directly at each size
+% and the field area sets the dot count, so a shared seed does not align the
+% draws. Costs ~2.3 GB at [960 1280 x nFrames], hence off by default.
+if SHOW_BOOTH_PREVIEW
+    boothSz = [960 1280 min(stimSz(3), MAX_MOVIE_FRAMES)];
+    stimPreview = mkMotionLetter(boothSz, LETTER, 'seed', SEED, ...
+        'dotSpeedDegS', SPEED_DEG_S, 'letterSizeArcmin', 168, 'frameRate', 60);
+else
+    stimPreview = [];
+end
 
 midBooth = round(size(stimPreview, 3) / 2);
 midStim  = round(size(stim, 3) / 2);
@@ -97,8 +143,11 @@ mtVels = pars.mtPopulationVelocities;
 v1Dirs = pars.v1PopulationDirections;
 speedPx = stimInfo.dotSpeedPxPerFrame;
 
-[iRight, iLeft] = localBestOpponentIndices(mtVels, speedPx);
-[iV1Right, iV1Left] = localBestOpponentIndices(v1Dirs, speedPx);
+[iRight, iLeft, mtNote] = localOpponentPair(mtVels, speedPx);
+[iV1Right, iV1Left, v1Note] = localOpponentPair(v1Dirs, speedPx);
+fprintf('\nOpponent pairs (speed-matched, so "right - left" is direction opponency):\n');
+fprintf('  MT: %s\n', mtNote);
+fprintf('  V1: %s\n', v1Note);
 
 mtRightMap = squeeze(shGetSubPop(popMt, indMt, iRight));
 mtLeftMap  = squeeze(shGetSubPop(popMt, indMt, iLeft));
@@ -108,13 +157,15 @@ v1LeftMap  = squeeze(shGetSubPop(popV1, indV1, iV1Left));
 maskOnMap = localMaskOnGrid(stimInfo.binaryMask, size(mtRightMap, 1), size(mtRightMap, 2));
 midMt   = round(size(mtRightMap, 3) / 2);
 
-%% Figure 1 — booth vs scaled still frames + mask
-f1 = figure('Name', 'Booth vs model stimulus', 'Color', 'w', 'Position', [40 520 1000 380]);
-tiledlayout(1, 4, 'Padding', 'compact', 'TileSpacing', 'compact');
+%% Figure 1 — still frames + mask
+f1 = figure('Name', 'Model stimulus', 'Color', 'w', 'Position', [40 520 1000 380]);
+tiledlayout(1, 3 + double(~isempty(stimPreview)), 'Padding', 'compact', 'TileSpacing', 'compact');
 
-nexttile;
-imagesc(stimPreview(:, :, midBooth), [0 1]); axis image off; colormap(gca, gray);
-title(sprintf('Booth t=%d', midBooth));
+if ~isempty(stimPreview)
+    nexttile;
+    imagesc(stimPreview(:, :, midBooth), [0 1]); axis image off; colormap(gca, gray);
+    title(sprintf('Booth t=%d (separate sample)', midBooth));
+end
 
 nexttile;
 imagesc(stim(:, :, midStim), [0 1]); axis image off; colormap(gca, gray);
@@ -205,19 +256,27 @@ imagesc(mtRightMap(:, :, midMt)); axis image off; colormap(gca, hot); colorbar;
 title(sprintf('Right-tuned MT t=%d', midMt));
 hold on; %contour(maskOnMap, [0.5 0.5], 'w', 'LineWidth', 0.8); hold off;
 
-%% Figure 0 — stimulus movies: booth vs model field (last, so model figures appear first)
+%% Figure 0 — stimulus movie (last, so model figures appear first)
 if PLAY_STIM_MOVIE
-    fprintf('\n[Figure 0] Playing booth vs model-field movies (caxis [0 1])...\n');
-    playStimMovieCompare(stimPreview, stim, ...
-        'labels', {sprintf('Booth [%d×%d]', size(stimPreview, 1), size(stimPreview, 2)), ...
-                   sprintf('Model input [%d×%d]', size(stim, 1), size(stim, 2))}, ...
-        'pauseSec', 1 / PLAYBACK_FPS, 'clim', [0 1], ...
-        'maxFrames', MAX_MOVIE_FRAMES);
+    fprintf('\n[Figure 0] Playing stimulus movie (caxis [0 1], %.1f fps)...\n', ...
+        units.framesPerSecond);
+    if isempty(stimPreview)
+        figure('Name', 'Model stimulus', 'Color', [0.5 0.5 0.5]);
+        playStimMovie(stim(:, :, 1:min(end, MAX_MOVIE_FRAMES)), ...
+            1 / units.framesPerSecond, [0 1]);
+    else
+        playStimMovieCompare(stimPreview, stim, ...
+            'labels', {sprintf('Booth [%d×%d] (separate sample)', ...
+                        size(stimPreview, 1), size(stimPreview, 2)), ...
+                       sprintf('Model input [%d×%d]', size(stim, 1), size(stim, 2))}, ...
+            'pauseSec', 1 / units.framesPerSecond, 'clim', [0 1], ...
+            'maxFrames', MAX_MOVIE_FRAMES);
+    end
 end
 
 fprintf('\nDone. Seven figures:\n');
-fprintf('  0 Booth vs model-field movies (side-by-side)\n');
-fprintf('  1 Booth vs model still frames + mask\n');
+fprintf('  0 Stimulus movie\n');
+fprintf('  1 Stimulus still frame + mask\n');
 fprintf('  2 MT time courses (center)\n');
 fprintf('  3 MT heatmap (tuning x time)\n');
 fprintf('  4 MT spatial maps (mean over time) + opponent\n');
@@ -262,13 +321,65 @@ function W = localLoadMidgetParasolLaggedWeights(repoRoot, pars)
     fprintf('  Saved fitted weights to %s\n', weightsFile);
 end
 
-function [iPos, iNeg] = localBestOpponentIndices(vels, speedPx)
-    targetPos = [0, speedPx];
-    targetNeg = [pi, speedPx];
-    dPos = hypot(angleDiff(vels(:, 1), targetPos(1)), vels(:, 2) - targetPos(2));
-    dNeg = hypot(angleDiff(vels(:, 1), targetNeg(1)), vels(:, 2) - targetNeg(2));
-    [~, iPos] = min(dPos);
-    [~, iNeg] = min(dNeg);
+% Pick a MATCHED opponent pair from a population in the model's standard
+% [direction (rad), speed (px/frame)] form -- the same form shSwts/shQwts take,
+% used by both pars.mtPopulationVelocities and pars.v1PopulationDirections.
+%
+% Matching is done in the model's own 3-D Fourier geometry: a [dir, speed] pair
+% maps to a unit vector via elevation = atan3(speed, 1) and sphere2rec, exactly
+% as shSwts/shQwts do internally. Distance is then the ANGLE between unit
+% vectors, which is dimensionally coherent -- unlike the old version, which
+% minimised hypot(angleDiff, speedError) and so added radians to pixels/frame.
+% There the speed term dominated, and at slow stimulus speeds it returned the
+% STATIC [0 deg, 0] unit as "right-tuned".
+%
+% The negative unit is matched to the POSITIVE unit's speed, not the stimulus
+% speed, so the pair is as close to speed-matched as the population allows and
+% the "right - left" map is direction opponency rather than a speed confound.
+% Exact speed shells cannot be used: MT's nominal speeds differ in low-order
+% bits, and V1's rings have a genuinely different speed for every unit.
+function [iPos, iNeg, note] = localOpponentPair(tuning, speedPx, targetDir)
+
+    if nargin < 3 || isempty(targetDir), targetDir = 0; end
+
+    speeds = tuning(:, 2);
+    moving = find(speeds > 0);
+    if isempty(moving)
+        error('localOpponentPair:noMovingUnits', ...
+            'Population contains no units with non-zero preferred speed.');
+    end
+
+    unitVecs = localTuningToUnitVec(tuning(moving, :));
+
+    % Preferred direction: closest to (targetDir, stimulus speed).
+    cosPos = unitVecs * localTuningToUnitVec([targetDir, speedPx])';
+    [~, a] = max(cosPos);
+    iPos = moving(a);
+
+    % Opponent: closest to (targetDir + pi, speed of the unit just chosen).
+    cosNeg = unitVecs * localTuningToUnitVec([targetDir + pi, tuning(iPos, 2)])';
+    [~, b] = max(cosNeg);
+    iNeg = moving(b);
+
+    note = sprintf(['stimulus %.4f px/frame; pref %.1f deg @ %.3f px/frame ' ...
+        'vs %.1f deg @ %.3f px/frame'], speedPx, ...
+        rad2deg(tuning(iPos, 1)), tuning(iPos, 2), ...
+        rad2deg(tuning(iNeg, 1)), tuning(iNeg, 2));
+
+    if abs(tuning(iPos, 2) - speedPx) > 0.5 * speedPx
+        warning('localOpponentPair:speedMismatch', ...
+            ['Nearest tuned speed (%.3f px/frame) is far from the stimulus speed ' ...
+             '(%.4f px/frame); this population does not sample the stimulus speed. ' ...
+             'Population speeds: %s.'], ...
+            tuning(iPos, 2), speedPx, mat2str(unique(round(speeds(moving), 3))', 3));
+    end
+end
+
+% [direction, speed] -> unit vector in 3-D Fourier space (shSwts convention).
+function v = localTuningToUnitVec(tuning)
+    el = atan3(tuning(:, 2), ones(size(tuning, 1), 1));
+    v = sphere2rec([tuning(:, 1), el]);
+    v = v ./ sqrt(sum(v.^2, 2));
 end
 
 function d = angleDiff(a, b)

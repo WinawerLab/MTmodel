@@ -10,7 +10,27 @@
 % imresize'd from booth resolution (that blurs Sloan letterforms).
 % Pass referenceDisplaySize = [] to build directly at stimSz with no scaling.
 %
-% See also: explore/showMotionLetter.m, playStimMovie, playStimMovieCompare
+% UNITS — read this before setting a speed. Angular parameters (dotSpeedDegS,
+% letterSizeArcmin) convert through info.ppd, the pixels-per-degree of the
+% OUTPUT field. By default that comes from the display geometry
+% (screenWidthCm / viewDistCm), giving ~100 px/deg at booth resolution. The
+% MODEL's own scale is ~2.33 px/deg and 37.2 frames/sec (shModelUnits), i.e.
+% about 43x coarser, so a speed converted with booth geometry lands far below
+% the speeds the MT population is tuned to. To work in the model's units:
+%
+%   u = shModelUnits();
+%   stim = mkMotionLetter(sz, 'C', 'referenceDisplaySize', [], ...
+%       'ppd', u.pixelsPerDegree, 'frameRate', u.framesPerSecond, ...
+%       'dotSpeedDegS', 5);          % -> 0.3125 px/frame, as intended
+%
+% Passing ppd overrides the display geometry entirely. letterSizePx, when
+% given, is in output-field pixels.
+%
+% NOTE: two calls with the same seed but different stimSz do NOT produce the
+% same dot sample — the field area sets the dot count, so the random draws
+% differ in length. Build once and resize if you need matched samples.
+%
+% See also: shModelUnits, explore/showMotionLetter.m, playStimMovie, playStimMovieCompare
 
 function [stim, info] = mkMotionLetter(stimSz, letter, varargin)
 
@@ -63,33 +83,44 @@ function [stim, info] = mkMotionLetter(stimSz, letter, varargin)
         ppdRef = localPpd(refSize(2), opts.screenWidthCm, opts.viewDistCm);
     end
 
-    ppd = opts.ppd;
-    if isempty(ppd)
-        ppd = ppdRef;
-    end
-
-    if ~isempty(opts.letterSizePx)
-        letterSizeBooth = round(opts.letterSizePx);
+    % Pixels-per-degree of the OUTPUT field, which is what every angular
+    % quantity below must convert through. Supplying ppd overrides the display
+    % geometry entirely -- that is how a caller asks for the model's own scale
+    % (shModelUnits: 2.33 px/deg) rather than a booth's (~100 px/deg).
+    if ~isempty(opts.ppd)
+        ppdField = opts.ppd;
     else
-        letterSizeBooth = round((opts.letterSizeArcmin / 60) * ppdRef);
+        ppdField = ppdRef * fieldScale;
     end
-    letterSizeBooth = max(letterSizeBooth, 8);
+    if ppdField <= 0
+        error('mkMotionLetter:ppd', 'Effective pixels-per-degree must be positive.');
+    end
 
     dotSizePx = max(1, round(opts.dotSize * fieldScale));
 
     if ~isempty(opts.dotSpeedPxPerFrame)
-        speedPxPerSec = opts.dotSpeedPxPerFrame * opts.frameRate;
-        dotSpeedDegS = speedPxPerSec / (ppdRef * max(fieldScale, eps));
+        speedPxPerFrame = opts.dotSpeedPxPerFrame;
+        speedPxPerSec = speedPxPerFrame * opts.frameRate;
+        dotSpeedDegS = speedPxPerSec / ppdField;
     else
         dotSpeedDegS = opts.dotSpeedDegS;
-        speedPxPerSec = dotSpeedDegS * ppdRef * fieldScale;
+        speedPxPerSec = dotSpeedDegS * ppdField;
+        speedPxPerFrame = speedPxPerSec / opts.frameRate;
     end
-    speedPxPerFrame = speedPxPerSec / opts.frameRate;
 
     grey = opts.background;
     dotValue = grey + opts.dotContrast * (1 - grey);
 
-    letterSizePx = max(8, round(letterSizeBooth * fieldScale));
+    % letterSizePx, when given, is in OUTPUT FIELD pixels (as its name says);
+    % otherwise the angular size converts through the same ppdField as speed.
+    if ~isempty(opts.letterSizePx)
+        letterSizePx = round(opts.letterSizePx);
+    else
+        letterSizePx = round((opts.letterSizeArcmin / 60) * ppdField);
+    end
+    letterSizePx = max(8, letterSizePx);
+    letterSizeBooth = round(letterSizePx / max(fieldScale, eps));
+
     [binaryMask, fontUsed] = localLetterMask(genY, genX, letter, ...
         letterSizePx, opts.fontName, grey);
 
@@ -114,8 +145,11 @@ function [stim, info] = mkMotionLetter(stimSz, letter, varargin)
     info.fCovered = opts.fCovered;
     info.drawBackgroundDots = opts.drawBackgroundDots;
     info.frameRate = opts.frameRate;
-    info.ppd = ppdRef;
+    info.ppd = ppdField;            % pixels/deg of the OUTPUT field
+    info.ppdReference = ppdRef;     % pixels/deg of the reference display
+    info.letterSizeDeg = letterSizePx / ppdField;
     info.fontName = fontUsed;
+    info.fontRequested = opts.fontName;
     info.background = grey;
     info.dotValue = dotValue;
     info.binaryMask = binaryMask;
@@ -185,14 +219,35 @@ function ppd = localPpd(screenWidthPx, screenWidthCm, viewDistCm)
 end
 
 function [mask, fontUsed] = localLetterMask(screenY, screenX, letter, letterSizePx, fontName, grey)
+    % MATLAB silently substitutes a default face for an unavailable font, so a
+    % missing font still renders a letter and cannot be detected from the
+    % rendered pixels. Check availability up front instead -- otherwise a run
+    % that never used Sloan is reported as though it had.
+    if ~localFontAvailable(fontName)
+        warning('mkMotionLetter:fontFallback', ...
+            ['Font ''%s'' is not installed (MATLAB would silently substitute ' ...
+             'another face); falling back to Arial. Optotype letterforms will ' ...
+             'differ from the booth stimulus.'], fontName);
+        fontName = 'Arial';
+    end
+
     [img, fontUsed] = localRenderLetter(screenY, screenX, letter, letterSizePx, fontName, grey);
     thresh = grey * 255 + 10;
     if ~any(img(:, :, 1) > thresh)
-        warning('mkMotionLetter:fontFallback', ...
-            'Font ''%s'' did not render; falling back to Arial.', fontName);
-        [img, fontUsed] = localRenderLetter(screenY, screenX, letter, letterSizePx, 'Arial', grey);
+        error('mkMotionLetter:emptyMask', ...
+            ['Letter ''%s'' rendered no pixels above threshold at %d px in font ' ...
+             '''%s''. Check letterSizePx and the field size.'], ...
+            letter, letterSizePx, fontName);
     end
     mask = img(:, :, 1) > thresh;
+end
+
+function tf = localFontAvailable(fontName)
+    persistent installed
+    if isempty(installed)
+        installed = listfonts;
+    end
+    tf = any(strcmpi(installed, fontName));
 end
 
 function [img, fontUsed] = localRenderLetter(screenY, screenX, letter, letterSizePx, fontName, grey)

@@ -345,29 +345,74 @@ Note the stimulus is *motion-defined form* (Regan letter: letter dots drift
 right, background dots drift left) — the deficit-(b) stimulus — not
 structure-from-motion in the 3D-shape sense.
 
-Blocking issues found in review, fix before quoting any result:
+Review findings 1-3 are **FIXED (2026-08-17)**; item 4 is documented:
 
-1. **`localBestOpponentIndices` mixes radians and px/frame** in one `hypot`, so
-   the speed term dominates. At the `quick` preset's 0.126 px/frame it selects
-   the **static** `[0 deg, 0]` MT unit as "right-tuned", making the Fig. 4
-   opponent map meaningless. Match direction first, then speed.
-2. **The same helper is applied to `pars.v1PopulationDirections`**, whose column
-   2 is a 3-D Fourier-space angle, not a speed. Fig. 5's "V1 right/left" labels
-   are a category error. Convert via `mt2sin`/`shSwts` conventions instead.
-3. **Stimulus speed sits below the model's tuned speeds.** MT is tuned to
-   {0, 1, 6} px/frame; the committed configs give 0.126 (quick) and 0.671
-   (experiment) px/frame. Letter/background separation in the MT opponent map
-   improves from d' = 1.05 to 1.26 — and from degenerate (both signs negative)
-   to clean opponency — when the dots run at 1 px/frame.
-4. **The booth preview and the model-field stimulus are independent dot
-   samples**, not one stimulus at two resolutions: `mkMotionLetter` builds
-   directly at each size, and `numDots` differs, so the shared seed does not
-   align the draws (frame correlation ~0). Figs. 0/1 compare different
-   stimuli, and the `showMotionLetterModel.m` comment claiming "built at booth,
-   then uniformly resized" is wrong.
+1. **`localBestOpponentIndices` mixed radians and px/frame** in one `hypot`, so
+   the speed term dominated and at slow stimulus speeds it selected the
+   **static** `[0 deg, 0]` MT unit as "right-tuned". Replaced by
+   `localOpponentPair`, which matches in the model's own 3-D Fourier geometry
+   (elevation `atan3(speed,1)` + `sphere2rec`, as `shSwts` does) and matches the
+   opponent to the *chosen unit's* speed, so "right - left" is direction
+   opponency rather than a speed confound. Exact speed shells cannot be used:
+   MT's nominal speeds differ in low-order bits and V1's rings have a different
+   speed for every unit.
+2. **The same helper was applied to `pars.v1PopulationDirections`.** Column 2
+   there *is* a speed in px/frame (0.22-1.63), not a Fourier angle -- an earlier
+   note in this file said otherwise and was wrong. It was still mis-selected for
+   the same dimensional reason, and now uses `localOpponentPair` too. V1's four
+   speed shells (3.5-26 deg/s) bracket the clinical band far better than MT's.
+3. **Units were the real problem, not speed per se.** `mkMotionLetter` converted
+   deg/s through *display* geometry (~100 px/deg at booth resolution) while the
+   model's filters live at **2.33 px/deg, 37.2 fps**. The `ppd` option that
+   would have fixed this was assigned and never read -- passing it did nothing.
+   Now `ppd` is authoritative, `pars/shModelUnits.m` derives the pinned scale
+   from SH Appendix I, and `explore/showMotionLetterModel.m` builds in model
+   units with `SPEED_DEG_S` documented against the literature bands.
 
-Smaller: the `experiment` preset needs ~11 GB (2.3 GB booth preview + ~8 GB MT
-population) yet ships as the committed default; `numDots`/`letterContrast` use
+**Corrected empirical claim.** An earlier note here said letter/background
+separation improved markedly with speed (d' 1.05 -> 1.26). That was an artifact
+of the broken selector picking the static unit at low speed. With the selector
+fixed, MT opponent d' is ~1.3 and **flat** from 1 to 48 deg/s (96x96 field,
+derivative preset, seeded):
+
+| deg/s | px/frame | MT opponent d' | V1 opponent d' |
+|---|---|---|---|
+| 1.0  | 0.0625 | 1.31 | 0.18 |
+| 2.0  | 0.1250 | 1.31 | 0.26 |
+| 5.0  | 0.3125 | 1.29 | 0.31 |
+| 9.6  | 0.6000 | 1.31 | 0.33 |
+| 16.0 | 1.0000 | 1.34 | 0.33 |
+| 48.0 | 3.0000 | 1.29 | 0.32 |
+
+So MT segregates the motion-defined letter robustly and **speed-invariantly**
+over the clinical band, and V1's opponent signal is much weaker (0.18-0.33) and
+does rise with speed. The standing tension in section 3 is unchanged: MT is tuned
+to {0, 1, 6} px/frame = {0, 16, 96} deg/s, so the entire clinical band sits below
+MT's slowest non-zero tuned speed. `localOpponentPair` now warns when the
+population does not sample the stimulus speed.
+
+4. **Booth preview and model stimulus are independent dot samples** (frame
+   correlation ~0): `mkMotionLetter` builds directly at each size and the field
+   area sets the dot count, so a shared seed does not align the draws. Not
+   "fixed" -- the preview is now off by default (`SHOW_BOOTH_PREVIEW`), labelled
+   as a separate sample, and the false "built at booth, then uniformly resized"
+   comment is gone.
+
+**Open decision — spatial scale.** At 2.33 px/deg a clinically sized letter
+(168 arcmin = 2.8 deg) is only **~6.5 pixels**, far too small to be a letter.
+`showMotionLetterModel.m` therefore sets the letter in model pixels (60% of the
+field, ~34 deg implied) and reports the angular size. Reconciling this with the
+known order-of-magnitude RGC spatial-scale offset is unresolved and is the main
+thing standing between this stimulus and a quantitative clinical claim.
+
+Also fixed: **the Sloan font was not installed**, and the fallback detector could
+not notice -- MATLAB silently substitutes a face, so a missing font still renders
+and `info.fontName` reported the requested name regardless. Every earlier run
+therefore used a substituted face while claiming Sloan. Sloan is now installed
+(letter mask 5022 px vs Arial's 1798), and availability is checked against
+`listfonts` up front.
+
+Smaller, still open: `numDots`/`letterContrast` use
 disk area `pi*(d/2)^2` for dots that are square by default (~27% too many dots);
 `localStampDots` clips dots at the field edge instead of wrapping, though the
 positions wrap; `maskOnMap` is computed but only used in commented-out
