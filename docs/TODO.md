@@ -176,6 +176,32 @@ different measurement (cached weights / different stimulus), so the two are not
 directly comparable. The A-vs-B *contrast* above is internally consistent — both
 fits, both stimuli, one script.
 
+**Why check 1 failed where it did — measured 2026-08-14
+(`explore/measurePreferredTfSf.m`).** The reconstruction loss above has a
+mechanism, visible in the tuning rather than the residual. Nominal preferred
+(sf, tf) is *identical* for both populations by construction — `v12sin` places
+them on a fixed-radius annulus (k = 0.2173) set purely by the neuron's tf/sf
+ratio, and both fits share `v1PopulationDirections`. But the **measured**
+preferences diverge, and only at the slow end:
+
+| band | nominal | B (mixed) | A (parasol) |
+|---|---|---|---|
+| slow (tf/sf < 0.5, n=13) | 1.98 Hz | 1.90 Hz | **2.49 Hz** |
+| fast (tf/sf > 1.0, n=7)  | 6.81 Hz | 9.71 Hz | 9.71 Hz |
+
+At the fast end A and B agree for **6 of 7** neurons — the parasol-only basis
+builds those exactly as well as the mixed basis. At the slow end A prefers a
+higher tf than B for **13 of 13**, unanimously (median ×1.40 vs nominal, against
+B's ×0.94). Denied midget input, the slow neurons drift toward the frequency the
+fast parasol kernel (τ = 0.6/1.2) actually prefers. Population A costs little in
+gain: median peak response A/B = 0.86.
+
+Both populations overshoot nominal at the fast end (9.71 vs 6.81 Hz) — a property
+of the model, not of the mask. *Caveats:* the log grid quantizes to ×1.31 per tf
+step, so the ×1.40 shift is ~1 step — credible because unanimous across all 13
+slow neurons, not because any single row is precise; and tf was swept at nominal
+sf and vice versa, so these are 1D cuts through a possibly non-separable surface.
+
 **Check 2 result — measured 2026-08-14 (`explore/knockoutAndAlphaCalibration.m`).**
 **Maunsell reproduced; `alpha = 0.10` adopted (bracket 0.05–0.10).**
 
