@@ -339,9 +339,41 @@ hypothesis needs revising.
 letter generator, i.e. exactly the stimulus class for deficit (b). It also adds
 `pars/shRgcClassesMidgetParasolTiled.m` and modifies the lagged preset.
 
-The branch has 2 commits not in `main` and was deliberately left aside on
-2026-08-13. Merging or cherry-picking it is a prerequisite for testing (b) with
-the actual clinical task rather than a proxy.
+**MERGED 2026-08-17** (`main`, merge commit). Clean auto-merge; `runAllTests.m`
+is 14/14 on the merged tree and both RGC presets run the stimulus end to end.
+Note the stimulus is *motion-defined form* (Regan letter: letter dots drift
+right, background dots drift left) — the deficit-(b) stimulus — not
+structure-from-motion in the 3D-shape sense.
+
+Blocking issues found in review, fix before quoting any result:
+
+1. **`localBestOpponentIndices` mixes radians and px/frame** in one `hypot`, so
+   the speed term dominates. At the `quick` preset's 0.126 px/frame it selects
+   the **static** `[0 deg, 0]` MT unit as "right-tuned", making the Fig. 4
+   opponent map meaningless. Match direction first, then speed.
+2. **The same helper is applied to `pars.v1PopulationDirections`**, whose column
+   2 is a 3-D Fourier-space angle, not a speed. Fig. 5's "V1 right/left" labels
+   are a category error. Convert via `mt2sin`/`shSwts` conventions instead.
+3. **Stimulus speed sits below the model's tuned speeds.** MT is tuned to
+   {0, 1, 6} px/frame; the committed configs give 0.126 (quick) and 0.671
+   (experiment) px/frame. Letter/background separation in the MT opponent map
+   improves from d' = 1.05 to 1.26 — and from degenerate (both signs negative)
+   to clean opponency — when the dots run at 1 px/frame.
+4. **The booth preview and the model-field stimulus are independent dot
+   samples**, not one stimulus at two resolutions: `mkMotionLetter` builds
+   directly at each size, and `numDots` differs, so the shared seed does not
+   align the draws (frame correlation ~0). Figs. 0/1 compare different
+   stimuli, and the `showMotionLetterModel.m` comment claiming "built at booth,
+   then uniformly resized" is wrong.
+
+Smaller: the `experiment` preset needs ~11 GB (2.3 GB booth preview + ~8 GB MT
+population) yet ships as the committed default; `numDots`/`letterContrast` use
+disk area `pi*(d/2)^2` for dots that are square by default (~27% too many dots);
+`localStampDots` clips dots at the field edge instead of wrapping, though the
+positions wrap; `maskOnMap` is computed but only used in commented-out
+`contour` calls; and `pars/shRgcClassesMidgetParasolTiled.m` is a
+backward-compatibility alias for a name that never existed on `main`, so it can
+probably just be deleted.
 
 ---
 
