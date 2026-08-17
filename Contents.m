@@ -36,6 +36,9 @@
 %
 % mkBar             Make a drifting bar stimulus
 % mkDots            make a drifting dot stimulus
+% mkMotionLetter    motion-defined letter (Regan-style opposite dot drift)
+% playStimMovie     play a [Y X T] movie with fixed [0 1] grey-scale display
+% playStimMovieCompare  play two movies side-by-side (booth vs model field)
 % mkFract           make a drifting fractal noise stimulus
 % mkPlaid           make a plaid stimulus
 % mkSin             make a drifting grating
