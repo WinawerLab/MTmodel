@@ -1,7 +1,12 @@
 # TODO — parked items and the optic-neuritis work plan
 
-Created 2026-08-13. Items here are **deliberately not being worked on now**;
-this file exists so they are not lost. Ordered by bearing on the driving question.
+Created 2026-08-13; reviewed 2026-08-19. Items here are **deliberately not being
+worked on now**; this file exists so they are not lost. Ordered by bearing on the
+driving question.
+
+For the current state of the design and what the lesion tests have shown, see
+[`MODEL_AND_LESIONS.md`](MODEL_AND_LESIONS.md). Sections 1 and 4 below are **done**
+and are kept only as the record of why things were built the way they were.
 
 ## The driving question
 
@@ -321,7 +326,7 @@ VEP latency — time-to-peak of the population response to a transient? A
 cross-correlation lag against the unlesioned response? Worth pinning down before
 quoting any number in milliseconds.
 
-## 3. The low-speed tension — highest-value next experiment
+## 3. The low-speed tension — highest-value next experiment *(see also §5)*
 
 Phase 2b found that **spatially heterogeneous** delay (`delay_random`) crushes
 coherence (−39% lagged) and **high-pass** speed tuning (−55%), whereas **uniform**
@@ -333,7 +338,7 @@ visual field → motion deficit.
 
 **But there is a tension.** The reported heterogeneous-delay effect was largest on
 the **high-pass** (fast, 16–160 deg/s) neuron. The clinical deficit is at **low**
-speeds. `VALIDATION_SUMMARY.md` does not report the low-pass neuron under
+speeds. `docs/_archive/VALIDATION_SUMMARY.md` does not report the low-pass neuron under
 `delay_random`, so this is currently unknown rather than contradicted.
 
 **Experiment:** measure low-pass (0.6–9.6 deg/s) vs high-pass speed tuning under
@@ -341,7 +346,7 @@ heterogeneous delay directly. If heterogeneous delay preferentially spares low
 speeds, the current mechanism does **not** explain the clinical deficit and the
 hypothesis needs revising.
 
-## 4. Motion-defined form stimulus already exists — on the `Kristin` branch
+## 4. Motion-defined form stimulus: merged and validated *(DONE 2026-08-17)*
 
 `origin/Kristin` adds `stim/mkMotionLetter.m` (283 lines), plus
 `explore/showMotionLetter.m` and `showMotionLetterModel.m` — a motion-defined
@@ -470,6 +475,98 @@ backward-compatibility alias for a name that never existed on `main`, so it can
 probably just be deleted.
 
 ---
+
+## 5. Re-run the lesion matrix through the two-stream MT *(added 2026-08-19)*
+
+Every lesion number on record was measured before `pars.rgc.mtMix` existed, i.e.
+through the midget-dominated MT. The class-agnostic results (uniform vs.
+heterogeneous amplitude and delay) are statements about the front-end and will
+probably survive; the **cell-type-specific ones — parasol-only, ON-only — are
+not interpretable as biology at all** and must be redone. See
+`MODEL_AND_LESIONS.md` §5 for the full ledger.
+
+Two cells of the lesion matrix have also never been run:
+
+- **uniform amplitude + uniform delay together.** There is no combined-uniform
+  condition anywhere. The only combined condition (`coupled`) ties amplitude and
+  delay together deterministically rather than varying them independently.
+- **the low-pass (0.6–9.6 deg/s) neuron under `delay_random`.** This is the cell
+  that decides item 3 above, and it was never reported.
+
+One consolidated pass would clear most of this: the full matrix
+{amplitude, delay, both} × {uniform, non-uniform}, through the two-stream MT,
+**seeded**, with the motion-defined letter d′ as an extra read-out alongside the
+Figs 9–14 tuning measures. `explore/compareLesionsToBaseline.m` is the template
+(it seeds and plots against baseline on shared axes);
+`explore/validateSHFigs9to14_lesions.m` still does not seed and should not be
+extended as-is.
+
+## 6. Internal noise: three sites, and the gain-compensation mechanism *(added 2026-08-19)*
+
+**Full treatment now has its own document: `NOISE_AND_DEMYELINATION.md`** — the
+demyelination pathophysiology and how it maps onto the lesion parameters, the
+three noise sites, the gain-compensation mechanism, the predictions, and the
+first measurement. Short version, and the framing is JW's:
+
+The model is deterministic, so a uniform amplitude lesion is close to a contrast
+reduction — and both cortical stages already implement
+`R = s*N / (strength*D + sigma^2)` with `sigma = v1C50 = mtC50 = 0.1`, where the
+pool `D` is computed from the **lesioned** input. So a lesion automatically raises
+the effective gain. That is why §4.2's 50% gain cut barely moved direction tuning:
+normalization absorbed it. **The compensation is the lesion's signature, not the
+model failing to notice it** — once there is noise for the raised gain to act on.
+
+Three injection sites, which are separable and should be run separately first:
+
+1. **Optic nerve.** Demyelinated fibres noisier / worse SNR. Upstream of the
+   amplitude loss, so a pure gain cut leaves this SNR unchanged — it needs an
+   explicit noise increase to do work.
+2. **Local cortical noise, upstream of the normalization gain.** Signal attenuated
+   by *k*, this noise not. **The site that makes amplitude lesions bite.**
+3. **Late / decision noise.** Gain compensation *helps* here, to the extent it
+   restores the mean.
+
+**The mechanism to take most seriously is (2) combined with the gain increase.**
+Two distinct consequences, and only one is an SNR change: absolute output noise
+rises (variability increases), while the mean response is restored toward normal
+(so the deficit is invisible to tuning-curve measures — exactly the §4.2 null).
+SNR itself falls by *k*, from signal loss against undiminished local noise; the
+shared gain cancels in the ratio. Net: **near-normal tuning curves, substantially
+degraded discriminability** — a tuning experiment calls the eye normal, a
+psychophysical one does not.
+
+A dynamic variant — gain control amplifying its own circuit noise, or losing
+stability at low drive — needs normalization *dynamics* (ORGaNICs), the same gap
+§2 flags for VEP latency. The static account is a lower bound.
+
+**New testable prediction (report §6.4).** The normalization pool is spatially
+blurred, so a damaged location sits in a pool partly supported by intact
+neighbours and gets *less* gain rescue than a uniform lesion of the same local
+severity, while intact locations get *more* gain and amplify more local noise.
+§4.4 currently finds uniform and heterogeneous amplitude lesions interchangeable;
+**with site-2 noise they should diverge**, scaling with the damage correlation
+length relative to the pool width. Uses lesions that already exist.
+
+**Compensation index — DONE 2026-08-19** (`explore/compensationIndex.m`).
+Normalization absorbs most of a uniform amplitude lesion at every speed
+(C = 0.64–0.92; a 50% gain cut costs only 12–25% of the MT response, not 75%),
+which quantitatively explains §4.2's null result. MT's motion signal across the
+clinical band is **4–5× smaller** than at 10–16 deg/s, confirming JW's
+signal-starvation premise — and compensation is **strongest where drive is
+weakest** (C = 0.89 at 1 deg/s vs 0.64 at 10 deg/s), i.e. the lesion-driven gain
+increase is largest exactly where there is least signal. Both factors point the
+same way, so the low-speed deficit needs no low-speed-selective damage. Drive is
+**U-shaped** in speed, so the model predicts impairment at high speeds too.
+Details and caveats in `NOISE_AND_DEMYELINATION.md` §6.
+
+**Next, still no noise code:** add a coherence axis and re-express deficit against
+unlesioned drive rather than speed — if low-speed, high-speed and low-coherence
+conditions collapse onto one curve, the operating-point account wins outright.
+
+Still to decide: response-scaled vs. fixed-variance noise (this changes the sign
+of several predictions); and the deficit-(a) observable, which does not exist yet
+(§2). Report motion-letter d′ **and** a trial-to-trial variability measure, since
+the mechanism predicts mean and variability move in opposite directions.
 
 ## Smaller items found during the 2026-08-13 review
 

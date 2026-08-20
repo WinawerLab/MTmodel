@@ -9,7 +9,7 @@
 % With pars.rgc.combine = 'steer', shModelV1LinearFromClasses reproduces
 % shModelV1Linear (legacy) essentially exactly at pars.nScales = 1.
 %
-% See docs/RGC_V1_unification_plan.md.
+% See docs/_archive/RGC_V1_unification_plan.md.
 
 function classes = shRgcClassesDerivative(pars)
 

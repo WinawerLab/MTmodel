@@ -1,6 +1,6 @@
 % lesionDeltaTest  Is the midget/parasol front-end non-vacuous, or "SH twice"?
 %
-% Decisive test for the reversion worry (docs/RGC_V1_design_discussion.md §13).
+% Decisive test for the reversion worry (docs/_archive/RGC_V1_design_discussion.md §13).
 % The sharp, clinically-relevant question: is a biological CONDUCTION DELAY an
 % independent lesion axis from AMPLITUDE, or is it reducible to a channel rescale?
 %

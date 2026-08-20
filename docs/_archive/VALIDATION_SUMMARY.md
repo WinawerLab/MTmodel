@@ -1,3 +1,14 @@
+> **ARCHIVED 2026-08-19 — results predate the current MT stage.** Every number
+> below was read out of an MT pooling the single *mixed* RGC→V1 weight matrix,
+> which gets magno/parvo backwards relative to Maunsell et al. (1990). The
+> two-stream MT mixture (`pars.rgc.mtMix`, 2026-08-14) supersedes it, so the
+> **cell-type-specific** lesion results here (parasol-only, ON-only) are not
+> interpretable as biology and the class-agnostic ones have not been re-measured.
+> The `explore/_figs/` paths listed below no longer exist. Findings that survive,
+> with validity stated, are in `docs/MODEL_AND_LESIONS.md` §4.
+
+---
+
 # MTmodel Visual Validation Summary
 
 **Date:** 2026-07-13 (started), completed and corrected 2026-07-16
@@ -8,7 +19,7 @@
 
 ## Overview
 
-This document summarizes the visual + quantitative validation work implementing the plan described in `docs/RGC_V1_unification_plan.md` §4 (item 4). We validate that three model paths reproduce published V1/MT phenomena, then assess lesion effects, then quantify them.
+This document summarizes the visual + quantitative validation work implementing the plan described in `docs/_archive/RGC_V1_unification_plan.md` §4 (item 4). We validate that three model paths reproduce published V1/MT phenomena, then assess lesion effects, then quantify them.
 
 ### Three Model Paths Tested
 
@@ -285,7 +296,7 @@ parameterized (midget/parasol, ON/OFF); lesionable via cell-type and timing para
 
 ## Next Steps
 
-### From plan doc (docs/RGC_V1_unification_plan.md §4, items 1-3, 5) - not yet addressed here
+### From plan doc (docs/_archive/RGC_V1_unification_plan.md §4, items 1-3, 5) - not yet addressed here
 1. **Pin down frame rate** - convert frame delays to physiological timing (ms).
 2. **Optic-neuritis lesion studies proper** - within-subject deltas (affected vs fellow eye), building on the lesion machinery validated here.
 3. **Rectification non-vacuousness refinement** (lower priority).
@@ -312,8 +323,8 @@ haven't been synced to this completed status yet.
 - `pars/shRgcClassesMidgetParasolLagged_v1Weights_lag0123.mat` - cached fitted weights (28x160)
 
 ### Documentation
-- This file: `explore/VALIDATION_SUMMARY.md`
-- `explore/SESSION_PROGRESS_2026-07-13.md` - session log (see 2026-07-16 update at top)
+- This file: `docs/_archive/VALIDATION_SUMMARY.md`
+- `docs/_archive/SESSION_PROGRESS_2026-07-13.md` - session log (see 2026-07-16 update at top)
 
 ---
 
@@ -339,8 +350,8 @@ haven't been synced to this completed status yet.
 
 ## Contact / Issues
 
-- See `docs/RGC_V1_unification_plan.md` for design rationale.
-- See `docs/RGC_V1_design_discussion.md` for background.
+- See `docs/_archive/RGC_V1_unification_plan.md` for design rationale.
+- See `docs/_archive/RGC_V1_design_discussion.md` for background.
 - See `AGENTS.md` for project status (not yet synced to this completed validation - see Next Steps above).
 
 **Common issues:**

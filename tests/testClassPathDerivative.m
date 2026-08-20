@@ -3,7 +3,7 @@
 % derivative path and legacy V1 to machine precision at nScales = 1.
 %
 % This is the guardrail for the pars.rgc.classes refactor
-% (docs/RGC_V1_unification_plan.md): the derivative preset must stay exact.
+% (docs/_archive/RGC_V1_unification_plan.md): the derivative preset must stay exact.
 
 rng(1);
 pars = shPars();

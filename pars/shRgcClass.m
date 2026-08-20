@@ -1,7 +1,7 @@
 % class = shRgcClass(name, temporalKernel, ...)
 %
 % Construct one RGC-class specification for the unified class-based RGC->V1
-% front-end (see docs/RGC_V1_unification_plan.md). A "class" is one RGC
+% front-end (see docs/_archive/RGC_V1_unification_plan.md). A "class" is one RGC
 % population: a spatiotemporal filter (spatial RF x temporal kernel) plus a
 % polarity/rectification rule, and a declaration of which V1 spatial-derivative
 % read-out orders it feeds. Presets (shRgcClassesDerivative, ...) return arrays

@@ -1,3 +1,11 @@
+> **ARCHIVED 2026-08-19 — not current.** §1–13 design a biological
+> direction-selectivity front-end (ON/OFF spatial offset + ON quadrature kernel)
+> that was **retired on 2026-07-12**; §14–16 record the pivot away from it and
+> correct the lesion-delta claim. The conclusions are carried forward in
+> `docs/MODEL_AND_LESIONS.md` §2. See `docs/_archive/README.md`.
+
+---
+
 # RGC → V1: Design Discussion (narrative)
 
 Date: 2026-07-10. Participants: J. Winawer + Claude (Opus 4.8).

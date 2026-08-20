@@ -16,6 +16,7 @@ Heeger, Nassi & Callaway, Kling, Chariker, …).
 | file | source | what it targets |
 |---|---|---|
 | `10.1002-ana.22692Figurefig1.pptx` | Raz et al., *Demyelination affects temporal aspects of perception: An optic neuritis study*, Ann Neurol 2012;71(4):531–538, doi:10.1002/ana.22692 | deficit (a) — temporal/timing aspects of perception after ON |
+| *(not yet in folder)* | Brusa, Jones & Plant, *Long-term remyelination after optic neuritis: a 2-year visual evoked potential and psychophysical serial study*, Brain 2001;124(3):468–479, [doi:10.1093/brain/124.3.468](https://doi.org/10.1093/brain/124.3.468) | deficit (a) — the **recovery trajectory**; see below |
 
 ## When adding a figure
 
@@ -46,3 +47,23 @@ quantitative claim:
 These are published figures kept for research reference, as with the PDFs in
 `literature/`. Do not redistribute them or reproduce them in a manuscript
 without permission — cite and redraw instead.
+
+
+## Brusa, Jones & Plant (2001) — why this one is worth pulling
+
+31 patients, **serial** VEP and psychophysics over 24 months. It is the target for
+the recovery-trajectory prediction in `docs/NOISE_AND_DEMYELINATION.md` §5.4,
+and it is harder than the clean version of that prediction:
+
+- VEP latency **does** shorten significantly — 6–7 ms between months 3 and 6, a
+  further ~4 ms by 24 months. So latency recovery is partial, not absent.
+- Contrast sensitivity improved through month 9 and then **declined**.
+- The authors conclude long-term remyelination may mostly protect axons from
+  degeneration rather than restore function.
+
+Two consequences for the model. The dissociation prediction must be stated as a
+**rate** difference (variability-driven measures recovering faster and more
+completely than mean latency), not an absolute one. And — important for the
+planned affected-vs-fellow-eye design — **they report the fellow eye
+deteriorating over the same window**, so the fellow eye is not a clean
+within-subject control.

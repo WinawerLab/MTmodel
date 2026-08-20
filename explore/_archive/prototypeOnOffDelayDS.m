@@ -17,7 +17,7 @@
 %
 % This is exploratory (not model code). delta is in FRAMES; ~1 frame stands in
 % for Chariker's ~10 ms pending a frame-rate calibration. See
-% docs/RGC_V1_unification_plan.md.
+% docs/_archive/RGC_V1_unification_plan.md.
 
 thisFile = mfilename('fullpath');
 repoRoot = fileparts(fileparts(thisFile));

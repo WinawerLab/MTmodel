@@ -2,7 +2,7 @@
 % the unified class path (increment 2): the DoG + rectification + lagged-class
 % machinery must run end-to-end, fit legacy V1 to a sensible level, and stay
 % finite. Uses the adopted lagged preset (no ON/OFF offset or quadrature; see
-% docs/RGC_V1_unification_plan.md §3.5). The retired offset+quadrature preset
+% docs/_archive/RGC_V1_unification_plan.md §3.5). The retired offset+quadrature preset
 % lives in explore/_archive/.
 
 rng(0);

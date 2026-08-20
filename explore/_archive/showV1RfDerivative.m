@@ -5,7 +5,7 @@
 %   Stimulus-ref : Y x X x lag      (space-time RF, RF_stim = sum_k RF_rgc*tf_k)
 %
 % Also verifies the analytic RF against the real model on a 9x9x9 stimulus
-% (single output location) -> max error ~1e-16. See docs/RGC_V1_unification_plan.md.
+% (single output location) -> max error ~1e-16. See docs/_archive/RGC_V1_unification_plan.md.
 %
 % Self-locating: adds the repo to the path from this file's location.
 

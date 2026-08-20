@@ -1,3 +1,11 @@
+> **ARCHIVED 2026-08-19 — not current.** The class-path unification refactor this
+> document plans is **complete** (increments 1–4). Decisions 3, 4 and 6 were
+> superseded by the §3.5 scope pivot; the "next steps" are done or have moved to
+> `docs/TODO.md`. For the current architecture see `docs/MODEL_AND_LESIONS.md`;
+> for orientation see `AGENTS.md`. See `docs/_archive/README.md`.
+
+---
+
 # RGC → V1 Unification: Design Notes & Handoff
 
 Last updated: 2026-07-12 (session with J. Winawer)
@@ -400,7 +408,7 @@ viewer (`shV1Rf` / `shShowV1Rf`, class-agnostic — the two-view viz in
 
 4. **Visual validation against SH paper benchmarks (Simoncelli & Heeger 1998 Figs.
    9–14) — DONE (2026-07-16).** All four sub-steps below completed; see
-   `explore/VALIDATION_SUMMARY.md` for the full writeup and
+   `docs/_archive/VALIDATION_SUMMARY.md` for the full writeup and
    `explore/_figs/` for all 114 figures + the quantitative analysis output
    (gitignored — regenerate via the scripts named below).
 

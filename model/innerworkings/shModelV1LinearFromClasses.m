@@ -14,7 +14,7 @@
 %
 % This is the single forward that subsumes both the 'derivative' and 'fourPop'
 % paths; the difference is entirely in pars.rgc.classes (see
-% docs/RGC_V1_unification_plan.md). With the derivative preset and 'steer' it
+% docs/_archive/RGC_V1_unification_plan.md). With the derivative preset and 'steer' it
 % reproduces shModelV1LinearFromRgcDerivative (hence legacy) essentially exactly.
 %
 % Required arguments:

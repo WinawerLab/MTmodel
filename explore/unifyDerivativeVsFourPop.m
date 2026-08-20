@@ -7,7 +7,7 @@
 % held-out stimulus set.
 %
 % Expected: derivative classes -> ~0.9999 (1.0 modulo ridge), fourPop -> ~0.69.
-% See docs/RGC_V1_unification_plan.md §2.2. (This script predates the
+% See docs/_archive/RGC_V1_unification_plan.md §2.2. (This script predates the
 % pars.rgc.classes refactor; the cross-check against the now-retired
 % shModelV1LinearFromRgcDerivative was dropped -- testClassPathDerivative.m
 % is the current, exact err=0 guardrail for that equivalence.)

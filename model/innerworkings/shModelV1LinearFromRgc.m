@@ -6,7 +6,7 @@
 % column ordering of shSwts so the default and fitted weight paths are
 % consistent with shModelV1Linear.
 %
-% RETIRED from the live dispatch (increment 3c, docs/RGC_V1_unification_plan.md):
+% RETIRED from the live dispatch (increment 3c, docs/_archive/RGC_V1_unification_plan.md):
 % pars.rgc.mode = 'fourPop' now runs through shModelV1LinearFromClasses +
 % shRgcClassesFourPop instead. This function is kept only as the independent
 % reference oracle for tests/testClassPathFourPop.m (which proves the class

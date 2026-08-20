@@ -116,3 +116,32 @@ Functional organization of midget and parasol RGCs — the intended calibration
 target for kernel time courses. Now actionable, since the frame rate is pinned
 (above): the preset's midget kernel peaks at ~107 ms and its parasol at ~27 ms,
 which can finally be checked against measured time courses.
+
+---
+
+## Demyelination biophysics — the source for the noise model
+
+### Naud & Longtin (2019), *J Math Neurosci* 9:3
+"Linking demyelination to compound action potential dispersion with a
+spike-diffuse-spike approach."
+DOI [10.1186/s13408-019-0071-6](https://doi.org/10.1186/s13408-019-0071-6)
+*(PDF not in folder; free preprint at [biorxiv 10.1101/501379](https://www.biorxiv.org/content/10.1101/501379))*
+
+A **stochastic** spike-diffuse-spike model: stochastic integrate-and-fire nodal
+excitability plus a linear filtering operation for internodal propagation. Shows
+how **weak and sporadic** axonal damage produces both delay *and* **dispersion**
+of the compound action potential — i.e. it derives the two together from one
+insult, rather than imposing them as separate parameters.
+
+This is the right level of description to import for `docs/NOISE_AND_DEMYELINATION.md`:
+it gives a principled form for trial-to-trial jitter and stochastic conduction
+block, which the current lesion parameterization cannot express at all.
+
+**Read the corrected version** — two corrections are published, one concerning the
+direction of the changes in transverse resistance and capacitance under
+demyelination ([10.1186/s13408-019-0076-1](https://doi.org/10.1186/s13408-019-0076-1),
+[10.1186/s13408-020-00083-y](https://doi.org/10.1186/s13408-020-00083-y)).
+
+**Not** a source for: g-ratio or internode length after CNS remyelination, or the
+claim that remyelination suppresses jitter. Those are still ungrounded — see the
+provenance warning in `docs/NOISE_AND_DEMYELINATION.md` §2.

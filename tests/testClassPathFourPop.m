@@ -1,7 +1,7 @@
 % testClassPathFourPop  Guardrail for the fourPop preset on the unified class
 % path (increment 3c): shRgcClassesFourPop + shClassV1Basis must reproduce the
 % legacy fourPop feature basis (shModelV1LinearFromRgc / shModelRgc) exactly,
-% including lagged channels. See docs/RGC_V1_unification_plan.md and
+% including lagged channels. See docs/_archive/RGC_V1_unification_plan.md and
 % explore/verifyClassPathFourPop.m.
 
 rng(7);
