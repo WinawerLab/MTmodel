@@ -6,7 +6,7 @@
 % projected onto the V1 spatial-derivative read-outs it declares. Shared by the
 % forward (shModelV1LinearFromClasses) and the fitter (shFitClassV1Weights).
 %
-% See docs/RGC_V1_unification_plan.md.
+% See docs/_archive/RGC_V1_unification_plan.md.
 
 function [S, ind, nCols] = shClassV1Basis(M, pars)
 

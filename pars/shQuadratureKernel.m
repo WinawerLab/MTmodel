@@ -5,7 +5,7 @@
 % channels a constant-phase temporal difference, which produces broadband
 % direction selectivity when combined with an ON/OFF spatial offset (Chariker/
 % Shapley Mechanism #2; see explore/prototypeOnOffDelayDS.m and
-% docs/RGC_V1_unification_plan.md §2.7).
+% docs/_archive/RGC_V1_unification_plan.md §2.7).
 %
 % NOTE: the exact Hilbert quadrature is acausal. Biology approximates a constant
 % phase offset with a shaped *causal* kernel; this utility is a first-pass stand-

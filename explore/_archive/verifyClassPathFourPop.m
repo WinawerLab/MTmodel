@@ -1,7 +1,7 @@
 % verifyClassPathFourPop  Check shRgcClassesFourPop + shClassV1Basis reproduces
 % the legacy fourPop feature basis (shModelV1LinearFromRgc / shModelRgc) exactly.
 %
-% Increment 3c of the pars.rgc.classes refactor (docs/RGC_V1_unification_plan.md):
+% Increment 3c of the pars.rgc.classes refactor (docs/_archive/RGC_V1_unification_plan.md):
 % the class-based basis matrix S is column-permuted relative to the legacy
 % basis (legacy loops temporal-order-outer / spatial-order-descending; the
 % class path's default readoutOrders = [0 1 2 3] loops spatial-order-ascending),

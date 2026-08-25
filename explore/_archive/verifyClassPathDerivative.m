@@ -1,7 +1,7 @@
 % verifyClassPathDerivative  Check the unified class-based forward reproduces the
 % existing derivative path (and legacy) exactly, at nScales = 1.
 %
-% Increment 1 of the pars.rgc.classes refactor (docs/RGC_V1_unification_plan.md):
+% Increment 1 of the pars.rgc.classes refactor (docs/_archive/RGC_V1_unification_plan.md):
 % shRgcClassesDerivative + shModelV1LinearFromClasses(...,'steer') should equal
 % shModelV1LinearFromRgcDerivative to machine precision, and match legacy V1.
 

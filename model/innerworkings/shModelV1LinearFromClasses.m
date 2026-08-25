@@ -12,9 +12,9 @@
 %      (pars.rgc.combine = 'steer', valid for the derivative diagonal) or with a
 %      fitted weight matrix (pars.rgc.combine = 'weights', pars.rgc.v1Weights).
 %
-% This is the single forward that subsumes both the 'derivative' and 'fourPop'
+% This is the single forward that subsumes both the 'derivative' and class-based
 % paths; the difference is entirely in pars.rgc.classes (see
-% docs/RGC_V1_unification_plan.md). With the derivative preset and 'steer' it
+% docs/_archive/RGC_V1_unification_plan.md). With the derivative preset and 'steer' it
 % reproduces shModelV1LinearFromRgcDerivative (hence legacy) essentially exactly.
 %
 % Required arguments:
@@ -75,7 +75,7 @@ function pop = localCombine(S, nCols, combine, pars, directions)
             end
             % Fitted weights are tied to pars.v1PopulationDirections; resdirs are
             % not independently steerable here, so this returns the fitted
-            % population responses (matches the legacy fourPop resdirs behavior).
+            % population responses (matches the legacy resdirs behavior).
             pop = S * W';
         otherwise
             error('pars.rgc.combine must be ''steer'' or ''weights''.');

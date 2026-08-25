@@ -1,7 +1,7 @@
 % classes = shRgcClassesMidgetParasolLagged(pars, lags)
 %
 % Biological RGC-class preset aligned with the 2026-07-12 scope pivot
-% (docs/RGC_V1_design_discussion.md §14-15): ON/OFF x midget/parasol, each with
+% (docs/_archive/RGC_V1_design_discussion.md §14-15): ON/OFF x midget/parasol, each with
 % a center-surround (DoG) spatial RF and a causal difference-of-gamma temporal
 % kernel, PLUS lagged copies of every class. Two design choices distinguish it
 % from the retired offset+quadrature preset (now in
@@ -27,8 +27,6 @@
 %
 % Optional arguments:
 % lags   vector of integer frame lags for the lagged copies. [ [0 1 2 3] ]
-%
-% See also: shRgcClassesMidgetParasolTiled (deprecated alias)
 
 function classes = shRgcClassesMidgetParasolLagged(pars, lags) %#ok<INUSL>
 

@@ -6,7 +6,7 @@
 % (parasol fast, midget slow), and half-wave rectification by polarity.
 %
 % Direction-selectivity ingredients (Chariker/Shapley; see
-% docs/RGC_V1_unification_plan.md §2.6-2.7):
+% docs/_archive/RGC_V1_unification_plan.md §2.6-2.7):
 %   * ON channels get a quadrature (90-deg phase-shifted) temporal kernel relative
 %     to OFF -- a constant-phase ON/OFF difference (Mechanism #2, broadband DS);
 %   * ON/OFF channels are given opposite spatial readout offsets, so a V1 neuron

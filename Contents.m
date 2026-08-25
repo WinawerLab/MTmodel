@@ -14,11 +14,9 @@
 % ----------------- HELP functions ---------------------------------------
 %
 % shTutorial1               Overview of the software, generating tuning curves, etc.
-% shCalibrateRgcLayer       Optimize RGC temporal parameters to match legacy V1/MT responses
+% shClassFeatureMask        Logical column mask over the RGC-class feature basis, from a name regexp
 % shFitClassV1Weights       Ridge regression to fit per-neuron RGC-class-to-V1 projection weights
-% shRunRgcPlan              Execution workflow for the RGC calibration pipeline
-% shSweepRgcTemporalPars    Grid search over RGC temporal parameters
-% shTestRgcV1Corr           Regression test comparing legacy vs. RGC V1 paths
+% shV1Rf                    A V1 neuron's receptive field, referred to the RGC classes and to the stimulus
 %
 % ----------------- MODEL functions ---------------------------------------
 %
@@ -67,7 +65,11 @@
 %
 % mkGaussianFilter          Make a 1D gaussian filter with a given SIGMA.
 % shModelUnits              Pinned physical scale (0.430 deg/px, 26.9 ms/frame, 16 deg/s per px/frame)
-% shPars                    Get a default PARS structure
+% shPars                    Get a PARS structure: shPars (derivative) or shPars('lagged') - the only two ways to run the model
+% shQuadratureKernel        90-deg Hilbert phase shift of a temporal kernel (retired ON/OFF quadrature)
+% shRgcClass                Constructor for one RGC class (spatial RF, temporal kernel, rectification, gain)
+% shRgcClassesDerivative    Preset: the SH temporal-derivative basis; reproduces legacy exactly
+% shRgcClassesMidgetParasolLagged  Preset: ON/OFF x midget/parasol x lags 0-3 - the live biological front-end
 % shParsScaleFactors        Set scale factors for the pars structure and pick pars.mtalpha
 % shParsV1PopulationDirections  Get evenly spread V1 neurons for a population
 %
@@ -77,12 +79,11 @@
 % shShowMtPopulationResponse            Show the response of a population of MT neurons
 % shShowRgcAndMtComparison              Compare healthy RGC vs. legacy MT responses
 % shShowRgcAndV1Comparison              Compare healthy RGC vs. legacy V1 responses
-% shShowRgcFourPopDemo                  Visualize individual RGC channel outputs
-% shShowRgcV1ReceptiveFields            Plot spatial receptive fields of RGC-fitted V1 neurons
 % shShowV1NeuronSpectrum                Show the fourier spectrum of V1 neuron(s)
 % shShowV1PopulationDirectionsDots      Show the neurons in V1 population as dots on a sphere
 % shShowV1PopulationDirectionsDotsMovie Show the neurons in V1 population being chosen
 % shShowV1PopulationResponse            Show the response of a population of V1 neurons
+% shShowV1Rf                            Draw a V1 receptive field both ways (see shV1Rf)
 % 
 % ----------------- Bonus functions ---------------------------------------
 %

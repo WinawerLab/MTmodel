@@ -1,4 +1,7 @@
-% testRgcPath  Verify RGC preprocessing layer runs correctly (both modes).
+% testRgcPath  Verify the RGC preprocessing layer runs correctly.
+%
+% Covers the 'derivative' front-end, which is the only one shModelRgc
+% inspects; class-based presets are covered by testClassPathBiological.
 
 rng(1);
 pars = shPars();
@@ -44,40 +47,3 @@ stimFull = mkDots(dims, 0, 1.0, 0.12, 1.0);
 [popRgc, indRgc] = shModel(stimFull, parsOn, 'v1Complex');
 shAssert(~isempty(popRgc),           'V1 run with RGC: pop must be non-empty');
 shAssert(all(isfinite(popRgc(:))),   'V1 run with RGC: pop must be finite');
-
-% --- RGC enabled, 'fourPop' mode: biological four-population struct ---
-parsFourPop = pars; parsFourPop.rgc.enabled = 1; parsFourPop.rgc.mode = 'fourPop';
-parsFourPop.rgc.v1Weights = [];
-outFourPop = shModelRgc(stim, parsFourPop);
-shAssert(isstruct(outFourPop),                  'RGC on (fourPop): output must be a struct');
-shAssert(strcmpi(outFourPop.mode, 'fourPop'),   'RGC on (fourPop): mode field wrong');
-shAssert(isfield(outFourPop, 'channels'),       'RGC on (fourPop): channels field missing');
-shAssert(isfield(outFourPop, 'combined'),       'RGC on (fourPop): combined field missing');
-
-% Four base channels must be present
-fourPopChNames = {'onFast', 'offFast', 'onSlow', 'offSlow'};
-for i = 1:length(fourPopChNames)
-    ch = outFourPop.channels.(fourPopChNames{i});
-    shAssert(isequal(size(ch), smallSz), sprintf('RGC on (fourPop): %s has wrong size', fourPopChNames{i}));
-    shAssert(all(isfinite(ch(:))),       sprintf('RGC on (fourPop): %s has non-finite values', fourPopChNames{i}));
-end
-shAssert(all(isfinite(outFourPop.combined(:))), 'RGC on (fourPop): combined must be finite');
-
-% --- Lagged channels appear when lag > 0 ---
-parsLag = parsFourPop;
-parsLag.rgc.temporal.fastLag = 2;
-parsLag.rgc.temporal.slowLag = 2;
-outLag = shModelRgc(stim, parsLag);
-shAssert(isfield(outLag.channels, 'onFastLag'),  'lagged RGC: onFastLag missing');
-shAssert(isfield(outLag.channels, 'offFastLag'), 'lagged RGC: offFastLag missing');
-shAssert(isfield(outLag.channels, 'onSlowLag'),  'lagged RGC: onSlowLag missing');
-shAssert(isfield(outLag.channels, 'offSlowLag'), 'lagged RGC: offSlowLag missing');
-
-% --- Full V1 run with RGC enabled (fourPop mode) completes without error ---
-parsFourPopFit = parsFourPop;
-parsFourPopFit.rgc.classes = shRgcClassesFourPop(parsFourPopFit);
-parsFourPopFit.rgc.combine = 'weights';
-parsFourPopFit.rgc.v1Weights = shFitClassV1Weights(parsFourPopFit, {stimFull});
-[popFourPop, indFourPop] = shModel(stimFull, parsFourPopFit, 'v1Complex');
-shAssert(~isempty(popFourPop),           'V1 run with RGC (fourPop): pop must be non-empty');
-shAssert(all(isfinite(popFourPop(:))),   'V1 run with RGC (fourPop): pop must be finite');

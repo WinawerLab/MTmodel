@@ -1,9 +1,9 @@
-# `explore/_archive` — retired offset+quadrature material
+# `explore/_archive` — retired and superseded scripts
 
-Everything here belongs to the **retired** biological direction-selectivity
+Most of this belongs to the **retired** biological direction-selectivity
 approach: `shRgcClassesMidgetParasol`, the ON/OFF spatial-offset + ON-quadrature
 preset. It was superseded on 2026-07-12 by the scope pivot recorded in
-`docs/RGC_V1_unification_plan.md` §3.5 and `docs/RGC_V1_design_discussion.md`
+`docs/_archive/RGC_V1_unification_plan.md` §3.5 and `docs/_archive/RGC_V1_design_discussion.md`
 §14–15.
 
 **Do not use this preset for new work.** The live biological preset is
@@ -30,6 +30,13 @@ Contents:
 | `lesionDeltaTest.m` | the §13 lesion-delta test, whose conclusion was later corrected in design-discussion §16 |
 | `showMidgetParasolV1Weights.m` | visualization of the fitted 28x40 weight matrix |
 | `verifyClassPathBiological.m` | ad-hoc end-to-end check, superseded by `tests/testClassPathBiological.m` |
+| `prototypeOnOffDelayDS.m` | the ON/OFF delay-vs-quadrature DS prototype — the experiment the retired approach was built on |
+| `verifyClassPathDerivative.m` | ad-hoc check, superseded by `tests/testClassPathDerivative.m` |
+| `verifyClassPathFourPop.m` | ad-hoc check, superseded by `tests/testClassPathFourPop.m` |
+| `showV1RfDerivative.m` | two-view RF visualization, superseded by `help/shV1Rf.m` + `show/shShowV1Rf.m` |
+
+The last four rows are not part of that retirement — they are ad-hoc checks and
+visualizations that live code (`tests/`, `help/shV1Rf.m`) now covers properly.
 
 `tests/runAllTests.m` does `addpath(genpath(repoRoot))`, so these files are still
 on the MATLAB path and will run — the folder name is the signal that they are

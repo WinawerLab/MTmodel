@@ -8,7 +8,7 @@
 % Point: SH kernels tile TF up to ~0.215 cyc/frame (orders 0-3); the biological
 % kernels peak only at ~0.10 (fast) and ~0.02 (slow), covering the lower half.
 % The high-TF (order 2-3) channels have no single-RGC counterpart -- relevant to
-% MT speed tuning. See docs/RGC_V1_unification_plan.md §2.4. Compare with Kling
+% MT speed tuning. See docs/_archive/RGC_V1_unification_plan.md §2.4. Compare with Kling
 % (2020) Fig. 4A (all human classes mono/biphasic).
 %
 % Self-locating.

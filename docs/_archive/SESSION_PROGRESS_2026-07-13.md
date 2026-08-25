@@ -1,10 +1,16 @@
+> **ARCHIVED 2026-08-19 — a session log, fully superseded.** Everything it lists
+> as pending was completed by 2026-07-16; its `/tmp/` outputs are gone. See
+> `docs/_archive/README.md`.
+
+---
+
 # Session Progress - 2026-07-13
 
 ## Update — 2026-07-16 (everything below this box is complete)
 
 **Everything this file originally listed as "ready to run" / "next steps" is done.**
 Phase 2b ran, quantitative analysis is complete, and a real bug was found and fixed
-along the way. See `explore/VALIDATION_SUMMARY.md` for the full writeup - short version:
+along the way. See `docs/_archive/VALIDATION_SUMMARY.md` for the full writeup - short version:
 
 - **Bug found & fixed:** the "lagged" preset never set `pars.rgc.mode`, so
   `shModelV1Linear` silently rebuilt it as the plain derivative preset on every call -
@@ -64,7 +70,7 @@ optic-neuritis lesion studies proper, rectification refinement) are still open.
 - **Output (when run):** 60 figures in `/tmp/MTmodel_stochastic_lesion_figs/`
 
 ### Documentation ✅
-- **File:** `explore/VALIDATION_SUMMARY.md`
+- **File:** `docs/_archive/VALIDATION_SUMMARY.md`
 - Comprehensive guide covering:
   - Three model paths tested
   - All lesion types (uniform + stochastic)
@@ -99,7 +105,7 @@ run('explore/validateSHFigs9to14_lesions_stochastic.m')
    - Direction/speed bias shifts
    - Compare uniform vs stochastic disruption
 
-### From Plan Doc (docs/RGC_V1_unification_plan.md §4)
+### From Plan Doc (docs/_archive/RGC_V1_unification_plan.md §4)
 4. **Pin down frame rate** (item 1) - convert frame delays to physiological timing (ms)
 5. **Wire lagged preset to MT** (item 2) - verify speed tuning with full model
 6. **Optic neuritis lesion studies** (item 3) - within-subject deltas
@@ -119,8 +125,8 @@ run('explore/validateSHFigs9to14_lesions_stochastic.m')
 - `pars/shRgcClassesMidgetParasolLagged_v1Weights_lag0123.mat` - Cached fitted weights
 
 ### Documentation
-- `explore/VALIDATION_SUMMARY.md` - Comprehensive validation guide
-- `explore/SESSION_PROGRESS_2026-07-13.md` - This file
+- `docs/_archive/VALIDATION_SUMMARY.md` - Comprehensive validation guide
+- `docs/_archive/SESSION_PROGRESS_2026-07-13.md` - This file
 
 ### Modified/Fixed
 - `explore/validateSHFigs9to14.m` - Fixed cell array bug in weight fitting
@@ -170,4 +176,4 @@ open /tmp/MTmodel_lesion_figs/
 run('explore/validateSHFigs9to14_lesions_stochastic.m')
 ```
 
-**For detailed info:** See `explore/VALIDATION_SUMMARY.md`
+**For detailed info:** See `docs/_archive/VALIDATION_SUMMARY.md`

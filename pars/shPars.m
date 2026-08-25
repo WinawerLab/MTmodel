@@ -1,6 +1,38 @@
-% pars = shPars         get default parameters structure for the SH model.
+% pars = shPars(preset)     get the parameters structure for the SH model.
 %
-% Feel free to create a new function using this as a template.
+% THERE ARE EXACTLY TWO WAYS TO RUN THIS MODEL. Both are complete: each call
+% returns a pars struct ready to hand straight to shModel, with no further
+% assembly.
+%
+%   pars = shPars;              % or shPars('derivative')
+%       The Simoncelli-Heeger basis. Reproduces the legacy (RGC-disabled)
+%       model to machine precision. No fitted weights involved.
+%
+%   pars = shPars('lagged');
+%       The biological front-end: ON/OFF x midget/parasol x lags 0-3
+%       (16 classes -> 160 features). MT runs on BOTH streams by default --
+%       see "Two streams" below.
+%
+% Anything else is a variation on one of these two, not a third way to run the
+% model. Do not hand-assemble a front-end; call shPars with a preset and then
+% modify the result.
+%
+% TWO STREAMS ('lagged' only). MT pools a mixture of two read-outs of the SAME
+% 160-feature basis (Nassi & Callaway 2006, 2007):
+%
+%   popMT = (1 - alpha)*streamA + alpha*streamB
+%
+%   stream A  parasol-masked weights; the dominant, fast magnocellular drive.
+%   stream B  the mixed M+P weights, relayed via V2; the slow minority drive.
+%
+% Both are 28 x 160 matrices projecting from one basis -- the basis is NOT
+% doubled. This is on by default because MT is magnocellular by construction;
+% stream B alone is midget-dominated, which is backwards. To run single-stream
+% (e.g. to reproduce pre-2026-08-14 results), clear pars.rgc.mtMix.
+%
+% LESIONS AND CUSTOM SETTINGS start from a preset and edit it -- see
+% pars.rgc.impairmentAmplitudeMap / impairmentDelayMap, pars.rgc.classes(i).gain,
+% and pars.rgc.mtMix.alpha. Read docs/MODEL_AND_LESIONS.md first.
 %
 % Choosing certain parameters outside of certain ranges will lead to
 % crashes:
@@ -15,9 +47,19 @@
 % pars.mtBaseline must be between .001 and 1. Values close to 1 lead to
 % very strange model behavior.
 %
-% SEE ALSO: shParsScaleFactors, shParsV1PopulationDirections
+% SEE ALSO: shRgcClassesDerivative, shRgcClassesMidgetParasolLagged,
+%           shModelV1ComplexForMt (the two-stream mixture), shModelUnits,
+%           shParsScaleFactors, shParsV1PopulationDirections
 
-function pars = shPars
+function pars = shPars(preset)
+
+    % Which RGC front-end to build:
+    %   'derivative' (default) - the SH basis; reproduces legacy exactly.
+    %   'lagged'               - ON/OFF x midget/parasol x lags 0-3, with the
+    %                            two-stream magnocellular MT already switched on.
+    if nargin < 1 || isempty(preset)
+        preset = 'derivative';
+    end
 
     % load some of the paramters that are big matrices that are no fun to type
     % into this file when you change them.
@@ -29,33 +71,18 @@ function pars = shPars
     %%%%% NOW WE GET STARTED: V1
     pars.nScales = 1;
     pars.rgc.enabled = 1;                           % If 1, pass the stimulus through an RGC layer before V1.
-    pars.rgc.mode = 'derivative';                   % 'derivative' (default): 4 causal temporal-derivative-order
-                                                     % channels that exactly reconstruct legacy V1/MT (no fitting
-                                                     % needed). 'fourPop': biological ON/OFF x fast/slow channels.
+    pars.rgc.mode = 'derivative';                   % Set by the preset switch at the END of this file; do not set
+                                                     % it by hand. 'derivative' = the SH basis (no fitting needed);
+                                                     % 'custom' = classes supplied in pars.rgc.classes.
     pars.rgc.derivative.channelGain = ones(1, 4);   % Per-channel gain for 'derivative' mode [order0 order1 order2 order3].
                                                      % A simple lesioning hook: set an entry to 0 to silence that
                                                      % temporal-derivative-order channel everywhere.
-    pars.rgc.gain = 1;                              % Global gain applied after RGC filtering.
-    pars.rgc.spatial.centerSigma = 0.8;             % RGC center sigma for ON/OFF center-surround filters.
-    pars.rgc.spatial.surroundSigma = 2.0;           % RGC surround sigma (pixels).
-    pars.rgc.spatial.surroundWeight = 0.25;         % RGC surround antagonism strength.
-    pars.rgc.spatial.fastRfScale = 1.0;             % RF size scale for fast channels relative to slow (e.g. 1.5 = 50% larger).
-    pars.rgc.spatial.onRfScale = 1.0;               % RF size scale for ON channels relative to OFF (e.g. 1.1 = 10% larger).
-    pars.rgc.temporal.mode = 'causal';              % RGC temporal mode: 'causal' biphasic kernels or explicit 'gaussian'.
-    pars.rgc.temporal.fastSigma = 0.6;              % RGC fallback width for fast temporal kernel (frames).
-    pars.rgc.temporal.slowSigma = 2.0;              % RGC fallback width for slow temporal kernel (frames).
-    pars.rgc.temporal.fastTau1 = 0.6;               % RGC causal fast kernel first lobe time constant (frames).
-    pars.rgc.temporal.fastTau2 = 1.2;               % RGC causal fast kernel second lobe time constant (frames).
-    pars.rgc.temporal.fastWeight = 0.45;            % RGC causal fast kernel second lobe weight.
-    pars.rgc.temporal.slowTau1 = 2.0;               % RGC causal slow kernel first lobe time constant (frames).
-    pars.rgc.temporal.slowTau2 = 4.0;               % RGC causal slow kernel second lobe time constant (frames).
-    pars.rgc.temporal.slowWeight = 0.15;            % RGC causal slow kernel second lobe weight.
-    pars.rgc.temporal.fastLag = 0;                 % Delay (frames) for lagged fast channels; 0 disables them.
-    pars.rgc.temporal.slowLag = 0;                 % Delay (frames) for lagged slow channels; 0 disables them.
-    pars.rgc.temporal.power = 2;                    % RGC gamma-kernel exponent.
-    pars.rgc.onOffSignSplit = 'contrast';           % RGC 'contrast' (frame mean-subtracted), 'local', or 'bipolar'.
-    pars.rgc.onOffSymmetry = 1.0;                   % RGC relative scaling of OFF vs ON rectification.
-    pars.rgc.v1Weights = [];                        % Fitted V1 weights, 'fourPop' mode only (Nx40, or Nx80 with lagged channels). Unused in 'derivative' mode.
+    % The RGC spatial RFs and temporal kernels live in the CLASSES
+    % (pars.rgc.classes), not here -- shRgcClassesMidgetParasolLagged carries its
+    % own DoG sigmas and difference-of-gamma kernels. Edit a class to change the
+    % front-end; see shRgcClass.
+    pars.rgc.v1Weights = [];                        % Fitted class-to-V1 weights (28 x nFeatures). Set by the
+                                                     % 'lagged' preset; unused by 'derivative', which steers analytically.
     pars.rgc.impairmentEnabled = 0;                 % If 1, apply amplitude/timing impairments.
     pars.rgc.impairmentAmplitudeMap = [];           % Optional YxX multiplicative map for RGC amplitude deficits.
     pars.rgc.impairmentDelayMap = [];               % Optional YxX integer delay map (frames) for timing deficits.
@@ -82,40 +109,56 @@ function pars = shPars
     pars.mtBaseline = .1;                           % Baseline response of MT neurons.
     pars.mtExponent = 2;                            % Exponent to which MT neuron responses are raised.
 
-    %%%% COMPUTE SCALE FACTORS AND (FOR 'fourPop') FIT RGC WEIGHTS
+    %%%% COMPUTE SCALE FACTORS
     % Scale factors are derived from the legacy (no-RGC) path so any
     % subsequent weight fit has the correct normalization reference.
     pars.rgc.enabled = 0;
     pars = shParsScaleFactors(pars);
     pars.rgc.enabled = 1;
 
-    % Unified class-based parameterization (pars.rgc.classes) drives both
-    % modes. 'derivative' needs no fitted weights -- it reconstructs the
-    % legacy basis exactly (see shModelV1LinearFromClasses). The biological
-    % 'fourPop' mode needs a numerically fitted channel-to-V1 weight matrix
-    % (edit pars.rgc.classes, or swap in shRgcClassesMidgetParasolLagged, to
-    % change the front-end).
-    if strcmpi(pars.rgc.mode, 'derivative')
-        pars.rgc.classes = shRgcClassesDerivative(pars);
-        pars.rgc.combine = 'steer';
-        pars.rgc.classesMode = 'derivative';
-    elseif strcmpi(pars.rgc.mode, 'fourPop')
-        pars.rgc.classes = shRgcClassesFourPop(pars);
-        pars.rgc.combine = 'weights';
-        pars.rgc.classesMode = 'fourpop';
-        pars.rgc.v1Weights = shFitClassV1Weights(pars, localDefaultStimSet(pars));
+    % Build the requested front-end. Everything the preset needs -- classes,
+    % read-out rule, fitted weights, and (for 'lagged') the two-stream MT --
+    % is set here, so callers never have to assemble it by hand.
+    switch lower(preset)
+        case 'derivative'
+            pars.rgc.mode        = 'derivative';
+            pars.rgc.classes     = shRgcClassesDerivative(pars);
+            pars.rgc.combine     = 'steer';
+            pars.rgc.classesMode = 'derivative';
+
+        case 'lagged'
+            pars.rgc.mode        = 'custom';
+            pars.rgc.classes     = shRgcClassesMidgetParasolLagged(pars, [0 1 2 3]);
+            pars.rgc.combine     = 'weights';
+            pars.rgc.classesMode = 'custom';
+            % Stream B: the mixed M+P read-out, relayed via V2.
+            pars.rgc.v1Weights   = localLoadWeights(directoryContainingThisFile, ...
+                'shRgcClassesMidgetParasolLagged_v1Weights_lag0123.mat', 'v1Weights');
+            % Stream A: the parasol-masked read-out, the dominant magno drive.
+            % On by default -- MT is magnocellular by construction. Clear
+            % pars.rgc.mtMix to get the single-stream (midget-dominated) model.
+            pars.rgc.mtMix = struct( ...
+                'weightsA', localLoadWeights(directoryContainingThisFile, ...
+                    'shRgcClassesMidgetParasolLagged_v1WeightsMagnoA_lag0123.mat', ...
+                    'v1WeightsMagnoA'), ...
+                'alpha', 0.10, 'delay', 0);
+
+        otherwise
+            error('shPars:preset', ...
+                  'preset must be ''derivative'' or ''lagged'', got ''%s''.', preset);
     end
 
 end
 
-function stimSet = localDefaultStimSet(pars)
-    dims = shGetDims(pars, 'mtPattern', [1 1 18]);
-    g1 = v12sin([0, 1.0]);
-    g2 = v12sin([pi/3, 1.6]);
-    stimSet = { ...
-        mkDots(dims, 0,    1.0, 0.12, 1), ...
-        mkDots(dims, pi/2, 0.7, 0.12, 0.7), ...
-        mkSin(dims, 0,    g1(2), g1(3), 1), ...
-        mkSin(dims, pi/3, g2(2), g2(3), 1) ...
-    };
+function W = localLoadWeights(parsDir, fileName, fieldName)
+    f = fullfile(parsDir, fileName);
+    if ~exist(f, 'file')
+        error('shPars:missingWeights', ...
+              'Cached weights not found: %s\nRefit with explore/validateSHFigs9to14.m.', f);
+    end
+    c = load(f);
+    if ~isfield(c, fieldName)
+        error('shPars:badWeights', '%s has no field ''%s''.', f, fieldName);
+    end
+    W = c.(fieldName);
 end
