@@ -9,6 +9,9 @@
 %   5. V1 spatial response maps for matched direction tunings
 %   6. Stimulus vs MT snapshot
 %
+% Letter-vs-background d' (MT and V1 opponent maps) is printed and shown in
+% figure titles. See explore/motionLetterMetrics.m for the definition.
+%
 % Edit the CONFIG block below, then:
 %   run explore/showMotionLetterModel.m
 %
@@ -20,14 +23,15 @@
 % 37.2 frames/sec), NOT the booth's ~100 px/deg. Converting a deg/s speed with
 % booth geometry makes it ~43x too slow in the units the MT filters live in.
 %
-% SPEED. Set SPEED_DEG_S from the literature band you want to probe:
-%   0.6 - 9.6 deg/s   the clinically interesting low-speed band, and the range
-%                     the Fig-10 "lowpass" neuron spans (0.0375-0.6 px/frame)
-%   16 - 160 deg/s    the "highpass" neuron's range (1-10 px/frame)
-% MT is tuned to speeds {0, 1, 6} px/frame = {0, 16, 96} deg/s, so the whole
-% clinical band sits BELOW MT's slowest non-zero tuned speed. V1 tiles four
+% SPEED. Set SPEED_DEG_S in deg/s. In this lab's motion-defined-form task,
+% supra-threshold trials are typically <= 2 deg/s; healthy recognition
+% thresholds cluster near ~0.04 deg/s. In model units (1 px/frame = 16 deg/s):
+%   0.04 deg/s  ~0.0025 px/frame   near healthy threshold (very slow)
+%   0.6 - 2 deg/s                 the usual experimental band
+% MT is tuned to {0, 1, 6} px/frame = {0, 16, 96} deg/s, so the whole
+% experimental band sits BELOW MT's slowest non-zero tuned speed. V1 tiles four
 % shells from 0.22 to 1.63 px/frame (3.5-26 deg/s), which reaches lower. Expect
-% weak MT opponency at clinical speeds -- that is a real property of the model,
+% weak MT opponency at these speeds -- that is a real property of the model,
 % not a bug, and it is the tension recorded in docs/TODO.md section 3.
 %
 % SPATIAL SCALE CAVEAT. At 2.33 px/deg a clinically sized letter (168 arcmin =
@@ -48,8 +52,8 @@ STAGE_MT = 'mtPattern';
 STAGE_V1 = 'v1Complex';
 SEED     = 1;
 
-% Dot speed in deg/s. See the SPEED note in the header for the literature bands.
-SPEED_DEG_S = 5;             % clinical low-speed band (-> 0.3125 px/frame)
+% Dot speed in deg/s. Default matches typical supra-threshold experiment speed.
+SPEED_DEG_S = 2;             % lab default (max ~2 deg/s); try 0.04 for threshold
 
 % Letter height in MODEL pixels (see SPATIAL SCALE CAVEAT in the header).
 LETTER_SIZE_PX = [];         % [] = 60% of the shorter field dimension
@@ -139,23 +143,24 @@ tic;
 v1Center = shGetNeuron(popV1, indV1);
 fprintf('      done (%.1f s).  pop %s, center traces %s\n', toc, mat2str(size(popV1)), mat2str(size(v1Center)));
 
+met = motionLetterMetrics(popMt, indMt, popV1, indV1, pars, stimInfo);
+fprintf('\nOpponent pairs (speed-matched, so "right - left" is direction opponency):\n');
+fprintf('  MT: %s\n', met.mtNote);
+fprintf('  V1: %s\n', met.v1Note);
+fprintf('Letter vs background d'':  MT %+.3f   V1 %+.3f\n', met.dMt, met.dV1);
+
+mtRightMap = squeeze(shGetSubPop(popMt, indMt, met.iMtRight));
+mtLeftMap  = squeeze(shGetSubPop(popMt, indMt, met.iMtLeft));
+v1RightMap = squeeze(shGetSubPop(popV1, indV1, met.iV1Right));
+v1LeftMap  = squeeze(shGetSubPop(popV1, indV1, met.iV1Left));
+maskOnMap = met.mask;
+midMt   = round(size(mtRightMap, 3) / 2);
+
 mtVels = pars.mtPopulationVelocities;
 v1Dirs = pars.v1PopulationDirections;
 speedPx = stimInfo.dotSpeedPxPerFrame;
-
-[iRight, iLeft, mtNote] = localOpponentPair(mtVels, speedPx);
-[iV1Right, iV1Left, v1Note] = localOpponentPair(v1Dirs, speedPx);
-fprintf('\nOpponent pairs (speed-matched, so "right - left" is direction opponency):\n');
-fprintf('  MT: %s\n', mtNote);
-fprintf('  V1: %s\n', v1Note);
-
-mtRightMap = squeeze(shGetSubPop(popMt, indMt, iRight));
-mtLeftMap  = squeeze(shGetSubPop(popMt, indMt, iLeft));
-v1RightMap = squeeze(shGetSubPop(popV1, indV1, iV1Right));
-v1LeftMap  = squeeze(shGetSubPop(popV1, indV1, iV1Left));
-
-maskOnMap = localMaskOnGrid(stimInfo.binaryMask, size(mtRightMap, 1), size(mtRightMap, 2));
-midMt   = round(size(mtRightMap, 3) / 2);
+iRight = met.iMtRight;
+iLeft = met.iMtLeft;
 
 %% Figure 1 — still frames + mask
 f1 = figure('Name', 'Model stimulus', 'Color', 'w', 'Position', [40 520 1000 380]);
@@ -200,13 +205,14 @@ yticklabels(arrayfun(@(k) sprintf('%.0f° %.2f', rad2deg(mtVels(k, 1)), mtVels(k
 xlabel('time (frames)'); title('MT center response (all tunings)');
 
 %% Figure 4 — MT spatial maps (mean over time)
-f4 = figure('Name', 'MT spatial maps', 'Color', 'w', 'Position', [960 80 720 520]);
+f4 = figure('Name', sprintf('MT spatial maps (d''=%+.2f)', met.dMt), ...
+    'Color', 'w', 'Position', [960 80 720 520]);
 tiledlayout(2, 3, 'Padding', 'compact', 'TileSpacing', 'compact');
 
 maps = {mtRightMap, mtLeftMap, mtRightMap - mtLeftMap};
 titles = {sprintf('MT right [%.2f, %.2f]', mtVels(iRight, :)), ...
           sprintf('MT left  [%.2f, %.2f]', mtVels(iLeft, :)), ...
-          'Right − left (opponent)'};
+          sprintf('Right − left (d''=%+.2f)', met.dMt)};
 
 for k = 1:3
     nexttile;
@@ -214,7 +220,7 @@ for k = 1:3
     imagesc(img); axis image off; colormap(gca, parula); colorbar;
     title(titles{k});
     hold on;
-    %contour(maskOnMap, [0.5 0.5], 'w', 'LineWidth', 0.8);
+    contour(maskOnMap, [0.5 0.5], 'w', 'LineWidth', 0.8);
     hold off;
 end
 
@@ -228,20 +234,21 @@ legend('right-tuned', 'left-tuned', 'difference', 'Location', 'best');
 title('MT spatial means over time');
 
 %% Figure 5 — V1 spatial maps
-f5 = figure('Name', 'V1 spatial maps', 'Color', 'w', 'Position', [200 200 720 420]);
+f5 = figure('Name', sprintf('V1 spatial maps (d''=%+.2f)', met.dV1), ...
+    'Color', 'w', 'Position', [200 200 720 420]);
 tiledlayout(1, 3, 'Padding', 'compact', 'TileSpacing', 'compact');
 
 v1Maps = {v1RightMap, v1LeftMap, v1RightMap - v1LeftMap};
-v1Titles = {sprintf('V1 right [%.2f, %.2f]', v1Dirs(iV1Right, :)), ...
-            sprintf('V1 left  [%.2f, %.2f]', v1Dirs(iV1Left, :)), ...
-            'Right − left'};
+v1Titles = {sprintf('V1 right [%.2f, %.2f]', v1Dirs(met.iV1Right, :)), ...
+            sprintf('V1 left  [%.2f, %.2f]', v1Dirs(met.iV1Left, :)), ...
+            sprintf('Right − left (d''=%+.2f)', met.dV1)};
 
 for k = 1:3
     nexttile;
     imagesc(squeeze(mean(v1Maps{k}, 3))); axis image off; colormap(gca, parula); colorbar;
     title(v1Titles{k});
     hold on;
-    %contour(maskOnMap, [0.5 0.5], 'w', 'LineWidth', 0.8);
+    contour(maskOnMap, [0.5 0.5], 'w', 'LineWidth', 0.8);
     hold off;
 end
 
@@ -274,7 +281,7 @@ if PLAY_STIM_MOVIE
     end
 end
 
-fprintf('\nDone. Seven figures:\n');
+fprintf('\nDone. Seven figures (MT d''=%+.3f, V1 d''=%+.3f):\n', met.dMt, met.dV1);
 fprintf('  0 Stimulus movie\n');
 fprintf('  1 Stimulus still frame + mask\n');
 fprintf('  2 MT time courses (center)\n');
@@ -319,75 +326,4 @@ function W = localLoadMidgetParasolLaggedWeights(repoRoot, pars)
     v1Weights = W; %#ok<NASGU>
     save(weightsFile, 'v1Weights', '-v7.3');
     fprintf('  Saved fitted weights to %s\n', weightsFile);
-end
-
-% Pick a MATCHED opponent pair from a population in the model's standard
-% [direction (rad), speed (px/frame)] form -- the same form shSwts/shQwts take,
-% used by both pars.mtPopulationVelocities and pars.v1PopulationDirections.
-%
-% Matching is done in the model's own 3-D Fourier geometry: a [dir, speed] pair
-% maps to a unit vector via elevation = atan3(speed, 1) and sphere2rec, exactly
-% as shSwts/shQwts do internally. Distance is then the ANGLE between unit
-% vectors, which is dimensionally coherent -- unlike the old version, which
-% minimised hypot(angleDiff, speedError) and so added radians to pixels/frame.
-% There the speed term dominated, and at slow stimulus speeds it returned the
-% STATIC [0 deg, 0] unit as "right-tuned".
-%
-% The negative unit is matched to the POSITIVE unit's speed, not the stimulus
-% speed, so the pair is as close to speed-matched as the population allows and
-% the "right - left" map is direction opponency rather than a speed confound.
-% Exact speed shells cannot be used: MT's nominal speeds differ in low-order
-% bits, and V1's rings have a genuinely different speed for every unit.
-function [iPos, iNeg, note] = localOpponentPair(tuning, speedPx, targetDir)
-
-    if nargin < 3 || isempty(targetDir), targetDir = 0; end
-
-    speeds = tuning(:, 2);
-    moving = find(speeds > 0);
-    if isempty(moving)
-        error('localOpponentPair:noMovingUnits', ...
-            'Population contains no units with non-zero preferred speed.');
-    end
-
-    unitVecs = localTuningToUnitVec(tuning(moving, :));
-
-    % Preferred direction: closest to (targetDir, stimulus speed).
-    cosPos = unitVecs * localTuningToUnitVec([targetDir, speedPx])';
-    [~, a] = max(cosPos);
-    iPos = moving(a);
-
-    % Opponent: closest to (targetDir + pi, speed of the unit just chosen).
-    cosNeg = unitVecs * localTuningToUnitVec([targetDir + pi, tuning(iPos, 2)])';
-    [~, b] = max(cosNeg);
-    iNeg = moving(b);
-
-    note = sprintf(['stimulus %.4f px/frame; pref %.1f deg @ %.3f px/frame ' ...
-        'vs %.1f deg @ %.3f px/frame'], speedPx, ...
-        rad2deg(tuning(iPos, 1)), tuning(iPos, 2), ...
-        rad2deg(tuning(iNeg, 1)), tuning(iNeg, 2));
-
-    if abs(tuning(iPos, 2) - speedPx) > 0.5 * speedPx
-        warning('localOpponentPair:speedMismatch', ...
-            ['Nearest tuned speed (%.3f px/frame) is far from the stimulus speed ' ...
-             '(%.4f px/frame); this population does not sample the stimulus speed. ' ...
-             'Population speeds: %s.'], ...
-            tuning(iPos, 2), speedPx, mat2str(unique(round(speeds(moving), 3))', 3));
-    end
-end
-
-% [direction, speed] -> unit vector in 3-D Fourier space (shSwts convention).
-function v = localTuningToUnitVec(tuning)
-    el = atan3(tuning(:, 2), ones(size(tuning, 1), 1));
-    v = sphere2rec([tuning(:, 1), el]);
-    v = v ./ sqrt(sum(v.^2, 2));
-end
-
-function d = angleDiff(a, b)
-    d = abs(atan2(sin(a - b), cos(a - b)));
-end
-
-function mask = localMaskOnGrid(fullMask, outY, outX)
-    fullMask = double(fullMask);
-    mask = imresize(fullMask, [outY outX], 'nearest');
-    mask = mask > 0.5;
 end

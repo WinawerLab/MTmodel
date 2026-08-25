@@ -3,6 +3,8 @@
 # Generated validation/analysis outputs (regenerate via explore/validateSHFigs9to14*.m
 # and explore/quantitativeAnalysisFigs9to14.m) - not source, don't track the binaries.
 explore/_figs/
+classifier/_figs/
+classifier/_cache/
 
 # Editor-local settings (machine-specific MATLAB paths)
 .vscode/

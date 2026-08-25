@@ -17,7 +17,7 @@ addpath(genpath(repoRoot));
 
 %% CONFIG
 LETTER      = 'C';
-SPEED_DEG_S = 5;              % clinical low-speed band -> 0.3125 px/frame
+SPEED_DEG_S = 2;              % lab supra-threshold default (-> 0.125 px/frame)
 OUT_SZ      = [128 128 120];  % model output [Y X T]
 SEED        = 7;
 FIGDIR      = fullfile(repoRoot, 'explore', '_figs');
@@ -69,7 +69,7 @@ for pIdx = 1:numel(presets)
     v1Opp = mean(squeeze(shGetSubPop(popV1, indV1, jR)) - ...
                  squeeze(shGetSubPop(popV1, indV1, jL)), 3);
 
-    mask = imresize(double(info.binaryMask), size(mtOpp), 'nearest') > 0.5;
+    mask = motionLetterMaskOnMap(info.binaryMask, size(mtOpp, 1), size(mtOpp, 2));
     dMt = localDprime(mtOpp, mask);
     dV1 = localDprime(v1Opp, mask);
 
@@ -163,7 +163,7 @@ for k = 1:3
     [pM, iM] = shModel(s, pars, 'mtPattern');
     [iR, iL] = localOpponentPair(pars.mtPopulationVelocities, inf_.dotSpeedPxPerFrame);
     ctlMaps{k} = mean(squeeze(shGetSubPop(pM,iM,iR)) - squeeze(shGetSubPop(pM,iM,iL)), 3);
-    mk = imresize(double(inf_.binaryMask), size(ctlMaps{k}), 'nearest') > 0.5;
+    mk = motionLetterMaskOnMap(inf_.binaryMask, size(ctlMaps{k}, 1), size(ctlMaps{k}, 2));
     ctlD(k) = localDprime(ctlMaps{k}, mk);
     staticCue = localDprime(mean(s, 3), inf_.binaryMask);
     fprintf('  %-24s  MT d'' = %+.3f   (static-luminance d'' = %+.4f)\n', ...
