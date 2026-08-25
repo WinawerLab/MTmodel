@@ -36,9 +36,15 @@ function report = shShowRgcAndV1Comparison(stimulus, pars, showMovies)
     if ~isfield(parsRgc.rgc, 'impairmentEnabled')
         parsRgc.rgc.impairmentEnabled = 0;
     end
-    parsRgc = localEnsureFourPopV1Weights(parsRgc, stimulus);
 
-    rgcStimulus = shModelRgc(stimulus, parsRgc);
+    % shModelRgc gives a channel view for the 'derivative' front-end only;
+    % class-based presets (shPars('lagged')) have no equivalent single movie,
+    % so fall back to the raw stimulus for the display panels.
+    if strcmpi(parsRgc.rgc.mode, 'derivative')
+        rgcStimulus = shModelRgc(stimulus, parsRgc);
+    else
+        rgcStimulus = stimulus;
+    end
     if isstruct(rgcStimulus) && isfield(rgcStimulus, 'channels')
         if isfield(rgcStimulus, 'combined')
             rgcMovieForPlots = rgcStimulus.combined;
@@ -159,48 +165,6 @@ function report = shShowRgcAndV1Comparison(stimulus, pars, showMovies)
     report.stimulus = stimulus;
     report.rgcStimulus = rgcStimulus;
     report.rgcMovieForPlots = rgcMovieForPlots;
-
-end
-
-function parsRgc = localEnsureFourPopV1Weights(parsRgc, stimulus)
-
-    % 'derivative' mode needs no fitted weights -- only 'fourPop' does.
-    if ~strcmpi(parsRgc.rgc.mode, 'fourPop')
-        return;
-    end
-
-    if isfield(parsRgc.rgc, 'v1Weights') && ~isempty(parsRgc.rgc.v1Weights)
-        return;
-    end
-
-    stimSet = localCalibrationStimuli(parsRgc, stimulus);
-    parsRgc.rgc.classes = shRgcClassesFourPop(parsRgc);
-    parsRgc.rgc.combine = 'weights';
-    parsRgc.rgc.classesMode = 'fourpop';
-    parsRgc.rgc.v1Weights = shFitClassV1Weights(parsRgc, stimSet);
-
-end
-
-function stimSet = localCalibrationStimuli(pars, stimulus)
-
-  stimSet = cell(1, 4);
-  dims = size(stimulus);
-
-  stimSet{1} = stimulus;
-  stimSet{2} = mkDots(dims, pi/2, 0.7, 0.12, 0.7);
-
-  g1 = v12sin([0, 1.0]);
-  g2 = v12sin([pi/3, 1.6]);
-  stimSet{3} = mkSin(dims, 0, g1(2), g1(3), 1);
-  stimSet{4} = mkSin(dims, pi/3, g2(2), g2(3), 1);
-
-  if any(dims < shGetDims(pars, 'mtPattern', [1 1 dims(3)]))
-      dims = shGetDims(pars, 'mtPattern', [1 1 dims(3)]);
-      stimSet{1} = mkDots(dims, 0, 1.0, 0.12, 1.0);
-      stimSet{2} = mkDots(dims, pi/2, 0.7, 0.12, 0.7);
-      stimSet{3} = mkSin(dims, 0, g1(2), g1(3), 1);
-      stimSet{4} = mkSin(dims, pi/3, g2(2), g2(3), 1);
-  end
 
 end
 

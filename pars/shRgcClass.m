@@ -18,7 +18,7 @@
 %                  mean-subtracted movie by shClassV1Basis. [ [] ]
 % 'rectify'        'none' (linear, signed) | 'onHalf' | 'offHalf'. ['none']
 % 'readoutOrders'  vector of V1 spatial-derivative TOTAL orders (x+y) this class
-%                  feeds. Derivative preset: the singleton 3-k. fourPop/biological:
+%                  feeds. Derivative preset: the singleton 3-k. Biological (lagged):
 %                  [0 1 2 3]. [ [0 1 2 3] ]
 % 'readoutOffset'  [dy dx] spatial offset (pixels) applied to this class in the V1
 %                  read-out; the ON/OFF offset that assembles DS. [ [0 0] ]

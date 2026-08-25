@@ -77,27 +77,12 @@ function pars = shPars(preset)
     pars.rgc.derivative.channelGain = ones(1, 4);   % Per-channel gain for 'derivative' mode [order0 order1 order2 order3].
                                                      % A simple lesioning hook: set an entry to 0 to silence that
                                                      % temporal-derivative-order channel everywhere.
-    pars.rgc.gain = 1;                              % Global gain applied after RGC filtering.
-    pars.rgc.spatial.centerSigma = 0.8;             % RGC center sigma for ON/OFF center-surround filters.
-    pars.rgc.spatial.surroundSigma = 2.0;           % RGC surround sigma (pixels).
-    pars.rgc.spatial.surroundWeight = 0.25;         % RGC surround antagonism strength.
-    pars.rgc.spatial.fastRfScale = 1.0;             % RF size scale for fast channels relative to slow (e.g. 1.5 = 50% larger).
-    pars.rgc.spatial.onRfScale = 1.0;               % RF size scale for ON channels relative to OFF (e.g. 1.1 = 10% larger).
-    pars.rgc.temporal.mode = 'causal';              % RGC temporal mode: 'causal' biphasic kernels or explicit 'gaussian'.
-    pars.rgc.temporal.fastSigma = 0.6;              % RGC fallback width for fast temporal kernel (frames).
-    pars.rgc.temporal.slowSigma = 2.0;              % RGC fallback width for slow temporal kernel (frames).
-    pars.rgc.temporal.fastTau1 = 0.6;               % RGC causal fast kernel first lobe time constant (frames).
-    pars.rgc.temporal.fastTau2 = 1.2;               % RGC causal fast kernel second lobe time constant (frames).
-    pars.rgc.temporal.fastWeight = 0.45;            % RGC causal fast kernel second lobe weight.
-    pars.rgc.temporal.slowTau1 = 2.0;               % RGC causal slow kernel first lobe time constant (frames).
-    pars.rgc.temporal.slowTau2 = 4.0;               % RGC causal slow kernel second lobe time constant (frames).
-    pars.rgc.temporal.slowWeight = 0.15;            % RGC causal slow kernel second lobe weight.
-    pars.rgc.temporal.fastLag = 0;                 % Delay (frames) for lagged fast channels; 0 disables them.
-    pars.rgc.temporal.slowLag = 0;                 % Delay (frames) for lagged slow channels; 0 disables them.
-    pars.rgc.temporal.power = 2;                    % RGC gamma-kernel exponent.
-    pars.rgc.onOffSignSplit = 'contrast';           % RGC 'contrast' (frame mean-subtracted), 'local', or 'bipolar'.
-    pars.rgc.onOffSymmetry = 1.0;                   % RGC relative scaling of OFF vs ON rectification.
-    pars.rgc.v1Weights = [];                        % Fitted V1 weights, 'fourPop' mode only (Nx40, or Nx80 with lagged channels). Unused in 'derivative' mode.
+    % The RGC spatial RFs and temporal kernels live in the CLASSES
+    % (pars.rgc.classes), not here -- shRgcClassesMidgetParasolLagged carries its
+    % own DoG sigmas and difference-of-gamma kernels. Edit a class to change the
+    % front-end; see shRgcClass.
+    pars.rgc.v1Weights = [];                        % Fitted class-to-V1 weights (28 x nFeatures). Set by the
+                                                     % 'lagged' preset; unused by 'derivative', which steers analytically.
     pars.rgc.impairmentEnabled = 0;                 % If 1, apply amplitude/timing impairments.
     pars.rgc.impairmentAmplitudeMap = [];           % Optional YxX multiplicative map for RGC amplitude deficits.
     pars.rgc.impairmentDelayMap = [];               % Optional YxX integer delay map (frames) for timing deficits.

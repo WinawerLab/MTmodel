@@ -86,5 +86,5 @@ shAssert(any(any(parsL.rgc.v1Weights(:, midgetCols) ~= 0)), ...
 
 % There is no third preset.
 threw = false;
-try, shPars('fourPop'); catch, threw = true; end
+try, shPars('somethingElse'); catch, threw = true; end
 shAssert(threw, 'shPars must reject any preset other than ''derivative''/''lagged''');

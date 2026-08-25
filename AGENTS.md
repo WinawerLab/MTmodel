@@ -20,7 +20,7 @@ The driving question:
 
 **Non-negotiable constraint:** with impairment disabled, the derivative preset
 must reproduce legacy behaviour to machine precision. The legacy (RGC-disabled)
-path is the oracle, and `tests/runAllTests.m` (14 tests) enforces it.
+path is the oracle, and `tests/runAllTests.m` (12 tests) enforces it.
 
 ## Where to start (reading order)
 
@@ -62,10 +62,7 @@ work phases. See its README before relying on anything in there.
 
   Everything else is a *variation* on one of these two — a lesion, or a custom
   setting — not a third way to run the model. Start from a preset and edit it.
-  `shRgcClassesFourPop` is **not** a third way to run the model: it is an
-  internal regression oracle used only by `tests/`, and it is the only
-  machine-precision check on the DoG + rectification machinery that the lagged
-  preset depends on. Leave it alone.
+  There is no third preset, and `shPars` rejects any other name.
 - **MT is magnocellular by construction, and `shPars('lagged')` already sets
   this up.** MT pools a two-stream mixture,
   `popMT = (1-alpha)*streamA + alpha*delay(streamB, d)`, formed
@@ -98,7 +95,7 @@ pars = shPars;                         % way 1: the SH derivative basis (exact)
 pars = shPars('lagged');               % way 2: biological front-end, both MT streams
 
 [pop, ind] = shModel(stim, pars, 'mtPattern');
-run tests/runAllTests.m                % must stay green (14/14)
+run tests/runAllTests.m                % must stay green (12/12)
 ```
 
 Both calls return a ready-to-use struct. Variations, all starting from a preset:

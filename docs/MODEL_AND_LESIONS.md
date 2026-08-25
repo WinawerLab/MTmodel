@@ -57,8 +57,7 @@ fully assembled:
 
 Anything else — a lesion, a custom gain, a cleared `mtMix` — is a *variation* on
 one of these two, obtained by editing the struct a preset returned. There is no
-third way to run the model. In particular `shRgcClassesFourPop` is an internal
-regression oracle used only by `tests/`; it is not a preset you run.
+third way to run the model, and `shPars` rejects any other preset name.
 
 > **Dispatch trap.** `shModelV1Linear` rebuilds `pars.rgc.classes` from the
 > preset named by `pars.rgc.mode`, which defaults to `'derivative'`. `shPars`
@@ -107,13 +106,14 @@ job is to prove that the class-based machinery introduces nothing: with
 class path reproduces the legacy no-RGC model **exactly — err = 0 at
 `nScales = 1`**, including the `resdirs` output.
 
-This is the non-negotiable constraint on the repo. `tests/runAllTests.m` (14 tests)
+This is the non-negotiable constraint on the repo. `tests/runAllTests.m` (12 tests)
 enforces it, and the legacy RGC-disabled path stays in the tree purely as the
 machine-precision oracle. Every subsequent claim about the biological preset is a
 claim about a *difference from* something known to be exactly right.
 
-The same guarantee was extended to `fourPop` (err = 0 against the old
-`shModelV1LinearFromRgc`, including lagged channels), which is why the old twin
+The same guarantee was once extended to a third `fourPop` preset (err = 0
+against the then-legacy `shModelV1LinearFromRgc`, including lagged channels),
+which is why the old twin
 forward functions could be deleted.
 
 ### 2.4 Validation leg 2 — the lagged midget/parasol preset
@@ -160,6 +160,37 @@ roughly an order of magnitude. The 0–3 frame lags are 0–81 ms, far too long 
 optic-nerve conduction differences (a few ms) and better justified as lagged LGN
 or delayed inhibition. The DoG surround integrates to only 12–13% of centre, so
 these are near-lowpass centres rather than genuine band-pass filters.
+
+### 2.4b MT's nominal speeds are not its measured speeds
+
+`pars.mtPopulationVelocities(:,2)` holds three speed tiers — 0, 1 and 6
+px/frame, i.e. 0, 16 and 96 deg/s at the pinned scale. Those are *construction*
+parameters for the MT pooling weights, and at the top tier they are not the
+tuning you get. Measured with drifting dots at each neuron's preferred
+direction (`explore/measureMtSpeedTuning.m`, 2026-08-25):
+
+| nominal | derivative | lagged (both streams) |
+|---|---|---|
+| 0 deg/s | low-pass, peak ≤ 2 deg/s | low-pass, peak ≤ 2 deg/s |
+| 16 deg/s | **14.9** (14.2–15.3) | **16.5** (16.1–17.1) |
+| 96 deg/s | **49.7** (47.0–50.3) | **58.7** (54.6–60.5) |
+
+The 16 deg/s tier lands where SH's own convention puts it (1 px/frame, and SH
+describe their normalization pool as tuned to "moderate speeds (16 deg/sec)").
+The 96 deg/s tier peaks near **half** its nominal value. The curves have a clean
+interior peak with falloff on both sides, so this is a real tuning result and
+not a grid artifact — it is consistent with 6 px/frame sitting past what the
+filter bank can represent, since the V1 filters peak at 0.2148 cyc/sample on
+both axes.
+
+**Do not quote 96 deg/s as those neurons' preferred speed.** The lagged preset
+also prefers systematically faster speeds than the derivative one (+11% at the
+low tier, +18% at the high tier), the expected direction given stream A is
+parasol-masked and parasol kernels peak at 1 frame versus midget's 4.
+
+Caveats: 7 of the 19 MT neurons probed (3 per moving tier, spanning directions;
+within-tier spread under 0.5 px/frame) on a 13-point speed grid, so the peak
+locations carry roughly ±5%.
 
 ### 2.5 Validation leg 3 — making M/P mean something at MT
 

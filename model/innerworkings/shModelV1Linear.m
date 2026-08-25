@@ -48,21 +48,11 @@ if isfield(pars, 'rgc') && isfield(pars.rgc, 'enabled') && pars.rgc.enabled == 1
                 end
             end
             rgcFun = @shModelV1LinearFromClasses;
-        case 'fourpop'
-            % Route fourPop through the unified class-based forward too (see
-            % classesMode note above).
-            if ~isfield(pars.rgc, 'classes') || isempty(pars.rgc.classes) ...
-                    || ~isfield(pars.rgc, 'classesMode') || ~strcmpi(pars.rgc.classesMode, 'fourpop')
-                pars.rgc.classes = shRgcClassesFourPop(pars);
-                pars.rgc.combine = 'weights';
-                pars.rgc.classesMode = 'fourpop';
-            end
-            rgcFun = @shModelV1LinearFromClasses;
         case 'custom'
             % Caller has already fully configured pars.rgc.classes/combine
             % (e.g. shRgcClassesMidgetParasolLagged with combine='weights'
             % and v1Weights fitted separately) - use as-is, no rebuild. Without
-            % this case, any classesMode other than 'derivative'/'fourpop'
+            % this case, any classesMode other than 'derivative'
             % would silently fall through to the 'derivative' branch above
             % (since mode defaults to 'derivative' when pars.rgc.mode is
             % unset) and have its custom classes/weights discarded.
@@ -72,7 +62,7 @@ if isfield(pars, 'rgc') && isfield(pars.rgc, 'enabled') && pars.rgc.enabled == 1
             end
             rgcFun = @shModelV1LinearFromClasses;
         otherwise
-            error('pars.rgc.mode must be ''derivative'', ''fourPop'', or ''custom''.');
+            error('pars.rgc.mode must be ''derivative'' or ''custom''.');
     end
     if nargin > 2
         [varargout{1:nargout}] = rgcFun(M, pars, varargin{3});

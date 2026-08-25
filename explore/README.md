@@ -50,10 +50,15 @@ note that the two `_lesions*` scripts do **not** seed the RNG.
 `testONOFFAsymmetryNonvacuousness.m` — whether ON/OFF-asymmetric timing exploits
 the rectification SH lacks. Established that timing lesions are ~90% irreducible
 to SH amplitude rescaling, but all three lesion types scored similarly, so it does
-not yet isolate a rectification-specific signature. `unifyDerivativeVsFourPop.m`
-demonstrates that `derivative` and `fourPop` are one projection with different
-classes; the refactor it documents is finished, and `tests/testClassPath*.m` now
-hold the guardrails.
+not yet isolate a rectification-specific signature. (`unifyDerivativeVsFourPop.m`
+was removed on 2026-08-25 with the `fourPop` preset it compared against; the
+refactor it documented is finished, and `tests/testClassPath*.m` hold the
+guardrails.)
+
+`measureMtSpeedTuning.m` — measured MT speed tuning in deg/s for both presets.
+Found that the population's nominal 96 deg/s tier actually peaks near 50
+(derivative) / 59 (lagged), while the 16 deg/s tier lands correctly. Recorded in
+the report §2.4b; the nominal speeds are construction parameters, not tuning.
 
 ## `_archive/`
 

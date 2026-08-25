@@ -2,7 +2,7 @@
 %
 % Apply an optic-neuritis impairment (spatial amplitude deficit + integer-frame
 % timing delay) to an RGC channel movie [Y X T]. No-op unless
-% rgcPars.impairmentEnabled == 1. Shared by the fourPop path (shModelRgc) and the
+% rgcPars.impairmentEnabled == 1. Shared by the derivative path (shModelRgc) and the
 % unified class path (shClassV1Basis) so the two stay consistent.
 %
 % rgcPars fields used:
