@@ -52,17 +52,35 @@ work phases. See its README before relying on anything in there.
   `shClassV1Basis` project through them; `pars.rgc.combine` selects the read-out
   (`'steer'` = analytic SH steering, `'weights'` = fitted matrix). Presets
   populate that field — they are not code branches.
-- **Presets.** `shRgcClassesDerivative` (the SH basis; exact oracle),
-  `shRgcClassesMidgetParasolLagged` (the live biological one: ON/OFF ×
-  midget/parasol × lags 0–3 = 16 classes → 160 features), and
-  `shRgcClassesFourPop` (legacy, kept as a regression oracle).
-  `shRgcClassesMidgetParasolTiled` is a deprecated alias for the lagged preset.
-- **MT is magnocellular by construction.** `pars.rgc.mtMix` makes MT pool a
-  two-stream mixture, `popMT = (1-alpha)*popA + alpha*delay(popB, d)`, formed
-  post-normalization in `shModelV1ComplexForMt`. Stream A is a parasol-masked
-  refit; stream B is the existing mixed fit. `alpha = 0.10`, `d = 0`. This
-  reproduces Maunsell et al. (1990); without it, MT is midget-dominated, which
-  is backwards. `'v1Complex'` is untouched — only the MT stages see the mixture.
+- **There are exactly two ways to run the model**, and `shPars` returns both
+  fully assembled — never hand-build a front-end:
+
+  | call | front-end | MT |
+  |---|---|---|
+  | `shPars` (or `shPars('derivative')`) | `shRgcClassesDerivative` — the SH basis, 4 classes; reproduces legacy exactly | single stream |
+  | `shPars('lagged')` | `shRgcClassesMidgetParasolLagged` — ON/OFF × midget/parasol × lags 0–3 = 16 classes → 160 features | **both streams, by default** |
+
+  Everything else is a *variation* on one of these two — a lesion, or a custom
+  setting — not a third way to run the model. Start from a preset and edit it.
+  `shRgcClassesFourPop` is **not** a third way to run the model: it is an
+  internal regression oracle used only by `tests/`, and it is the only
+  machine-precision check on the DoG + rectification machinery that the lagged
+  preset depends on. Leave it alone.
+- **MT is magnocellular by construction, and `shPars('lagged')` already sets
+  this up.** MT pools a two-stream mixture,
+  `popMT = (1-alpha)*streamA + alpha*delay(streamB, d)`, formed
+  post-normalization in `shModelV1ComplexForMt`. Stream A is the parasol-masked
+  read-out (the dominant fast magno drive); stream B is the mixed M+P read-out
+  relayed via V2. `alpha = 0.10`, `d = 0`. This reproduces Maunsell et al.
+  (1990); stream B alone is midget-dominated, which is backwards.
+  `'v1Complex'` is untouched — only the MT stages see the mixture.
+  - **Both streams read out of the SAME 160-feature basis.** They are two
+    28×160 weight matrices, not two bases — the basis is not doubled. (It *is*
+    computed twice per call, once per stream, so `'lagged'` costs about 2× the
+    single-stream model.)
+  - The switch is `pars.rgc.mtMix` (fields `weightsA`, `alpha`, `delay`).
+    Clearing it gives the single-stream, midget-dominated model and reproduces
+    pre-2026-08-14 results bit-exactly.
 - **Lesions** go through `pars.rgc.impairmentAmplitudeMap` /
   `impairmentDelayMap` (spatially varying), or by editing
   `pars.rgc.classes(i).gain` / `.temporalKernel` (class-selective). Weights are
@@ -75,29 +93,33 @@ work phases. See its README before relying on anything in there.
 
 ```matlab
 addpath(genpath('PATHNAME-OF-MTmodel'));
-pars = shPars;                         % RGC on, mode 'derivative' (exact)
-[pop, ind] = shModel(stim, pars, 'v1Complex');
-pars.rgc.enabled = 0;                  % legacy (no-RGC) oracle
+
+pars = shPars;                         % way 1: the SH derivative basis (exact)
+pars = shPars('lagged');               % way 2: biological front-end, both MT streams
+
+[pop, ind] = shModel(stim, pars, 'mtPattern');
 run tests/runAllTests.m                % must stay green (14/14)
 ```
 
-Magnocellular MT. Omitting `mtMix` reproduces the pre-2026-08-14 behaviour
-bit-exactly:
+Both calls return a ready-to-use struct. Variations, all starting from a preset:
 
 ```matlab
-WA = getfield(load('pars/shRgcClassesMidgetParasolLagged_v1WeightsMagnoA_lag0123.mat'), 'v1WeightsMagnoA');
-pars.rgc.mtMix = struct('weightsA', WA, 'alpha', 0.10, 'delay', 0);
-[pop, ind] = shModel(stim, pars, 'mtPattern');   % alpha = 0 gives the pure magno drive
+pars = shPars; pars.rgc.enabled = 0;               % legacy (no-RGC) oracle
+pars = shPars('lagged'); pars.rgc.mtMix.alpha = 0; % pure magno drive (stream A only)
+pars = shPars('lagged'); pars.rgc = rmfield(pars.rgc, 'mtMix');  % single-stream (pre-2026-08-14)
 ```
 
 ## Traps that have already cost time
 
-- **`pars.rgc.mode = 'custom'` is mandatory for custom classes.**
-  `shModelV1Linear` rebuilds `pars.rgc.classes` from the preset named by
-  `pars.rgc.mode`, which defaults to `'derivative'`. Without the `'custom'`
-  setting, your classes, fitted weights and lesion edits are silently discarded
-  and you are computing the plain derivative preset. This mislabelled a whole
-  round of results before it was caught.
+- **`pars.rgc.mode = 'custom'` is mandatory for custom classes.** `shPars`
+  handles this for both presets, so this only bites if you assemble
+  `pars.rgc.classes` by hand — don't. `shModelV1Linear` rebuilds
+  `pars.rgc.classes` from the preset named by `pars.rgc.mode`, which defaults to
+  `'derivative'`; without `'custom'`, your classes, fitted weights and lesion
+  edits are silently discarded and you are computing the plain derivative
+  preset. This mislabelled a whole round of results before it was caught. The
+  tell: `'lagged'` and `'derivative'` outputs that are bit-identical, which is
+  impossible for a nonlinear model.
 - **Seed the RNG in anything using dot stimuli.** SH Figs 11–14 use random dot
   fields; unseeded, a lesion-vs-baseline difference is confounded with
   dot-sample noise (worth ~5 percentage points in practice). Use

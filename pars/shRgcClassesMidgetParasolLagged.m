@@ -27,8 +27,6 @@
 %
 % Optional arguments:
 % lags   vector of integer frame lags for the lagged copies. [ [0 1 2 3] ]
-%
-% See also: shRgcClassesMidgetParasolTiled (deprecated alias)
 
 function classes = shRgcClassesMidgetParasolLagged(pars, lags) %#ok<INUSL>
 

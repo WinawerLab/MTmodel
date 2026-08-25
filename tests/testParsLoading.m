@@ -39,3 +39,52 @@ shAssert(~isempty(pars.v1TemporalFilters), 'v1TemporalFilters must be non-empty'
 shAssert(pars.v1C50 > 0 && pars.v1C50 < 1,  'v1C50 must be in (0,1)');
 shAssert(pars.mtBaseline > 0,                'mtBaseline must be positive');
 shAssert(pars.nScales == 1,                  'default nScales should be 1');
+
+% ---------------------------------------------------------------------------
+% THE TWO-PRESET CONTRACT. There are exactly two ways to run this model, and
+% shPars must return each one fully assembled -- no hand-assembly by callers.
+% If you are changing these assertions, re-read the shPars header first.
+
+% shPars() and shPars('derivative') are the same thing.
+shAssert(isequal(shPars(), shPars('derivative')), ...
+    'shPars() must be identical to shPars(''derivative'')');
+
+% The default preset is single-stream.
+shAssert(~isfield(pars.rgc, 'mtMix') || isempty(pars.rgc.mtMix), ...
+    'derivative preset must not set mtMix');
+shAssert(numel(pars.rgc.classes) == 4, 'derivative preset must have 4 classes');
+
+% The lagged preset arrives complete: custom dispatch, 16 classes, fitted
+% stream-B weights, AND stream A switched on.
+parsL = shPars('lagged');
+shAssert(strcmpi(parsL.rgc.mode, 'custom'), ...
+    'lagged preset must set rgc.mode = ''custom'' (else shModelV1Linear rebuilds the classes)');
+shAssert(strcmpi(parsL.rgc.classesMode, 'custom'), 'lagged preset must set rgc.classesMode = ''custom''');
+shAssert(strcmpi(parsL.rgc.combine, 'weights'),    'lagged preset must set rgc.combine = ''weights''');
+shAssert(numel(parsL.rgc.classes) == 16, 'lagged preset must have 16 classes (ON/OFF x midget/parasol x lags 0-3)');
+
+nFeat = numel(parsL.rgc.classes) * 10;
+shAssert(isequal(size(parsL.rgc.v1Weights), [28 nFeat]), ...
+    sprintf('lagged stream-B weights must be 28x%d', nFeat));
+
+% Two streams by default, reading out of ONE basis: both matrices are 28xnFeat.
+shAssert(isfield(parsL.rgc, 'mtMix') && ~isempty(parsL.rgc.mtMix), ...
+    'lagged preset must switch on the two-stream MT (mtMix) by default');
+shAssert(isequal(size(parsL.rgc.mtMix.weightsA), [28 nFeat]), ...
+    sprintf('lagged stream-A weights must be 28x%d -- the basis is NOT doubled', nFeat));
+shAssert(parsL.rgc.mtMix.alpha == 0.10, 'lagged preset must default to alpha = 0.10');
+shAssert(parsL.rgc.mtMix.delay == 0,    'lagged preset must default to delay = 0');
+
+% Stream A really is parasol-masked: its midget columns must be exactly zero.
+isMidget   = contains({parsL.rgc.classes.name}, 'midget');
+colClass   = repelem(1:numel(parsL.rgc.classes), 10);
+midgetCols = ismember(colClass, find(isMidget));
+shAssert(all(all(parsL.rgc.mtMix.weightsA(:, midgetCols) == 0)), ...
+    'stream A must be parasol-masked (midget columns exactly zero)');
+shAssert(any(any(parsL.rgc.v1Weights(:, midgetCols) ~= 0)), ...
+    'stream B must carry midget drive (it is the mixed M+P read-out)');
+
+% There is no third preset.
+threw = false;
+try, shPars('fourPop'); catch, threw = true; end
+shAssert(threw, 'shPars must reject any preset other than ''derivative''/''lagged''');

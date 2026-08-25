@@ -47,18 +47,28 @@ steering, `'weights'` for a fitted matrix. **Presets populate that field; they a
 not code branches.** This is what makes the biological front-end substitutable for
 the mathematical one without a second copy of the model.
 
-Three presets exist. `shRgcClassesDerivative` (the SH basis), `shRgcClassesFourPop`
-(a legacy four-population parameterization, kept as a regression oracle), and
-`shRgcClassesMidgetParasolLagged` (the biological one). Only the first and third
-matter for the argument below.
+**There are exactly two ways to run the model**, and `shPars` returns each one
+fully assembled:
 
-> **Dispatch trap, still live.** `shModelV1Linear` rebuilds `pars.rgc.classes`
-> from the preset named by `pars.rgc.mode`, which defaults to `'derivative'`.
-> Any script using custom classes **must set `pars.rgc.mode = 'custom'`**, or its
-> classes, fitted weights, and lesion edits are silently discarded and it computes
-> the plain derivative preset instead. This produced a run of mislabelled results
-> before it was caught on 2026-07-16 (the tell: "lagged" and "derivative" outputs
-> that were bit-identical, impossible for a nonlinear model).
+| call | front-end |
+|---|---|
+| `shPars` (or `shPars('derivative')`) | `shRgcClassesDerivative` — the SH basis |
+| `shPars('lagged')` | `shRgcClassesMidgetParasolLagged` — the biological front-end, with **both MT streams on** (§ two-stream MT below) |
+
+Anything else — a lesion, a custom gain, a cleared `mtMix` — is a *variation* on
+one of these two, obtained by editing the struct a preset returned. There is no
+third way to run the model. In particular `shRgcClassesFourPop` is an internal
+regression oracle used only by `tests/`; it is not a preset you run.
+
+> **Dispatch trap.** `shModelV1Linear` rebuilds `pars.rgc.classes` from the
+> preset named by `pars.rgc.mode`, which defaults to `'derivative'`. `shPars`
+> now sets `'custom'` for you, so this only bites if you assemble
+> `pars.rgc.classes` by hand — don't. If you do, and omit
+> `pars.rgc.mode = 'custom'`, your classes, fitted weights, and lesion edits are
+> silently discarded and you compute the plain derivative preset instead. This
+> produced a run of mislabelled results before it was caught on 2026-07-16 (the
+> tell: "lagged" and "derivative" outputs that were bit-identical, impossible
+> for a nonlinear model).
 
 ### 2.2 The branch that was retired, and why it matters
 

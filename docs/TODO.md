@@ -470,9 +470,7 @@ Smaller, still open: `numDots`/`letterContrast` use
 disk area `pi*(d/2)^2` for dots that are square by default (~27% too many dots);
 `localStampDots` clips dots at the field edge instead of wrapping, though the
 positions wrap; `maskOnMap` is computed but only used in commented-out
-`contour` calls; and `pars/shRgcClassesMidgetParasolTiled.m` is a
-backward-compatibility alias for a name that never existed on `main`, so it can
-probably just be deleted.
+`contour` calls. (The `shRgcClassesMidgetParasolTiled` alias was deleted 2026-08-25.)
 
 ---
 

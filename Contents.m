@@ -69,13 +69,12 @@
 %
 % mkGaussianFilter          Make a 1D gaussian filter with a given SIGMA.
 % shModelUnits              Pinned physical scale (0.430 deg/px, 26.9 ms/frame, 16 deg/s per px/frame)
-% shPars                    Get a default PARS structure
+% shPars                    Get a PARS structure: shPars (derivative) or shPars('lagged') - the only two ways to run the model
 % shQuadratureKernel        90-deg Hilbert phase shift of a temporal kernel (retired ON/OFF quadrature)
 % shRgcClass                Constructor for one RGC class (spatial RF, temporal kernel, rectification, gain)
 % shRgcClassesDerivative    Preset: the SH temporal-derivative basis; reproduces legacy exactly
-% shRgcClassesFourPop       Preset: the legacy four-population parameterization (regression oracle)
+% shRgcClassesFourPop       Internal regression oracle for tests/ only - NOT a way to run the model
 % shRgcClassesMidgetParasolLagged  Preset: ON/OFF x midget/parasol x lags 0-3 - the live biological front-end
-% shRgcClassesMidgetParasolTiled   Deprecated alias for shRgcClassesMidgetParasolLagged
 % shParsScaleFactors        Set scale factors for the pars structure and pick pars.mtalpha
 % shParsV1PopulationDirections  Get evenly spread V1 neurons for a population
 %
