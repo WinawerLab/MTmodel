@@ -28,13 +28,13 @@
 % clinical band sits BELOW MT's slowest non-zero tuned speed. V1 tiles four
 % shells from 0.22 to 1.63 px/frame (3.5-26 deg/s), which reaches lower. Expect
 % weak MT opponency at clinical speeds -- that is a real property of the model,
-% not a bug, and it is the tension recorded in docs/TODO.md section 3.
+% not a bug, and it is the tension recorded in docs/TODO.md 1.
 %
 % SPATIAL SCALE CAVEAT. At 2.33 px/deg a clinically sized letter (168 arcmin =
 % 2.8 deg) is only ~6.5 pixels -- far too small to be a letter. LETTER_SIZE_PX
 % below therefore sets the letter in model pixels and the script reports the
 % implied angular size, which will be much larger than the booth's. This is the
-% known order-of-magnitude spatial-scale offset (docs/TODO.md smaller items).
+% known order-of-magnitude spatial-scale offset (docs/TODO.md 5).
 
 thisFile = mfilename('fullpath');
 repoRoot = fileparts(fileparts(thisFile));

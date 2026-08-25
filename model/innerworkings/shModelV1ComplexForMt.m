@@ -7,7 +7,7 @@
 % is bit-identical to the previous inline code.
 %
 % If pars.rgc.mtMix is set, MT instead pools a TWO-STREAM mixture, after
-% Nassi & Callaway (2006, 2007) -- see docs/TODO.md item 1:
+% Nassi & Callaway (2006, 2007) -- see docs/MODEL_AND_LESIONS.md 2.3:
 %
 %   popMT = (1 - alpha)*popA + alpha*delay(popB, d)
 %
@@ -40,7 +40,7 @@
 %              detour explicitly; it already overstates it.
 %
 % Setting alpha = 0 skips stream B entirely (one pass, pure magno) -- the
-% comparison called for in docs/TODO.md item 1.6.
+% comparison called for in docs/MODEL_AND_LESIONS.md 4.5.
 
 function [pop, ind] = shModelV1ComplexForMt(stimulus, pars)
 

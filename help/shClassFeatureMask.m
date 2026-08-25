@@ -3,8 +3,8 @@
 % Build a logical column mask over the class-based V1 feature matrix
 % (shClassV1Basis), selecting the columns contributed by RGC classes whose name
 % matches a regexp. Used to restrict shFitClassV1Weights to one pathway --
-% e.g. the parasol-only fit for the MT-projecting V1 population (docs/TODO.md
-% item 1).
+% e.g. the parasol-only fit for the MT-projecting V1 population (docs/MODEL_AND_LESIONS.md
+% 2.3).
 %
 % Column layout: shClassV1Basis walks pars.rgc.classes in order and, for each
 % class, emits sum(readoutOrders + 1) contiguous columns. So a class either owns

@@ -1,6 +1,6 @@
 % knockoutAndAlphaCalibration
 %
-% Check 2 of docs/TODO.md item 1, plus the alpha calibration.
+% Criterion 2 of docs/MODEL_AND_LESIONS.md 4.4, plus the alpha calibration.
 %
 % Two questions:
 %
@@ -27,7 +27,7 @@
 % of the midget-knockout effect is carried by alpha -- which is what makes alpha
 % calibratable against Maunsell.
 %
-% Dot stimuli are explicitly seeded (docs/TODO.md smaller items: the earlier
+% Dot stimuli are explicitly seeded (docs/TODO.md known problems: the earlier
 % lesion scripts did not seed, confounding lesion effects with dot-sample noise).
 
 % Self-locating script

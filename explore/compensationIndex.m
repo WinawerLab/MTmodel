@@ -11,7 +11,7 @@
 %
 % This decides two things at once:
 %
-%   1. How much of docs/MODEL_AND_LESIONS.md 4.2's null result ("50% gain cut
+%   1. How much of docs/MODEL_AND_LESIONS.md 4.7.2's null result ("50% gain cut
 %      barely moves direction tuning") is normalization absorbing the lesion.
 %   2. JW's signal-starvation hypothesis (docs/NOISE_AND_DEMYELINATION.md 5.5):
 %      the clinical low-speed deficit may not need low-speed-selective damage.

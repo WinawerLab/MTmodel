@@ -14,14 +14,15 @@ the most recent versions of the code, are available at
 
 RGC front-end and project status:
 
-- This toolbox is being extended with an optional retinal ganglion cell (RGC)
-  layer in front of V1 (enabled by default; set pars.rgc.enabled = 0 to recover
-  exact legacy behavior). For the RGC front-end's design, current status, and
-  usage, see AGENTS.md at the repository root and the docs/ folder. The base
+- This toolbox has been extended with a retinal ganglion cell (RGC) layer in
+  front of V1. It is on by default; set pars.rgc.enabled = 0 to recover the
+  original behaviour exactly. There are exactly two ways to run the model,
+  shPars and shPars('lagged'). For the design, the current status, and usage,
+  read AGENTS.md at the repository root and then the docs/ folder. The base
   V1/MT model is described below and in the references.
-- Native MATLAB implementations of the core 3D operations mean no MEX
-  compilation is required for normal use (legacy C/MEX sources remain in the
-  mex/ subfolder for reference).
+- The core 3D operations are now implemented natively in MATLAB, so no MEX
+  compilation is required for normal use. The legacy C/MEX sources remain in the
+  mex/ subfolder for reference.
 
 Authors:  Timothy Saint and Eero P. Simoncelli
 ___________________________________________________________________________
@@ -38,14 +39,15 @@ INSTALLATION
    for reference and experimentation. Core model internals call explicit
    native helper functions, so default execution does not depend on MEX.
 
-3) RGC front-end (optional, enabled by default):
+3) RGC front-end (on by default):
 
-   pars = shPars;   % pars.rgc.enabled == 1
+   pars = shPars;            % the SH derivative front-end
+   pars = shPars('lagged');  % the biological midget/parasol front-end
 
-   The stimulus passes through an RGC layer before reaching V1. Set
+   The stimulus passes through an RGC layer before it reaches V1. Set
    pars.rgc.enabled = 0 to recover the original no-RGC model exactly. For the
-   RGC modes, the class-based parameterization (pars.rgc.classes), lesioning,
-   and calibration, see AGENTS.md and the docs/ folder.
+   class-based parameterization (pars.rgc.classes), lesioning, and calibration,
+   see AGENTS.md and the docs/ folder.
 
 ___________________________________________________________________________
 USING THE SOFTWARE
