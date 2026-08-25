@@ -4,7 +4,7 @@
 % to parasol classes only, and report how well that restricted basis reproduces
 % the legacy V1 target compared with the existing mixed fit (population B).
 %
-% This is step 1 of docs/TODO.md item 1 -- the change that gives the midget/parasol
+% This is step 1 of docs/MODEL_AND_LESIONS.md 2.3 -- the change that gives the midget/parasol
 % labels meaning. Motivation, in brief (Nassi & Callaway 2006, 2007):
 %
 %   * Disynaptic label in layer 4C after an MT injection is ~96-97% in
@@ -19,7 +19,7 @@
 % -- provided the direction tiling stays complete. Hence: mask the FEATURES, never
 % subset the neurons.
 %
-% Pre-registered check (docs/TODO.md 1.5): a partial failure is expected and is a
+% Pre-registered criterion 1 (docs/MODEL_AND_LESIONS.md 4.4): a partial failure is expected and is a
 % result, not a problem. The parasol kernel is fast (tau 0.6/1.2) and may not build
 % the sustained low-TF V1 neurons -- which are the ones MT cares least about. If so,
 % score r on the MT-relevant subset rather than the whole tiling.

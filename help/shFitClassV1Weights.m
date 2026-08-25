@@ -23,7 +23,7 @@
 %          and set pars.rgc.combine = 'weights'.
 %
 % The masked form is how the MT-projecting ("population A") V1 fit is built: see
-% docs/TODO.md item 1. Restricting to parasol columns makes that population
+% docs/MODEL_AND_LESIONS.md 2.3. Restricting to parasol columns makes that population
 % magnocellular by construction, rather than leaving the M/P split to an
 % objective that does not encode it.
 

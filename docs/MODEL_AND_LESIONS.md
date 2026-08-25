@@ -1,173 +1,266 @@
-# The design logic, and what the lesion tests have shown
+# The model, and what we have measured
 
-**Written 2026-08-19.** This is the standing report: the chain of reasoning that
-produced the current model, the validation each link rests on, and the lesion
-results with an explicit statement of what each one is still good for.
+**The standing report.** How the model is built, why it is built that way,
+everything that has been measured, and how far each result can be trusted.
 
-It replaces the two long handoff documents and the validation summary, now in
-`docs/_archive/`. Read `AGENTS.md` first for orientation and how to run things;
-read `docs/TODO.md` for what is open.
+Rewritten 2026-08-25. Read `AGENTS.md` first for orientation and for how to run
+things. Read `docs/TODO.md` for what is still open.
 
----
+Contents:
 
-## 1. The question
-
-> Can an RGC-level lesion explain the optic-neuritis pattern of
-> **(a) increased VEP latency** and **(b) reduced recognition of motion-defined
-> form at low speeds**?
-
-Answering it requires a model in which "an RGC-level lesion" is a thing you can
-*state* — which cells are affected, by how much, and how that varies across the
-visual field — and in which the healthy behaviour is trustworthy enough that a
-lesion delta means something. Everything below is in service of those two
-requirements.
-
-Units are pinned (SH 1998 Appendix I, p. 761; derivation in
-`docs/RGC_lagged_preset_summary.md` §7.1, code in `pars/shModelUnits.m`):
-
-**1 pixel = 0.430 deg · 1 frame = 26.9 ms (37.2 fps) · 1 px/frame = 16 deg/s.**
+1. [The question, and the units](#1-the-question-and-the-units)
+2. [How the model is built](#2-how-the-model-is-built)
+3. [What a lesion means here](#3-what-a-lesion-means-here)
+4. [What has been measured](#4-what-has-been-measured)
+5. [Validity ledger — what still holds](#5-validity-ledger--what-still-holds)
+6. [Decisions we reversed, and why](#6-decisions-we-reversed-and-why)
+7. [Where the noise work fits](#7-where-the-noise-work-fits)
 
 ---
 
-## 2. The design logic
+## 1. The question, and the units
 
-### 2.1 One mechanism, several presets
+> Can damage at the level of retinal ganglion cells (RGCs) explain the
+> optic-neuritis pattern of **(a) a slower visual evoked potential** and
+> **(b) worse recognition of shapes defined only by motion, at slow speeds**?
 
-The Simoncelli–Heeger model drives V1 from an abstract basis: spatial/temporal
-derivatives of the filtered stimulus, orders 0–3. The insight the whole
-architecture rests on is that this is not a different *kind* of front-end from a
-retina — it is one point in a space of front-ends, all of which are "some set of
-filtered channels, linearly combined into V1."
+To answer it we need two things. First, a model in which "damage to retinal
+ganglion cells" is something you can actually *state*: which cells are hit, by how
+much, and how that varies across the visual field. Second, healthy behaviour that
+is trustworthy enough that a change caused by damage means something. Everything
+below serves one of those two needs.
 
-So the model carries a single class-based path. `pars.rgc.classes` is a list of
-RGC classes, each with a spatial RF, a temporal kernel, a rectification, and a
-gain; `shModelV1LinearFromClasses` projects the stimulus through them and
-`pars.rgc.combine` says how V1 reads them out — `'steer'` for the analytic SH
-steering, `'weights'` for a fitted matrix. **Presets populate that field; they are
-not code branches.** This is what makes the biological front-end substitutable for
-the mathematical one without a second copy of the model.
+The physical scale is fixed by SH 1998 Appendix I, p. 761. The derivation is in
+`docs/RGC_lagged_preset_summary.md` §7, and the code is `pars/shModelUnits.m`:
 
-**There are exactly two ways to run the model**, and `shPars` returns each one
-fully assembled:
+**1 pixel = 0.430 deg · 1 frame = 26.9 ms (37.2 frames/sec) · 1 pixel/frame = 16 deg/sec**
+
+Useful conversions for the clinical speed range:
+
+| clinical speed | model units |
+|---|---|
+| 1 deg/s | 0.063 px/frame |
+| 2 deg/s | 0.125 px/frame |
+| 5 deg/s | 0.313 px/frame |
+| 10 deg/s | 0.625 px/frame |
+
+---
+
+## 2. How the model is built
+
+### 2.1 One code path, two presets
+
+The Simoncelli–Heeger model drives V1 from an abstract mathematical basis: spatial
+and temporal derivatives of the filtered stimulus, orders 0 to 3. The idea the
+whole design rests on is that this is not a *different kind* of front-end from a
+retina. It is one point in a space of front-ends, all of which are "some set of
+filtered channels, added together to make V1 neurons."
+
+So there is a single class-based code path. `pars.rgc.classes` is a list of cell
+classes. Each class has a spatial receptive field, a temporal filter, a
+rectification and a gain. `shModelV1LinearFromClasses` projects the stimulus
+through them, and `pars.rgc.combine` says how V1 reads them out: `'steer'` for the
+analytic SH steering, `'weights'` for a fitted matrix. **Presets fill in that list.
+They are not separate branches of code.** That is what lets the biological
+front-end stand in for the mathematical one without a second copy of the model.
+
+There are exactly two ways to run it, and `shPars` returns each one fully
+assembled:
 
 | call | front-end |
 |---|---|
-| `shPars` (or `shPars('derivative')`) | `shRgcClassesDerivative` — the SH basis |
-| `shPars('lagged')` | `shRgcClassesMidgetParasolLagged` — the biological front-end, with **both MT streams on** (§ two-stream MT below) |
+| `shPars` or `shPars('derivative')` | `shRgcClassesDerivative` — the SH basis |
+| `shPars('lagged')` | `shRgcClassesMidgetParasolLagged` — the biological front-end, with both MT streams on (§2.3) |
 
-Anything else — a lesion, a custom gain, a cleared `mtMix` — is a *variation* on
-one of these two, obtained by editing the struct a preset returned. There is no
-third way to run the model, and `shPars` rejects any other preset name.
+Anything else — a lesion, a changed gain, a cleared `mtMix` — is a *variation* on
+one of these two, made by editing the struct a preset returned. `shPars` refuses
+any other preset name.
 
-> **Dispatch trap.** `shModelV1Linear` rebuilds `pars.rgc.classes` from the
-> preset named by `pars.rgc.mode`, which defaults to `'derivative'`. `shPars`
-> now sets `'custom'` for you, so this only bites if you assemble
-> `pars.rgc.classes` by hand — don't. If you do, and omit
-> `pars.rgc.mode = 'custom'`, your classes, fitted weights, and lesion edits are
-> silently discarded and you compute the plain derivative preset instead. This
-> produced a run of mislabelled results before it was caught on 2026-07-16 (the
-> tell: "lagged" and "derivative" outputs that were bit-identical, impossible
-> for a nonlinear model).
+> **The dispatch trap.** `shModelV1Linear` rebuilds `pars.rgc.classes` from the
+> preset named in `pars.rgc.mode`, which defaults to `'derivative'`. `shPars` now
+> sets `'custom'` for you, so this only bites if you build `pars.rgc.classes` by
+> hand — don't. If you do, and you forget `pars.rgc.mode = 'custom'`, your classes,
+> your fitted weights and your lesion edits are discarded in silence and you
+> compute the plain derivative preset instead. This produced a run of mislabelled
+> results before it was caught on 2026-07-16. The giveaway was `'lagged'` and
+> `'derivative'` outputs that were identical bit for bit, which a nonlinear model
+> cannot produce.
 
-### 2.2 The branch that was retired, and why it matters
-
-The first attempt at a biological front-end tried to build **direction
-selectivity biologically** — an ON/OFF spatial read-out offset plus an ON
-quadrature kernel, following Chariker & Shapley. It was retired on 2026-07-12
-(code in `explore/_archive/`, argument in
-`docs/_archive/RGC_V1_design_discussion.md` §9–15):
-
-- The fixed translational ON/OFF offset **distorts V1 orientation tuning** and
-  does not rotate with a neuron's preferred direction. Removing it recovers
-  orientation best.
-- Direction selectivity is something the SH steerable read-out already produces
-  for free. Building it biologically fights the read-out rather than adding to it.
-
-The conclusion that survived is the load-bearing one: **the value of a biological
-front-end is not a different healthy computation. It is a lesionable
-parameterization** — a statement of which cells co-vary under an insult, with
-kernels constrained by measured physiology. It is a *physically grounded* lesion
-model, not a mathematically richer lesion space than SH.
-
-That distinction was itself once oversold, and the correction matters for how
-lesion results should be phrased. An early test claimed a conduction delay was "a
-lesion axis SH cannot express." It is not: SH's basis regrouped by temporal order
-supports the same delay lesion, and in the lagged preset a delay is approximately
-a reweighting of the lag channels. What the biological preset buys is that the
-lesion is *stated in cell-type terms* — not that it is inexpressible otherwise.
-A genuine non-vacuousness test, exploiting the ON/OFF rectification SH lacks, is
-still outstanding (`docs/TODO.md`).
-
-### 2.3 Validation leg 1 — the derivative preset as an exact oracle
-
-The derivative preset is the *validation instrument*, not a scientific claim. Its
-job is to prove that the class-based machinery introduces nothing: with
-`pars.rgc.classes = shRgcClassesDerivative(pars)` and `combine = 'steer'`, the
-class path reproduces the legacy no-RGC model **exactly — err = 0 at
-`nScales = 1`**, including the `resdirs` output.
-
-This is the non-negotiable constraint on the repo. `tests/runAllTests.m` (12 tests)
-enforces it, and the legacy RGC-disabled path stays in the tree purely as the
-machine-precision oracle. Every subsequent claim about the biological preset is a
-claim about a *difference from* something known to be exactly right.
-
-The same guarantee was once extended to a third `fourPop` preset (err = 0
-against the then-legacy `shModelV1LinearFromRgc`, including lagged channels),
-which is why the old twin
-forward functions could be deleted.
-
-### 2.4 Validation leg 2 — the lagged midget/parasol preset
+### 2.2 The biological front-end
 
 `pars/shRgcClassesMidgetParasolLagged.m` is the live biological front-end:
-{parasol, midget} × {ON, OFF} × lags {0,1,2,3} = 16 classes, each a
-difference-of-gaussians spatial RF with a causal difference-of-gamma temporal
-kernel, half-wave rectified. No offset, no quadrature — direction selectivity
-comes from the SH read-out, per §2.2. Each class feeds read-out orders 0–3
-(10 combinations) → 160 features, combined by a fitted weight matrix.
+{parasol, midget} × {ON, OFF} × lags {0, 1, 2, 3} = **16 classes**. Each class is a
+difference-of-Gaussians receptive field with a causal difference-of-gamma temporal
+filter, half-wave rectified. There is no spatial offset and no quadrature filter;
+direction selectivity comes from the SH read-out, for the reason in §6.1. Each
+class feeds read-out orders 0 to 3, which is 10 combinations, giving **160
+features**, combined by a fitted weight matrix.
 
-**What the lags are for.** A single mono- or biphasic RGC kernel cannot supply
-SH's high-temporal-frequency (order 2–3) channels, and that gap capped the earlier
-preset at ~0.68 correlation with legacy V1. A *difference of lagged biphasic
-kernels approximates a temporal derivative*, so lagged copies let the read-out
-synthesize the high orders while every individual channel stays mono/biphasic and
-therefore Kling-plausible. High order lives in the linear combination, not in any
-cell.
+**What the lags are for.** A single RGC filter with one or two phases cannot supply
+SH's high-temporal-frequency channels (orders 2 and 3). That gap held an earlier
+preset to about 0.68 correlation with the original V1. But *a weighted difference
+of the same filter at staggered delays approximates a time derivative*, the same
+trick as a finite difference. So lagged copies let the read-out build the high
+orders while every individual channel stays simple enough to be biologically
+plausible. **The high-order structure lives in the combination, not in any cell.**
 
-**Fidelity.** Held-out correlation with legacy SH V1
-(`tests/testClassPathBiological.m`, fit on 6 stimuli, evaluated on 4 unseen):
-**pooled r = 0.984**, flat across temporal frequency, against ~0.68 for the
-retired preset. Read with three qualifications, all of which are in the doc and
-none of which are cosmetic:
+A full description of the front-end, with figures and with the physical sizes of
+every parameter, is in `docs/RGC_lagged_preset_summary.md`.
 
-1. It is a match **to the SH model, not to data**.
-2. The pooled figure hides per-neuron spread: median 0.984, max 0.997,
-   **minimum 0.709**.
-3. Samples are not independent — neighbouring (y,x,t) locations overlap heavily
-   under 9-tap filters, so effective *n* is far below nominal.
+Two known problems with the scale, carried openly (details in that document, §7):
+at 0.43 deg per pixel the midget centre is about 0.34 deg across against roughly
+0.02–0.05 deg for real midget cells, so the midget-to-parasol *ratio* is right but
+the absolute scale is off by about a factor of ten; and the 0–3 frame lags are
+0–81 ms, far too long for differences in optic nerve conduction (a few ms) and
+better justified as lagged LGN cells or delayed inhibition.
 
-A later, independent measurement on a different stimulus with differently-cached
-weights (`explore/fitMagnoMtPopulation.m`) put the same mixed population at median
-r = 0.93–0.95. The two are not directly comparable; **the ~0.985 figure should not
-be quoted as if it were a stable property of the preset.**
+### 2.3 Two streams into MT
 
-The healthy lagged copies are **not** pathological conduction delay. Optic-neuritis
-timing deficits go through `pars.rgc.impairmentDelayMap` or per-class kernel edits.
+This is the step that makes the midget and parasol labels mean something rather
+than being decoration.
 
-**Known scale problems, carried openly** (`docs/RGC_lagged_preset_summary.md` §7.1):
-at 0.43 deg/px the midget centre σ is 0.34 deg against ~0.02–0.05 deg for real
-midgets — the midget/parasol *ratio* is preserved, the absolute scale is off by
-roughly an order of magnitude. The 0–3 frame lags are 0–81 ms, far too long for
-optic-nerve conduction differences (a few ms) and better justified as lagged LGN
-or delayed inhibition. The DoG surround integrates to only 12–13% of centre, so
-these are near-lowpass centres rather than genuine band-pass filters.
+**What went wrong first.** The 160-column weight matrix was fitted to reproduce
+SH's V1, and SH's V1 has no midget/parasol distinction. Nothing in that objective
+says MT should be magnocellular, so the fit came out **midget-dominated**: setting
+midget classes to zero collapsed MT direction tuning, while setting parasol classes
+to zero left it intact and *raised* the peak by 25%. That is Maunsell et al. (1990)
+exactly backwards, and it contradicts SH's own premise on p. 754. Any result about
+specific cell types measured in that configuration reflects an arbitrary outcome of
+the fitting, not biology. This is why the 2026-07 lesion campaign is archived
+rather than live.
 
-### 2.4b MT's nominal speeds are not its measured speeds
+**Why the fix was cheap.** `shMtWts` computes the V1→MT weights *analytically* from
+the geometry of the directions:
+`sum(shQwts(dirs) * pinv(shQwts(pars.v1PopulationDirections)))`. Nothing there is
+fitted, and it carries no information about cell type. **So MT's dependence on
+midget versus parasol input is set entirely by the RGC→V1 weight matrix.** The trap
+that follows: you cannot do this by *selecting a subset* of the 28 V1 neurons,
+because the `pinv` needs the full set of directions. Mask the *features*, never the
+neurons.
 
-`pars.mtPopulationVelocities(:,2)` holds three speed tiers — 0, 1 and 6
-px/frame, i.e. 0, 16 and 96 deg/s at the pinned scale. Those are *construction*
-parameters for the MT pooling weights, and at the top tier they are not the
-tuning you get. Measured with drifting dots at each neuron's preferred
-direction (`explore/measureMtSpeedTuning.m`, 2026-08-25):
+**What the anatomy says** (Nassi & Callaway 2006, 2007). Layer 4B cells that
+project to MT are 76% spiny stellate and receive input only from 4Cα, which is
+magnocellular-dominated; after an injection into MT, about 96–97% of the two-synapse
+label lands in 4Cα. MT *does* get parvocellular input, but by a detour of 3 to 5
+synapses through the thick stripes of V2, and the 4B cells projecting to V2 are 83%
+pyramidal and mix magnocellular and parvocellular input. The structural point:
+**biology puts the M/P selectivity in two separate populations, not in one graded
+weighting.** The old model had one population, and it was the mixed one.
+
+**The design.** MT pools a mixture of two streams, formed after normalization in
+`shModelV1ComplexForMt` so that the two streams do not share a V1 normalization
+pool:
+
+```
+popMT = (1 - alpha) * popA  +  alpha * delay(popB, d)
+```
+
+- **popA, "4B→MT", the fast magnocellular drive.** The same 28 neurons refitted
+  against the same SH target, with the feature matrix masked down to the 80 parasol
+  columns (`shClassFeatureMask(pars, '^parasol')`). Its parasol share is 1.0 by
+  construction.
+- **popB, "→V2→MT", the slow minority drive.** The **existing mixed fit,
+  unchanged**. This is justified because the V2 relay carries mixed M and P input.
+  No second fit was needed, and popB stays the validated V1 stage.
+- **alpha = 0.10, d = 0.** The midget drive is *imposed and never fitted*. If the
+  midget columns were unmasked, ridge regression would re-inflate the midget share,
+  because nothing in the objective holds it down. `d = 0` because the V2 detour is
+  roughly 5–10 ms, well under one 26.9 ms frame — and the difference in latency is
+  already there for free, since the midget filter peaks at about 107 ms against the
+  parasol filter's 27 ms.
+
+The MT stage is linear in `pop`, so the mixture is exactly
+`(1-alpha)*MT(popA) + alpha*MT(popB delayed)`. That makes knockout bookkeeping
+trivial. Two bit-exact checks confirm the plumbing: setting stream A to the default
+weights reproduces the no-mixture baseline at both `alpha = 0` and `alpha = 1`.
+`'v1Complex'` is untouched, so **the validated V1 stage has not changed.** Only MT
+sees the mixture.
+
+The measurements that justify `alpha = 0.10` are in §4.4.
+
+---
+
+## 3. What a lesion means here
+
+Three independent choices. The results in §4.7 are organised by them.
+
+**Axis — what is damaged**
+
+- **amplitude**: the gain is multiplied down.
+- **delay**: the temporal filter is shifted by a whole number of frames.
+- **both together.**
+
+**Scope — which cells**
+
+- **class-agnostic**: all RGC classes equally. This is a statement about the optic
+  nerve as a whole.
+- **class-selective**: parasol only, midget only, ON only. This is the statement
+  only a biological front-end can make, and it needs the two-stream MT of §2.3 to
+  be interpretable.
+
+**Spatial profile — how the damage varies across the visual field**
+
+- **uniform**: the same everywhere.
+- **non-uniform**, through the amplitude and delay maps in
+  `shApplyRgcImpairment`: *random* (independent at every pixel), *patchy*
+  (correlated across space, Gaussian-smoothed with σ = 3), or *coupled* (low
+  amplitude goes with high delay, which is the most realistic).
+
+Mechanically: spatial maps go through `pars.rgc.impairmentAmplitudeMap` and
+`impairmentDelayMap`; damage to particular cell types is applied by editing
+`pars.rgc.classes(i).gain` or `.temporalKernel` before the forward pass. Weights
+are **not** refitted after a lesion. Optic neuritis is a change within one person,
+so holding the weights fixed isolates the RGC effect from any cortical
+re-adaptation.
+
+---
+
+## 4. What has been measured
+
+### 4.1 The derivative preset reproduces the original model exactly
+
+The derivative preset is a *measuring instrument*, not a scientific claim. Its job
+is to prove that the class-based machinery adds nothing of its own. With
+`pars.rgc.classes = shRgcClassesDerivative(pars)` and `combine = 'steer'`, the class
+path reproduces the old no-RGC model **exactly — error = 0 at `nScales = 1`**,
+including the `resdirs` output.
+
+This is the constraint that cannot be broken. `tests/runAllTests.m` (12 tests)
+enforces it, and the old RGC-disabled path stays in the tree purely as the
+machine-precision reference. Every later claim about the biological preset is a
+claim about a *difference from* something known to be exactly right.
+
+### 4.2 The lagged preset reproduces SH's V1 closely
+
+From `tests/testClassPathBiological.m`, fitted on 6 stimuli and evaluated on 4 it
+had not seen: **pooled r = 0.984**, flat across temporal frequency, against about
+0.68 for the retired preset (§6.1).
+
+Read that with four qualifications. None of them is cosmetic.
+
+1. It is a match **to the SH model, not to data**. The target is the old V1 output.
+2. The pooled figure hides the spread across neurons: median 0.984, best 0.997,
+   **worst 0.709**.
+3. The samples are not independent. Neighbouring (y, x, t) locations overlap
+   heavily under 9-tap filters, so the effective sample size is far below the
+   nominal one.
+4. **A later measurement disagrees.** `explore/fitMagnoMtPopulation.m` put the same
+   mixed population at median r = 0.93–0.95, on a different stimulus with
+   differently cached weights. The two are not directly comparable, but
+   **0.985 should not be quoted as a stable property of the preset** until the
+   difference is understood.
+
+The healthy lagged copies are **not** a pathological conduction delay. Timing
+deficits in optic neuritis go through `pars.rgc.impairmentDelayMap` or through
+edits to a class's temporal filter.
+
+### 4.3 MT's nominal speeds are not its measured speeds
+
+`pars.mtPopulationVelocities(:,2)` holds three speed tiers: 0, 1 and 6 px/frame,
+which is 0, 16 and 96 deg/s at the pinned scale. Those are *construction*
+parameters for the MT pooling weights. At the top tier they are not the tuning you
+actually get. Measured with drifting dots at each neuron's preferred direction
+(`explore/measureMtSpeedTuning.m`, 2026-08-25):
 
 | nominal | derivative | lagged (both streams) |
 |---|---|---|
@@ -175,109 +268,74 @@ direction (`explore/measureMtSpeedTuning.m`, 2026-08-25):
 | 16 deg/s | **14.9** (14.2–15.3) | **16.5** (16.1–17.1) |
 | 96 deg/s | **49.7** (47.0–50.3) | **58.7** (54.6–60.5) |
 
-The 16 deg/s tier lands where SH's own convention puts it (1 px/frame, and SH
-describe their normalization pool as tuned to "moderate speeds (16 deg/sec)").
-The 96 deg/s tier peaks near **half** its nominal value. The curves have a clean
-interior peak with falloff on both sides, so this is a real tuning result and
-not a grid artifact — it is consistent with 6 px/frame sitting past what the
-filter bank can represent, since the V1 filters peak at 0.2148 cyc/sample on
-both axes.
+The 16 deg/s tier lands where SH's own convention puts it — 1 px/frame, and SH
+describe their normalization pool as tuned to "moderate speeds (16 deg/sec)". The
+96 deg/s tier peaks near **half** its nominal value. The curves have a clean
+interior peak with falloff on both sides, so this is real tuning and not an
+artifact of the grid. It fits with 6 px/frame sitting past what the filter bank can
+represent, since the V1 filters peak at 0.2148 cycles/sample on both axes.
 
-**Do not quote 96 deg/s as those neurons' preferred speed.** The lagged preset
-also prefers systematically faster speeds than the derivative one (+11% at the
-low tier, +18% at the high tier), the expected direction given stream A is
-parasol-masked and parasol kernels peak at 1 frame versus midget's 4.
+**Do not quote 96 deg/s as those neurons' preferred speed.** The lagged preset also
+prefers systematically faster speeds than the derivative one, by 11% at the low
+tier and 18% at the high tier. That is the expected direction, since stream A is
+parasol-masked and the parasol filter peaks at 1 frame against the midget filter's
+4.
 
-Caveats: 7 of the 19 MT neurons probed (3 per moving tier, spanning directions;
-within-tier spread under 0.5 px/frame) on a 13-point speed grid, so the peak
-locations carry roughly ±5%.
+*Caveat:* 7 of the 19 MT neurons were probed, 3 per moving tier, spread across
+directions, on a 13-point speed grid. Within a tier the spread was under 0.5
+px/frame. Peak locations carry roughly ±5%.
 
-### 2.5 Validation leg 3 — making M/P mean something at MT
+### 4.4 The two-stream MT reproduces Maunsell's knockouts
 
-This is the step that turns the midget/parasol labels from decoration into
-biology, and it is where the *previous* configuration failed.
+Two stopping criteria were written down in advance, and both were met.
 
-**The failure.** The 160-column weight matrix was fitted to reproduce SH's V1,
-which has no M/P distinction. Nothing in that objective encodes magno-dominance,
-so the fit came out **midget-dominated**: zeroing midget classes collapsed MT
-direction tuning, while zeroing parasol classes left it intact and *raised* the
-peak (+25%). That is Maunsell et al. (1990) exactly backwards, and it contradicts
-SH's own p. 754 premise. **Any cell-type-specific lesion result from that
-configuration reflects an arbitrary fitting outcome, not biology.** This is the
-"lagged preset without M/P segregation" configuration, and it is the reason the
-2026-07 lesion campaign is archived rather than live.
+**Criterion 1 — how good is the masked fit?** The partial failure that was
+predicted did happen, and it happened exactly where predicted. Reconstruction of
+the old V1 target, binned by each neuron's preferred temporal and spatial
+frequency:
 
-**The architectural fact that made the fix cheap.** `shMtWts` computes V1→MT
-weights *analytically* from the direction geometry
-(`sum(shQwts(dirs) * pinv(shQwts(pars.v1PopulationDirections)))`). Nothing there
-is fitted and it carries no cell-type information. **MT's M/P dependence is
-therefore set entirely by the RGC→V1 weight matrix.** Corollary and trap: this
-cannot be done by *subsetting* the 28 V1 neurons — the `pinv` needs the full
-direction tiling. Mask the *features*, never the neurons.
-
-**What the anatomy constrains** (Nassi & Callaway 2006, 2007): MT-projecting
-layer-4B cells are 76% spiny stellate, receiving input only from M-dominated 4Cα
-(disynaptic label after an MT injection is ~96–97% in 4Cα). MT *does* receive
-parvocellular input, but by a 3–5 synapse detour through V2 thick stripes, and
-V2-projecting 4B cells are 83% pyramidal and integrate mixed M and P. The
-structural point: **biology puts M/P selectivity in two distinct populations, not
-in a graded weighting.** The old model had one population, and it was the mixed one.
-
-**The design.** MT pools a two-stream mixture, formed post-normalization in
-`shModelV1ComplexForMt` so the streams do not share a V1 normalization pool:
-
-```
-popMT = (1 - alpha) * popA  +  alpha * delay(popB, d)
-```
-
-- **popA — "4B→MT", the fast magno drive.** The same 28 neurons refitted against
-  the same SH target with the feature matrix masked to the 80 parasol columns
-  (`shClassFeatureMask(pars, '^parasol')`). Parasol share = 1.0 by construction.
-- **popB — "→V2→MT", the slow minority drive.** The **existing mixed fit,
-  unchanged** — justified because the V2 relay carries mixed M and P. No second
-  fit needed, and popB remains the validated V1 stage.
-- **alpha = 0.10, d = 0.** The midget drive is *imposed and never fitted*:
-  unmasking midget columns would let ridge regression re-inflate the midget share,
-  with nothing in the objective holding it down. `d = 0` because the V2 detour is
-  ~5–10 ms, well under one 26.9 ms frame — and the latency separation is already
-  present for free, since the midget kernel peaks at ~107 ms against the parasol
-  kernel's ~27 ms.
-
-Because the MT stage is linear in `pop`, the mixture is exactly
-`(1-alpha)*MT(popA) + alpha*MT(popB delayed)`, which makes knockout bookkeeping
-trivial. Verified by two bit-exact identities (stream A set to the default weights
-reproduces the no-mix baseline at both alpha = 0 and alpha = 1); the suite stays
-14/14. `'v1Complex'` is untouched, so **the validated V1 stage is unchanged** —
-only MT sees the mixture.
-
-**Stopping criteria were pre-registered, and both were met.**
-
-*Check 1 — masked fit quality.* The predicted partial failure happened, exactly
-where predicted. Reconstruction of the legacy V1 target, binned by the neuron's
-tf/sf preference:
-
-| tf/sf band | neurons | median *r*, B (mixed) | median *r*, A (parasol) | loss |
+| tf/sf band | neurons | median r, B (mixed) | median r, A (parasol) | loss |
 |---|---|---|---|---|
 | 0.22–0.30 (slow) | 12 | 0.95 | ~0.55 | ~0.40 |
 | 0.43–0.81 (mid)  | 9  | 0.93 | ~0.75 | ~0.17 |
 | 1.41–1.63 (fast) | 7  | 0.90 | ~0.82 | ~0.07 |
 
-Monotonic. The parasol-only basis is a **good** V1 model for the fast neurons —
-the ones MT weights most — and a poor one for the slow sustained ones. That is
-precisely the Nassi & Callaway division of labour. The whole-tiling median
-(0.930 → 0.706) should **not** be quoted as the headline.
+The pattern is monotonic. The parasol-only basis is a **good** V1 model for the
+fast neurons — the ones MT weights most heavily — and a poor one for the slow
+sustained ones. That is precisely the division of labour Nassi & Callaway describe.
+The median over the whole set (0.930 → 0.706) should **not** be quoted as the
+headline number.
 
-The mechanism is visible in the tuning, not the residual
-(`explore/measurePreferredTfSf.m`): nominal preferred (sf, tf) is identical for
-both populations by construction, but at the slow end population A prefers a
-higher tf than B for **13 of 13** neurons (median ×1.40 vs nominal, against B's
-×0.94), while at the fast end A and B agree for 6 of 7. Denied midget input, slow
-neurons drift toward the frequency the fast parasol kernel actually prefers.
-*Caveat:* the log grid quantizes to ×1.31 per step, so ×1.40 is ~1 step —
-credible because unanimous, not because any single row is precise.
+Population B reproduced the previously recorded parasol share of the mixed fit
+(0.249–0.377 of the absolute weight per V1 neuron, median 0.316), which confirms
+the setup matches the existing fit. Population A is 1.0 by construction, and costs
+little in gain: the median peak response of A relative to B is 0.86.
 
-*Check 2 — Maunsell reproduction.* Percent change from each architecture's own
-intact model; "pop" columns are over the 19-neuron MT population:
+The mechanism shows up in the tuning rather than in the residual
+(`explore/measurePreferredTfSf.m`). The nominal preferred spatial and temporal
+frequency is identical for both populations by construction. But at the slow end,
+population A prefers a higher temporal frequency than B for **13 of 13** neurons
+(median 1.40× nominal, against B's 0.94×), while at the fast end A and B agree for
+6 of 7. Denied midget input, the slow neurons drift toward the frequency the fast
+parasol filter actually prefers.
+
+| band | nominal | B (mixed) | A (parasol) |
+|---|---|---|---|
+| slow (tf/sf < 0.5, n = 13) | 1.98 Hz | 1.90 Hz | **2.49 Hz** |
+| fast (tf/sf > 1.0, n = 7) | 6.81 Hz | 9.71 Hz | 9.71 Hz |
+
+Note that both populations overshoot the nominal value at the fast end, 9.71
+against 6.81 Hz. That is a property of the model, not of the mask.
+
+*Caveats:* the log grid steps by 1.31×, so the 1.40× shift is about one step. It is
+credible because it is unanimous across all 13 slow neurons, not because any single
+row is precise. And temporal frequency was swept at the nominal spatial frequency
+and vice versa, so these are one-dimensional cuts through a surface that may not be
+separable.
+
+**Criterion 2 — does it reproduce Maunsell?** Percent change from each
+architecture's own intact model. The "pop" columns are over the 19-neuron MT
+population.
 
 | architecture | knockout | dir_peak | dir_DSI | coh_peak | pop med \|%\| | pop >20% |
 |---|---|---|---|---|---|---|
@@ -290,254 +348,364 @@ intact model; "pop" columns are over the 19-neuron MT population:
 | **alpha=0.10** | **both** | **−78.7** | **−100.0** | **−90.5** | **89.5** | **100%** |
 | alpha=0.20 | midget (P) | −58.5 | −0.0 | −32.7 | 5.7 | 37% |
 
-Against Maunsell: M block "pronounced and often complete" (81% population median,
-95% of units); P block "very little effect" on the typical unit (2.7% median)
-while unequivocal for **a minority** (5% = 1 of 19 units over 20%); combined block
-"essentially eliminates" the response (89.5%, DSI −100%). `alpha >= 0.20` breaks
-it — the P block reaches 37% of units and rivals the M block — so the criterion
-brackets alpha tightly to 0.05–0.10. **0.10 adopted**, because it keeps the P
-contribution real rather than vanishing, which is what Maunsell actually reported.
+The old model's backwards result was reproduced almost exactly, which validates the
+harness: parasol knockout raises the direction peak by +25.1%, recorded previously
+as 1.033 → 1.291 = +25.0%, and cuts coherence by 72.7%, previously 74.6%. The small
+gap is consistent with this script seeding the dot stimuli, which the earlier one
+did not.
 
-Note a dissociation that was not designed in: midget knockout leaves **DSI
-unchanged at every alpha** (−0.0%) — it scales MT down without disturbing
-direction tuning — whereas parasol knockout destroys it. The two pathways are no
-longer interchangeable in this model.
+Maunsell reported that a magnocellular block is "pronounced and often complete"
+(here: 81% population median, 95% of units); that a parvocellular block has "very
+little effect" on the typical unit (2.7% median) while being unequivocal for **a
+minority** (5%, or 1 of 19 units, over 20%); and that a combined block "essentially
+eliminates" the response (89.5%, DSI −100%). At `alpha >= 0.20` this breaks: the
+parvocellular block reaches 37% of units and rivals the magnocellular one. So the
+criterion brackets alpha tightly to 0.05–0.10. **0.10 was adopted**, because it
+keeps the parvocellular contribution real rather than vanishing, which is what
+Maunsell actually reported.
 
-*First evidence for the clinical mechanism.* Midget dependence concentrates
-sharply at **low** preferred speed — median midget-knockout effect by MT preferred
-speed (1 px/frame = 16 deg/s):
+One dissociation appeared that was not designed in. Midget knockout leaves the
+direction selectivity index **unchanged at every alpha** (−0.0%) — it scales MT
+down without disturbing direction tuning — whereas parasol knockout destroys it.
+The two pathways are no longer interchangeable in this model.
 
-| pref speed | alpha=0.05 | alpha=0.10 |
+Scripts: `explore/fitMagnoMtPopulation.m` (the fit),
+`explore/measurePreferredTfSf.m` (the mechanism),
+`explore/knockoutAndAlphaCalibration.m` (the knockouts and the alpha bisection).
+
+### 4.5 Midget damage costs slow speeds most — the first clue to the clinical picture
+
+Dependence on midget input concentrates sharply at **low** preferred speed. Median
+effect of a midget knockout, by the MT neuron's preferred speed (1 px/frame = 16
+deg/s):
+
+| preferred speed | alpha=0.05 | alpha=0.10 |
 |---|---|---|
 | 0 px/frame | −25.0% | **−45.2%** |
 | 1 px/frame | −5.4 to −7.8% | −11.4 to −15.3% |
 | 6 px/frame | −0.7 to −0.9% | **−1.4 to −1.9%** |
 
-A 10–30× gradient from slowest to fastest. An insult to the midget pathway would
-preferentially cost low-speed motion — which is where the clinical deficit is.
-**Caveat, and it matters:** every MT neuron here was probed with the *same*
-grating, optimal for the slow test neuron, so fast-preferring units were driven
-off-peak and their small effects are partly confounded with that. Suggestive, not
-settled; the proper test is per-neuron speed tuning with alpha on vs. off.
+That is a gradient of 10 to 30 times from slowest to fastest. Damage to the midget
+pathway would cost low-speed motion first, and low speed is where the clinical
+deficit is.
 
-### 2.6 The healthy baseline on the target stimulus
+**Caveat, and it matters.** Every MT neuron here was probed with the *same*
+grating, chosen to be optimal for the slow test neuron. So the fast-preferring
+units were driven off their peak, and their small effects are partly confounded
+with that. This is suggestive, not settled. The proper test is per-neuron speed
+tuning with alpha on and off.
 
-`stim/mkMotionLetter.m` builds a Regan-style motion-defined letter (letter dots
-drift one way, background dots the other) — the deficit-(b) stimulus. Seeded,
-5 deg/s, letter 'C', 128×128×120, `explore/runMotionLetterDemo.m`:
+### 4.6 MT recovers a motion-defined letter; V1 barely does
 
-| stage | derivative preset | midgetParasolLagged |
+`stim/mkMotionLetter.m` builds a Regan-style motion-defined letter: the dots inside
+the letter drift one way, the background dots drift the other. This is the
+stimulus for deficit (b). Seeded, 5 deg/s, letter 'C', 128×128×120, from
+`explore/runMotionLetterDemo.m`:
+
+| stage | derivative preset | lagged preset |
 |---|---|---|
-| V1 opponent d' | +0.23 | +0.22 |
-| MT opponent d' | **+1.32** | **+1.32** |
+| V1 opponent d′ | +0.23 | +0.22 |
+| MT opponent d′ | **+1.32** | **+1.32** |
 
-**MT recovers the letterform; V1 barely does.** The two RGC presets are
-indistinguishable, which is the expected result for a healthy-condition stimulus
-and the right baseline for lesioning. Three controls establish that the
-segregation is genuinely motion-based: opposite drift +1.32, static background
-+1.30, **same drift (no relative motion) −0.34**. Static-luminance d' on the
-time-averaged image is ≈0, so there is no static cue to exploit. MT d' is **flat**
-from 1 to 48 deg/s (an earlier claim that it improved with speed was an artifact
-of a broken opponent-unit selector, since fixed).
+The two RGC presets are indistinguishable, which is what you want for a healthy
+stimulus and is the right baseline for lesioning.
 
-**Do not use frame-scrambling as the motion control** — permuting whole frames
-displaces letter and background dots by equal and opposite amounts, so relative
+Three controls establish that the separation really is based on motion:
+
+| control | MT d′ |
+|---|---|
+| opposite drift (the Regan stimulus) | +1.32 |
+| static background | +1.30 |
+| **same drift, no relative motion** | **−0.34** |
+
+There is no static cue to exploit: d′ on the time-averaged image is −0.008, on a
+single frame −0.002, and dot coverage is 0.3025 inside the letter against 0.3124
+outside.
+
+MT d′ is **flat** across the clinical band, while V1's weaker opponent signal does
+rise with speed (96×96 field, derivative preset, seeded):
+
+| deg/s | px/frame | MT opponent d′ | V1 opponent d′ |
+|---|---|---|---|
+| 1.0 | 0.0625 | 1.31 | 0.18 |
+| 2.0 | 0.1250 | 1.31 | 0.26 |
+| 5.0 | 0.3125 | 1.29 | 0.31 |
+| 9.6 | 0.6000 | 1.31 | 0.33 |
+| 16.0 | 1.0000 | 1.34 | 0.33 |
+| 48.0 | 3.0000 | 1.29 | 0.32 |
+
+An earlier claim that MT d′ improved with speed came from a broken opponent-unit
+selector, since fixed.
+
+**Do not use frame-scrambling as the motion control.** Permuting whole frames moves
+the letter dots and the background dots by equal and opposite amounts, so relative
 direction survives it.
 
-**Open, and it gates any quantitative clinical claim:** at 2.33 px/deg a
-clinically sized letter (2.8 deg) is only ~6.5 pixels. The demo therefore sets the
-letter in model pixels (~34 deg implied) and reports the angular size. Reconciling
-that with the order-of-magnitude RGC spatial-scale offset (§2.4) is unresolved.
+**Open, and it blocks any quantitative clinical claim.** At 2.33 pixels per degree,
+a clinically sized letter (2.8 deg) is only about 6.5 pixels across. The demo
+therefore sets the letter size in model pixels, implying about 34 deg, and reports
+the angular size it used. Reconciling that with the factor-of-ten offset in RGC
+spatial scale (§2.2) is unresolved.
 
-A standing scale tension for all of §4 too: MT is tuned to {0, 1, 6} px/frame =
-{0, 16, 96} deg/s, so **the entire clinical low-speed band sits below MT's slowest
-non-zero tuned speed.**
+A related tension runs through all of §4.7 as well: MT is tuned to {0, 1, 6}
+px/frame = {0, 16, 96} deg/s, so **the entire clinical low-speed band sits below
+MT's slowest moving unit.**
 
----
-
-## 3. What "a lesion" means here
-
-Three orthogonal choices, and the results in §4 are organized by them.
-
-**Axis** — what is damaged:
-- **amplitude**, a multiplicative gain reduction;
-- **delay**, an integer-frame shift of the temporal kernel;
-- **both together.**
-
-**Scope** — which cells:
-- **class-agnostic** (all RGC classes equally), which is a statement about the
-  optic nerve as a whole;
-- **class-selective** (parasol-only, midget-only, ON-only), which is the
-  statement only a biological front-end can make — and which requires §2.5's
-  two-stream MT to be interpretable.
-
-**Spatial profile** — how it varies across the visual field:
-- **uniform**, the same everywhere;
-- **non-uniform**, via `shApplyRgcImpairment`'s amplitude/delay maps: *random*
-  (independent per pixel), *patchy* (spatially correlated, Gaussian-smoothed
-  σ = 3), or *coupled* (low amplitude ⇒ high delay, the most realistic).
-
-Mechanically: spatial maps go through `pars.rgc.impairmentAmplitudeMap` /
-`impairmentDelayMap`; class-selective damage is applied by editing
-`pars.rgc.classes(i).gain` / `.temporalKernel` before the forward pass. Weights
-are **not** refitted after a lesion — optic neuritis is a within-subject delta, so
-fixed weights isolate the RGC effect from cortical re-adaptation.
-
----
-
-## 4. Lesion results
+### 4.7 Lesion results
 
 **Read §5 before quoting any of these.** Every number below was measured through
-the *pre-mtMix* MT (single mixed weight matrix). The class-agnostic rows are
-statements about the front-end and V1 and are likely to survive; the
-class-selective rows are not interpretable as biology.
+the *pre-mtMix* MT, which used a single mixed weight matrix. The class-agnostic
+rows are statements about the front-end and V1 and are likely to survive. The
+class-selective rows cannot be read as biology.
 
-### 4.1 The matrix as it stands
+#### 4.7.1 What has and has not been run
 
 | axis | uniform | non-uniform |
 |---|---|---|
 | **amplitude** | gain 0.5, all classes ✓ | random U(0.3,0.7) ✓ · patchy σ=3 ✓ |
 | **delay** | 2 frames, all classes ✓ | random {0,1,2,3} ✓ · patchy ✓ |
-| **both** | **✗ never run** | coupled amp↔delay ✓ (deterministically tied) |
+| **both** | **✗ never run** | coupled amplitude↔delay ✓ (tied together) |
 
-Two gaps, both worth closing: there is **no uniform amplitude + uniform delay
-condition at all**, and the only combined condition (`coupled`) ties the two axes
+Two gaps, both worth closing. There is **no uniform amplitude plus uniform delay
+condition at all**. And the only combined condition, `coupled`, ties the two axes
 together by construction rather than varying them independently.
 
-### 4.2 Uniform amplitude — hits gain, spares tuning shape
+#### 4.7.2 Uniform amplitude loss — hits the gain, spares the shape of the tuning
 
-Gain 0.5 on all classes: speed-tuning peaks fall **−35% to −49%**, coherence peak
-**−9% to −18%**, while direction peak, DSI and FWHM are **barely touched**. A
-uniform amplitude loss scales the response down without reorganizing what the
-population is tuned to.
+Gain 0.5 on all classes: speed-tuning peaks fall **35% to 49%**, the coherence peak
+falls **9% to 18%**, while direction peak, direction selectivity index and tuning
+width are **barely touched**. A uniform loss of amplitude scales the response down
+without reorganising what the population is tuned to.
 
-**Do not read this as "amplitude lesions don't matter."** §6.1 shows the flat
-direction tuning is divisive normalization absorbing the lesion — the model's own
-contrast-response nonlinearity — and §6.3 argues that the absorption is itself the
-damage once cortical noise is present.
+**Do not read this as "amplitude lesions don't matter."** §4.8 shows that the flat
+direction tuning is divisive normalization absorbing the lesion, and that once
+cortical noise is present, the absorption is itself the damage.
 
-### 4.3 Uniform delay — does essentially nothing
+#### 4.7.3 Uniform delay — does essentially nothing
 
-2 frames on all classes: **~0%** on direction peak, DSI, FWHM, and speed peak, for
-both presets. This is expected rather than surprising — a uniform phase shift does
-not change the time-averaged response to a periodic drifting grating. It is also
-the single most important negative result in the set, because it means **uniform
-conduction slowing is invisible to steady-state tuning measures.** If uniform
-slowing is to explain deficit (a), the observable has to be a latency measure, not
-a tuning measure.
+2 frames on all classes: about **0%** change in direction peak, direction
+selectivity index, tuning width and speed peak, for both presets. This is expected
+rather than surprising. A uniform phase shift does not change the time-averaged
+response to a periodic drifting grating.
 
-### 4.4 Non-uniform amplitude — behaves like uniform amplitude
+It is also the single most important negative result in the set, because it means
+**uniform conduction slowing is invisible to steady-state tuning measures.** If
+uniform slowing is going to explain deficit (a), the observable has to be a latency
+measure, not a tuning measure.
 
-Random, patchy and coupled amplitude lesions all land in a similar band
-(**~9–18% coherence-peak drop**), comparable to the uniform case. Spatial
-heterogeneity in *amplitude* buys little beyond its mean.
+#### 4.7.4 Non-uniform amplitude loss — behaves like uniform amplitude loss
 
-**§6.4 predicts this equivalence is an artifact of the deterministic model** and
-should break once cortical noise is present, because the spatially blurred
-normalization pool gives damaged locations less gain rescue under a heterogeneous
-lesion than under a uniform one.
+Random, patchy and coupled amplitude lesions all land in a similar band, around a
+**9–18% drop in the coherence peak**, much like the uniform case. Making the
+amplitude damage patchy buys little beyond its average.
 
-### 4.5 Non-uniform delay — the one large effect
+**§5 of `NOISE_AND_DEMYELINATION.md` predicts this equivalence is an artifact of
+the model being deterministic**, and that it should break once cortical noise is
+present.
 
-This is the headline result, and it is a dissociation, not a magnitude:
+#### 4.7.5 Non-uniform delay — the one large effect
+
+This is the headline result, and it is a dissociation rather than a magnitude:
 
 | delay lesion | coherence peak | high-pass speed tuning |
 |---|---|---|
 | uniform, 2 frames | ~0% | ~0% |
-| patchy (spatially correlated) | tracks uniform | tracks uniform |
+| patchy (correlated across space) | tracks uniform | tracks uniform |
 | **random (per-pixel {0,1,2,3})** | **−59% derivative / −39% lagged** | **−64% / −55%** |
 
-**It is spatial heterogeneity — decorrelation — in conduction delay, not delay
-magnitude, that disrupts motion and coherence pooling.** Desynchronized timing
-across space breaks the spatial pooling that coherence and speed tuning depend on;
-a delay that is uniform, or correlated over patches, largely preserves it.
+**It is patchiness in conduction delay, not the size of the delay, that disrupts
+motion and coherence pooling.** Timing that is desynchronised across space breaks
+the spatial pooling that coherence and speed tuning depend on. A delay that is
+uniform, or correlated over patches, largely preserves it.
 
-This is the sharpest thing the model has said, and it suggests a single insult
-producing both clinical signs: *uniform* slowing → VEP latency; *desynchronized*
-conduction across the field → motion deficit.
+This is the sharpest thing the model has said. It suggests a single insult
+producing both clinical signs: *uniform* slowing gives the VEP latency,
+*desynchronised* conduction across the field gives the motion deficit.
 
 **But there is a standing tension.** The heterogeneous-delay effect was largest on
 the **high-pass** neuron (1–10 px/frame = 16–160 deg/s). The clinical deficit is at
-**low** speeds. The low-pass neuron (0.0375–0.6 px/frame = 0.6–9.6 deg/s) — which
-is squarely the clinically interesting band — was **not reported** under
-`delay_random`, so this is currently unknown rather than contradicted. This is the
-highest-value open experiment (`docs/TODO.md` §3), and §2.5's speed-graded midget
-dependence is the candidate mechanism that would resolve it.
+**low** speeds. The low-pass neuron (0.0375–0.6 px/frame = 0.6–9.6 deg/s), which is
+squarely the clinically interesting band, was **not reported** under
+`delay_random`. So this is currently unknown rather than contradicted. It is the
+highest-value open experiment (`docs/TODO.md` §1), and the speed-graded midget
+dependence of §4.5 is the candidate mechanism that would resolve it.
 
-### 4.6 Class-selective lesions — measured, but not interpretable as biology
+#### 4.7.6 Class-selective lesions — measured, but not interpretable as biology
 
-For the record: parasol-only gain 0.3 *raised* direction peak (+22%) while
-broadening tuning (FWHM +7.4%), degrading DSI (−3.2%), and crashing coherence
-(−47% seeded; the −52% figure sometimes quoted came from an unseeded run and is
-~5 points off). An ON-only 1-frame delay was also run.
+For the record: parasol-only gain 0.3 *raised* the direction peak by 22%, broadened
+the tuning (width +7.4%), degraded the direction selectivity index by 3.2%, and
+crashed coherence by 47% when seeded. (The −52% figure sometimes quoted came from
+an unseeded run and is about 5 points off.) An ON-only 1-frame delay was also run.
 
-These came from the midget-dominated MT of §2.5, so even the *sign* of the parasol
-effect is a fitting artifact. **They must be re-run through the two-stream MT
-before any of them is used.** A seeded rerun is what
-`explore/compareLesionsToBaseline.m` exists for.
+These came from the midget-dominated MT described in §2.3, so even the *sign* of
+the parasol effect is an artifact of the fitting. **They must be re-run through the
+two-stream MT before any of them is used.** `explore/compareLesionsToBaseline.m`
+exists for exactly this.
 
-### 4.7 One methodological note that changed numbers
+#### 4.7.7 A methodological note that changed numbers
 
-The 2026-07 lesion figure scripts **never seeded the RNG**, and Figs 11–14 use
-random dot fields — so lesion-vs-baseline differences there were confounded with
-dot-sample noise, worth ~5 percentage points on the parasol coherence effect.
-`explore/compareLesionsToBaseline.m` seeds explicitly, plots lesion and baseline
-on shared axes, and states remaining gain unambiguously; it is the model for any
-new lesion script. `validateSHFigs9to14_lesions.m` still does not seed.
+The 2026-07 lesion figure scripts **never seeded the random number generator**, and
+Figs 11–14 use random dot fields. So differences between a lesion and its baseline
+were mixed up with differences between two dot samples, worth about 5 percentage
+points on the parasol coherence effect. `explore/compareLesionsToBaseline.m` seeds
+explicitly, plots lesion and baseline on shared axes, and labels the remaining gain
+unambiguously. It is the model for any new lesion script.
+`validateSHFigs9to14_lesions.m` still does not seed.
+
+### 4.8 Divisive normalization hides amplitude damage
+
+Measured 2026-08-19 by `explore/compensationIndex.m`. A uniform RGC amplitude
+lesion (gain *k* remaining) crossed with stimulus speed, on seeded drifting dots,
+for both presets. Still deterministic — no noise anywhere.
+
+The compensation index is **C = 1 − slope/2**, where slope = d log R / d log k.
+C = 0 means no compensation, C = 1 means full compensation. The k² reference is
+verified rather than assumed: with `v1NormalizationType = 'off'` the measured slope
+is 2.000.
+
+**Normalization absorbs most of a uniform amplitude lesion, at every speed.**
+C = 0.64–0.92 for the best-driven moving MT unit, and 0.64–0.84 for V1. In plain
+terms: **a 50% cut in RGC gain costs only 12–25% of the MT response**, where
+without normalization it would cost 75%. Both presets agree, so this is a property
+of the normalization and not of the front-end. This quantitatively explains
+§4.7.2's null result.
+
+**MT's motion signal is much weaker across the clinical speed band.** Unlesioned
+best moving-MT response, lagged preset with two streams:
+
+| stimulus speed | 1 | 2 | 5 | 10 | 16 | 48 | 96 deg/s |
+|---|---|---|---|---|---|---|---|
+| MT, moving unit | 0.18 | 0.19 | 0.40 | 0.79 | **0.97** | 0.89 | 0.30 |
+| V1, best unit | 0.46 | 0.47 | 0.34 | 0.47 | 0.48 | 0.40 | 0.24 |
+
+Across 1–5 deg/s the MT motion signal is 4 to 5 times smaller than at 10–16 deg/s,
+while V1 is essentially flat over the same range. At 1 deg/s in the derivative
+preset the *static* MT unit responds 1.60 against the best moving unit's 0.22, so
+the population is dominated by a non-motion signal. The starvation is specific to MT,
+which is what you would expect given that MT is tuned to {0, 16, 96} deg/s. Note
+the shape is a **U**, not a ramp: drive collapses again at 96 deg/s.
+
+**Compensation is strongest where the drive is weakest**, which is the opposite of
+what was predicted:
+
+| stimulus speed | 1 | 2 | 5 | 10 | 16 | 48 | 96 deg/s |
+|---|---|---|---|---|---|---|---|
+| C, MT moving unit | **0.89** | 0.88 | 0.74 | 0.64 | 0.66 | 0.65 | **0.81** |
+
+C tracks the inverse of drive: about 0.65 in the well-driven middle, about 0.9 at
+the starved ends. The likely mechanism, which should be confirmed by instrumenting
+the normalization pool directly rather than inferred: at low stimulus speed the
+moving units are weakly driven *and* heavily normalized by a pool dominated by
+static and low-speed energy. That large pool is what makes their response small to
+begin with, and it also keeps them in the compensated regime down to small *k*.
+
+Why this matters for the clinical question is set out in
+`NOISE_AND_DEMYELINATION.md` §4 and §6. In short: high C means the lesion drives a
+large *increase* in gain, and that gain increase is exactly what would amplify
+cortical noise. So at 1–5 deg/s the signal is smallest and the gain increase is
+largest, and both point the same way.
+
+Caveats on this measurement:
+
+- **C describes the mean response only.** It measures the gain headroom that noise
+  would act on. By itself it says nothing about discriminability.
+- **The size of the starvation is specific to this model.** MT tiles only three
+  speeds here. A real MT with denser speed tuning would be less starved at 5 deg/s,
+  so the 4–5× figure is not a quantitative clinical prediction.
+- **Units far from their preferred speed behave erratically and should not be
+  read.** They show C > 1, meaning the response *rises* under lesion, because the
+  lesion cuts their normalization pool more than their numerator. That is real
+  normalization behaviour, but at responses of order 1e-3 it is noise-floor
+  bookkeeping, not a finding.
+- The normalization pool was inferred, not measured. Instrumenting it is a one-line
+  change to a copy of `shModelV1Normalization_Tuned`.
 
 ---
 
-## 5. Validity ledger — what has to be re-run
+## 5. Validity ledger — what still holds
 
 | result | status |
 |---|---|
-| derivative preset reproduces legacy exactly | **current** — enforced by `tests/runAllTests.m` |
-| lagged preset healthy fidelity to SH V1 | **current**, with the ~0.985 vs 0.93–0.95 discrepancy unresolved (§2.4) |
-| two-stream MT reproduces Maunsell knockouts | **current** (2026-08-14) |
-| speed-graded midget dependence | **current but confounded** — one fixed grating for all units |
-| motion-letter healthy baseline, d' = 1.32 | **current** (2026-08-17) |
-| uniform vs. non-uniform amplitude/delay lesions | **pre-mtMix** — the front-end conclusion likely survives, the MT numbers need re-measuring |
-| parasol-only / ON-only lesions | **invalid as biology** — measured on the midget-dominated MT |
-| the 114 campaign figures + metrics CSVs | **gone** — `explore/_figs/` is gitignored and has been cleared; the scripts still live |
+| derivative preset reproduces the original model exactly | **current** — enforced by `tests/runAllTests.m` |
+| lagged preset's healthy fidelity to SH V1 | **current**, with the 0.985 versus 0.93–0.95 discrepancy unresolved (§4.2) |
+| MT's measured speed tuning | **current** (2026-08-25) |
+| two-stream MT reproduces Maunsell's knockouts | **current** (2026-08-14) |
+| midget dependence graded by speed | **current but confounded** — one fixed grating for all units (§4.5) |
+| motion-letter healthy baseline, d′ = 1.32 | **current** (2026-08-17) |
+| compensation index | **current** (2026-08-19) |
+| uniform versus non-uniform amplitude and delay lesions | **pre-mtMix** — the front-end conclusion probably survives, the MT numbers need re-measuring |
+| parasol-only and ON-only lesions | **invalid as biology** — measured on the midget-dominated MT |
+| the 114 campaign figures and metric CSVs | **gone** — `explore/_figs/` is gitignored and has been cleared. The scripts still exist. |
 
-The consolidated re-run that would clear most of this in one pass: the §4 lesion
-matrix — with the missing uniform amp+delay cell added, and the low-pass neuron
-reported under `delay_random` — through the two-stream MT, seeded, with the
-motion-defined letter as an additional read-out alongside the SH Figs 9–14 tuning
-measures.
+One consolidated re-run would clear most of this: the §4.7 lesion matrix, with the
+missing uniform amplitude-plus-delay cell added and the low-pass neuron reported
+under `delay_random`, through the two-stream MT, seeded, with the motion-defined
+letter as an extra read-out alongside the SH Figs 9–14 tuning measures.
 
 ---
 
-## 6. Next: noise
+## 6. Decisions we reversed, and why
 
-Moved to its own document: **[`NOISE_AND_DEMYELINATION.md`](NOISE_AND_DEMYELINATION.md)**
-— the demyelination pathophysiology and how it maps onto the lesion parameters,
-the three noise sites, JW's gain-compensation mechanism, and the predictions that
-follow. Its §6 is measured (`explore/compensationIndex.m`); the rest is design.
+### 6.1 Building direction selectivity in the retina
 
-The three points from it that change how §4 above should be read:
+The first attempt at a biological front-end tried to build **direction selectivity
+biologically**: an ON/OFF spatial offset in the read-out plus an ON quadrature
+filter, following Chariker & Shapley. It was retired on 2026-07-12. The code is in
+`explore/_archive/` and the full argument is in
+`docs/_archive/RGC_V1_design_discussion.md` §9–15. Two reasons:
 
-1. **§4.2's null result is normalization, and this is now measured.** Both
-   cortical stages compute `R = s*N / (strength*D + sigma^2)` with the pool `D`
-   driven by the *lesioned* input, so a uniform amplitude lesion — which is, to
-   first order, a contrast reduction — is absorbed by a gain that rises as the
-   lesion deepens. Measured compensation index C = 0.64–0.92: **a 50% gain cut
-   costs 12–25% of the MT response where without normalization it would cost
-   75%.** The correct reading of "a 50% gain cut barely moves direction tuning"
-   is not *amplitude lesions don't matter*; it is **normalization hid it, and with
-   cortical noise present the hiding is itself the damage**: near-normal tuning
+- The fixed ON/OFF offset **distorts V1 orientation tuning**, and it does not
+  rotate with a neuron's preferred direction. Removing it recovers orientation
+  best.
+- Direction selectivity is something the SH steerable read-out already produces for
+  free. Building it biologically fights the read-out rather than adding to it.
+
+The conclusion that survived is the one everything rests on: **the value of a
+biological front-end is not a different healthy computation. It is a lesionable
+parameterization** — a statement of which cells co-vary under an insult, with
+filters constrained by measured physiology. It is a *physically grounded* lesion
+model, not a mathematically richer one than SH.
+
+### 6.2 The claim that SH cannot express a conduction delay
+
+That distinction was itself once oversold, and the correction matters for how
+lesion results should be phrased. An early test claimed a conduction delay was "a
+lesion axis SH cannot express." It is not. SH's basis, regrouped by temporal order,
+supports the same delay lesion, and in the lagged preset a delay is approximately a
+reweighting of the lag channels.
+
+What the biological preset buys is that the lesion is *stated in terms of cell
+types* — not that it could not be expressed otherwise. A genuine test of
+non-vacuousness, exploiting the ON/OFF rectification that SH lacks, is still
+outstanding (`docs/TODO.md` §4).
+
+---
+
+## 7. Where the noise work fits
+
+The whole argument has its own document:
+**[`NOISE_AND_DEMYELINATION.md`](NOISE_AND_DEMYELINATION.md)** — the pathophysiology
+of demyelination, how it maps onto the lesion parameters, where internal noise
+would enter, and what the model would then predict.
+
+Three points from it change how §4.7 above should be read.
+
+1. **§4.7.2's null result is normalization, and that is now measured** (§4.8). The
+   right reading of "a 50% gain cut barely moves direction tuning" is not
+   *amplitude lesions don't matter*. It is **normalization hid it, and once
+   cortical noise is present the hiding is itself the damage**: near-normal tuning
    curves, degraded discriminability.
-2. **Three pathophysiological mechanisms are currently inexpressible** — trial-to-
-   trial spike jitter, stochastic conduction block, and high-frequency conduction
-   failure. The first two need noise; the third needs a kernel-shape lesion and
-   could be run now. `delay_random` (§4.5) models only the *static* half of
-   temporal dispersion, not the trial-varying half.
-3. **§4.4's uniform/heterogeneous amplitude equivalence is predicted to break**
-   once noise is present, because the spatially blurred normalization pool gives
-   damaged locations less gain rescue under a heterogeneous lesion than under a
-   uniform one.
+2. **Three mechanisms of demyelination cannot currently be written down at all** —
+   trial-to-trial spike jitter, stochastic conduction block, and failure at high
+   firing rates. The first two need noise. The third needs a change in filter shape
+   and could be run today. `delay_random` (§4.7.5) models only the *fixed* half of
+   temporal dispersion, not the half that varies from trial to trial.
+3. **§4.7.4's equivalence between uniform and patchy amplitude damage is predicted
+   to break** once noise is present, because the normalization pool is blurred
+   across space and therefore gives a damaged location less gain rescue under
+   patchy damage than under uniform damage.
 
-Until that work is done, phrase the §4 conclusions as *"heterogeneous delay
-disrupts steady-state tuning where uniform amplitude loss does not"* — which is
-what was measured — rather than as *"amplitude lesions matter less"*, which is a
-claim about behaviour that the deterministic model is not equipped to make.
+Until that work is done, phrase the §4.7 conclusions as *"patchy delay disrupts
+steady-state tuning where uniform amplitude loss does not"*, which is what was
+measured — rather than as *"amplitude lesions matter less"*, which is a claim about
+behaviour that a deterministic model cannot make.

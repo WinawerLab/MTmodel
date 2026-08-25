@@ -153,7 +153,7 @@ function varargout = shModel(varargin)
         case {'mtlin'}
             % V1 complex population that MT pools over. Identical to the inline
             % block unless pars.rgc.mtMix is set, in which case MT pools the
-            % two-stream magno/mixed mixture (docs/TODO.md item 1).
+            % two-stream magno/mixed mixture (docs/MODEL_AND_LESIONS.md 2.3).
             [pop, ind] = shModelV1ComplexForMt(stimulusForV1, pars);
 
             if nargin > 3
@@ -170,7 +170,7 @@ function varargout = shModel(varargin)
         case {'mtprepool'}
             % V1 complex population that MT pools over. Identical to the inline
             % block unless pars.rgc.mtMix is set, in which case MT pools the
-            % two-stream magno/mixed mixture (docs/TODO.md item 1).
+            % two-stream magno/mixed mixture (docs/MODEL_AND_LESIONS.md 2.3).
             [pop, ind] = shModelV1ComplexForMt(stimulusForV1, pars);
 
             if nargin > 3
@@ -190,7 +190,7 @@ function varargout = shModel(varargin)
         case {'mthalfrect'}
             % V1 complex population that MT pools over. Identical to the inline
             % block unless pars.rgc.mtMix is set, in which case MT pools the
-            % two-stream magno/mixed mixture (docs/TODO.md item 1).
+            % two-stream magno/mixed mixture (docs/MODEL_AND_LESIONS.md 2.3).
             [pop, ind] = shModelV1ComplexForMt(stimulusForV1, pars);
 
             if nargin > 3
@@ -212,7 +212,7 @@ function varargout = shModel(varargin)
         case {'mtpostpool'}
             % V1 complex population that MT pools over. Identical to the inline
             % block unless pars.rgc.mtMix is set, in which case MT pools the
-            % two-stream magno/mixed mixture (docs/TODO.md item 1).
+            % two-stream magno/mixed mixture (docs/MODEL_AND_LESIONS.md 2.3).
             [pop, ind] = shModelV1ComplexForMt(stimulusForV1, pars);
 
             if nargin > 3
@@ -236,7 +236,7 @@ function varargout = shModel(varargin)
         case {'mtpattern'}
             % V1 complex population that MT pools over. Identical to the inline
             % block unless pars.rgc.mtMix is set, in which case MT pools the
-            % two-stream magno/mixed mixture (docs/TODO.md item 1).
+            % two-stream magno/mixed mixture (docs/MODEL_AND_LESIONS.md 2.3).
             [pop, ind] = shModelV1ComplexForMt(stimulusForV1, pars);
 
             if nargin > 3

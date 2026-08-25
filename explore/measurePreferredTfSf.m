@@ -1,7 +1,7 @@
 % measurePreferredTfSf
 %
 % Tabulate the preferred spatial and temporal frequency of all 28 V1 neurons, for
-% both fitted populations of docs/TODO.md item 1:
+% both fitted populations of docs/MODEL_AND_LESIONS.md 2.3:
 %
 %   population B  "-> V2 -> MT"  : the mixed fit (all 160 feature columns)
 %   population A  "4B -> MT"     : the parasol-masked fit (80 columns)
