@@ -273,24 +273,17 @@ while a small uniform delay persists**. Since a uniform delay is invisible to
 steady-state tuning (report §4.7.3), the model predicts **motion-form
 discrimination recovering while VEP latency stays prolonged.**
 
-**The real data are harder than that clean story, and the target already exists.**
-Brusa, Jones & Plant (2001), "Long-term remyelination after optic neuritis: a
-2-year visual evoked potential and psychophysical serial study," *Brain*
-124(3):468–479,
-[doi:10.1093/brain/124.3.468](https://doi.org/10.1093/brain/124.3.468) — 31
-patients, serial VEP and psychophysics over 24 months. They find that VEP latency
-*does* shorten significantly (6–7 ms between months 3 and 6, about 4 ms more by 24
-months), so recovery is partial rather than absent; that contrast sensitivity
-improved for nine months and then **declined**; and they conclude that long-term
-remyelination may mostly protect axons from degenerating rather than restore
-function.
+**The real data are harder than that clean story.** The target is Brusa, Jones &
+Plant (2001), 31 patients with serial VEP and psychophysics over 24 months. What it
+reports, and its full citation, are in
+[`optic neuritis targets/NOTES.md`](../optic%20neuritis%20targets/NOTES.md).
 
-Two things follow. First, the prediction has to be stated as a difference in
-*rate* — measures driven by variability recovering faster and more completely than
-latency — not as an absolute dissociation. Second, and this matters for the
-planned affected-eye versus fellow-eye design: **Brusa et al. report the fellow eye
-deteriorating over the same window**, so the fellow eye is not a clean
-within-subject control. This paper belongs in `optic neuritis targets/`.
+Two things follow for the model. First, the prediction has to be stated as a
+difference in *rate* — measures driven by variability recovering faster and more
+completely than latency — not as an absolute dissociation, because latency recovery
+in the real data is partial rather than absent. Second, their fellow eye
+deteriorates over the same window, so **the fellow eye is not a clean
+within-subject control** for the planned affected-versus-fellow design.
 
 ### 5.5 The low-speed deficit is probably about the operating point (JW)
 

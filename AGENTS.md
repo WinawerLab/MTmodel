@@ -68,15 +68,14 @@ Full account in [docs/MODEL_AND_LESIONS.md](docs/MODEL_AND_LESIONS.md) §2.
   this up already.** MT pools a mixture of two streams,
   `popMT = (1-alpha)*streamA + alpha*delay(streamB, d)`, built after normalization
   in `shModelV1ComplexForMt`. Stream A is the parasol-only read-out (the fast
-  magnocellular drive). Stream B is the mixed read-out that reaches MT by way of
-  V2. `alpha = 0.10`, `d = 0`. Without the mixture, MT comes out midget-dominated,
-  which is Maunsell et al. (1990) backwards.
-  - Both streams read out of the **same** 160-feature basis. They are two 28×160
-    weight matrices, not two bases. The basis is computed twice per call, once per
-    stream, so `'lagged'` costs about twice as much as a single-stream run.
+  magnocellular drive), stream B the mixed read-out that reaches MT by way of V2.
+  `alpha = 0.10`, `d = 0`. Why it has to be there, and how alpha was set: §2.3 and
+  §4.4 of the report.
   - The switch is `pars.rgc.mtMix`, with fields `weightsA`, `alpha`, `delay`.
-    Clearing it gives the single-stream model and reproduces results from before
-    2026-08-14 bit for bit.
+    Clearing it gives the single-stream model.
+  - Both streams read out of the same 160-feature basis, as two 28×160 weight
+    matrices. The basis is computed once per stream, so `'lagged'` costs about
+    twice a single-stream run.
   - `'v1Complex'` is untouched. Only the MT stages see the mixture.
 - **Lesions** go through `pars.rgc.impairmentAmplitudeMap` and
   `impairmentDelayMap` (these vary across the visual field), or by editing
@@ -104,9 +103,9 @@ Full account in [docs/MODEL_AND_LESIONS.md](docs/MODEL_AND_LESIONS.md) §2.
   directions, so removing V1 neurons wrecks MT tuning for reasons of geometry that
   have nothing to do with biology. Change *what drives* the 28 neurons, not *which*
   28 they are.
-- **Do not quote 0.985 as a fixed property of the lagged preset.** A separate
-  measurement puts the same population at 0.93–0.95, and the worst single neuron is
-  0.709. See the report §4.2.
+- **Do not quote the 0.984 pooled correlation as a fixed property of the lagged
+  preset.** A separate measurement puts the same population at 0.93–0.95, and the
+  worst single neuron is 0.709. See the report §4.2.
 - **Do not use frame-scrambling as a motion control** for the motion letter. It
   leaves relative direction intact.
 
@@ -124,7 +123,6 @@ Full account in [docs/MODEL_AND_LESIONS.md](docs/MODEL_AND_LESIONS.md) §2.
   `set(0,'DefaultFigureVisible','on')`. This machine does that from a `startup.m`
   in `userpath`, which sits outside the repo and does not travel with it.
 - Get the healthy model comparable before adding complexity.
-- `explainV1RFs.m` at the repo root is scratch work. It is not authoritative.
 
 ## What to read next
 

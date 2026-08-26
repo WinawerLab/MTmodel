@@ -176,7 +176,7 @@ stimuli and evaluated on 4 it had not seen:
 
 Gratings fit better than dots, which stress the temporal basis harder.
 
-**Do not quote 0.985 as a stable property of the preset.** It is a match to the SH
+**Do not quote 0.984 as a stable property of the preset.** It is a match to the SH
 model rather than to data; it hides real spread across neurons (the worst is
 0.709); the samples are not independent; and a separate measurement puts the same
 population at 0.93–0.95. The four qualifications are set out in

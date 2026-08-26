@@ -13,9 +13,13 @@ the papers describing the **model and its mechanisms** (Simoncelli & Heeger, Nas
 
 ## Contents
 
+**The folder currently holds no figures — only this file.** Both rows below are
+citations waiting for their figure. Nothing here can be used as a numerical target
+until the underlying figure is actually pulled in.
+
 | file | source | what it targets |
 |---|---|---|
-| `10.1002-ana.22692Figurefig1.pptx` | Raz et al., *Demyelination affects temporal aspects of perception: an optic neuritis study*, Ann Neurol 2012;71(4):531–538, doi:10.1002/ana.22692 | deficit (a) — the timing aspects of perception after optic neuritis |
+| *(not yet in folder)* | Raz et al., *Demyelination affects temporal aspects of perception: an optic neuritis study*, Ann Neurol 2012;71(4):531–538, doi:10.1002/ana.22692 | deficit (a) — the timing aspects of perception after optic neuritis |
 | *(not yet in folder)* | Brusa, Jones & Plant, *Long-term remyelination after optic neuritis: a 2-year visual evoked potential and psychophysical serial study*, Brain 2001;124(3):468–479, [doi:10.1093/brain/124.3.468](https://doi.org/10.1093/brain/124.3.468) | deficit (a) — the **recovery trajectory**; see below |
 
 ## When you add a figure

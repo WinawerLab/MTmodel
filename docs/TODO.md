@@ -35,16 +35,18 @@ Two cells of the matrix have also never been run:
 - **the low-pass (0.6–9.6 deg/s) neuron under `delay_random`.** This is the cell
   that decides the tension below, and it was never reported.
 
-**The tension.** Patchy delay crushes coherence (−39% lagged) and **high-pass**
-speed tuning (−55%), while uniform delay does essentially nothing. That would give
-both clinical signs from a single insult: uniform slowing gives the VEP latency,
-desynchronised conduction gives the motion deficit. But the effect was largest on
-the **fast** neuron, and the clinical deficit is at **slow** speeds. The slow
-neuron was never measured under `delay_random`, so this is unknown rather than
-contradicted. If patchy delay turns out to spare low speeds, the mechanism does not
-explain the clinical deficit and the hypothesis needs revising. The speed-graded
-midget dependence in `MODEL_AND_LESIONS.md` §4.5 is the candidate that would
-resolve it.
+**The tension.** `delay_random` — delay drawn independently at every pixel —
+crushes coherence (−39% lagged) and **high-pass** speed tuning (−55%), while
+uniform delay does essentially nothing. (The `patchy` condition, which is
+correlated across space, also does essentially nothing. It is desynchronisation
+that bites, not heterogeneity as such.) That would give both clinical signs from a
+single insult: uniform slowing gives the VEP latency, desynchronised conduction
+gives the motion deficit. But the effect was largest on the **fast** neuron, and
+the clinical deficit is at **slow** speeds. The slow neuron was never measured
+under `delay_random`, so this is unknown rather than contradicted. If
+`delay_random` turns out to spare low speeds, the mechanism does not explain the
+clinical deficit and the hypothesis needs revising. The speed-graded midget
+dependence in `MODEL_AND_LESIONS.md` §4.5 is the candidate that would resolve it.
 
 **One consolidated pass would clear most of this**: the full matrix
 {amplitude, delay, both} × {uniform, non-uniform}, through the two-stream MT,
@@ -149,23 +151,14 @@ impulse response. These can finally be checked against measured time courses.
 
 ## Known problems, not currently being worked on
 
-- **`validateSHFigs9to14_lesions.m` still does not seed the random number
-  generator.** Figs 11–14 use random dot fields, so any lesion-versus-baseline
-  difference it produces is mixed up with dot-sample noise, worth about 5 percentage
-  points. Numbers published from the unseeded runs — for example the −52% parasol
-  coherence effect — are about 5 points off the seeded value of −47%.
-- **The difference-of-Gaussians surround is far too weak.** The integrated surround
-  is only 12–13% of the centre (`surroundWeight = 0.25`), so these are close to
-  low-pass centres rather than band-pass centre-surround filters. Revisit if the
-  surround is meant to do real work.
-- **The population lags are too long to be conduction delay.** 0–3 frames is
-  0–81 ms; differences in optic nerve conduction are a few ms. They are better
-  justified as lagged LGN cells or delayed inhibition. This matters for how a
-  "conduction delay" lesion is framed.
-- **The worst-fitting V1 neuron is r = 0.709** while the median is 0.984. The
-  headline fidelity figure hides real spread across neurons. See
-  `MODEL_AND_LESIONS.md` §4.2, including the separate measurement that puts the
-  same population at 0.93–0.95.
+**Defects in live code only.** Caveats about *results* belong in
+`MODEL_AND_LESIONS.md` §5 (the validity ledger); limits of the front-end's
+parameters — the weak surround, the over-long lags, the spread in per-neuron
+fidelity — belong in `RGC_lagged_preset_summary.md` §7 and `MODEL_AND_LESIONS.md`
+§4.2. Do not restate them here.
+
+- **`validateSHFigs9to14_lesions.m` does not seed the random number generator.**
+  Consequences and the affected numbers: `MODEL_AND_LESIONS.md` §4.7.7.
 - **`mkMotionLetter` details.** `numDots` and `letterContrast` use the area of a
   disk, `pi*(d/2)^2`, for dots that are square by default, so it makes about 27%
   too many. `localStampDots` clips dots at the edge of the field instead of

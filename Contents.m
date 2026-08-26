@@ -6,7 +6,6 @@
 % Authors: Timothy Saint (saint@cns.nyu.edu) and Eero Simoncelli (eero.simoncelli@nyu.edu)
 %
 % See README file for brief description.
-% See ChangeLog file for latest modifications. 
 % See HELP subdirectory for demonstrations.
 % Type "help <command-name>" for documentation on individual commands.
 % ----------------------------------------------------------------------

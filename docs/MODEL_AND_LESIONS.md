@@ -247,7 +247,7 @@ Read that with four qualifications. None of them is cosmetic.
 4. **A later measurement disagrees.** `explore/fitMagnoMtPopulation.m` put the same
    mixed population at median r = 0.93–0.95, on a different stimulus with
    differently cached weights. The two are not directly comparable, but
-   **0.985 should not be quoted as a stable property of the preset** until the
+   **0.984 should not be quoted as a stable property of the preset** until the
    difference is understood.
 
 The healthy lagged copies are **not** a pathological conduction delay. Timing
@@ -313,10 +313,13 @@ little in gain: the median peak response of A relative to B is 0.86.
 
 The mechanism shows up in the tuning rather than in the residual
 (`explore/measurePreferredTfSf.m`). The nominal preferred spatial and temporal
-frequency is identical for both populations by construction. But at the slow end,
-population A prefers a higher temporal frequency than B for **13 of 13** neurons
-(median 1.40× nominal, against B's 0.94×), while at the fast end A and B agree for
-6 of 7. Denied midget input, the slow neurons drift toward the frequency the fast
+frequency is identical for both populations by construction. Note that this
+measurement bins the 28 V1 neurons **differently** from the reconstruction table
+above: here "slow" means tf/sf < 0.5 and takes 13 neurons, where the table above
+uses the narrower band 0.22–0.30 and takes 12. The two sets are not the same set.
+But at the slow end, population A prefers a higher temporal frequency than B for
+**13 of 13** neurons (median 1.40× nominal, against B's 0.94×), while at the fast
+end A and B agree for 6 of 7. Denied midget input, the slow neurons drift toward the frequency the fast
 parasol filter actually prefers.
 
 | band | nominal | B (mixed) | A (parasol) |
@@ -513,10 +516,17 @@ This is the headline result, and it is a dissociation rather than a magnitude:
 | patchy (correlated across space) | tracks uniform | tracks uniform |
 | **random (per-pixel {0,1,2,3})** | **−59% derivative / −39% lagged** | **−64% / −55%** |
 
-**It is patchiness in conduction delay, not the size of the delay, that disrupts
-motion and coherence pooling.** Timing that is desynchronised across space breaks
-the spatial pooling that coherence and speed tuning depend on. A delay that is
-uniform, or correlated over patches, largely preserves it.
+**It is delay that is desynchronised from one location to the next, not the size
+of the delay, that disrupts motion and coherence pooling.** Timing that varies
+independently across space breaks the spatial pooling that coherence and speed
+tuning depend on. A delay that is uniform, or correlated over patches, largely
+preserves it.
+
+Note the word *patchy* carefully. It is the name of one specific condition —
+Gaussian-smoothed, σ = 3, correlated across space — and that condition does
+**nothing**. The large effect is `delay_random`, which is independent at every
+pixel. Do not use "patchy" as a loose word for "spatially heterogeneous" here; the
+two conditions give opposite answers.
 
 This is the sharpest thing the model has said. It suggests a single insult
 producing both clinical signs: *uniform* slowing gives the VEP latency,
@@ -530,27 +540,26 @@ squarely the clinically interesting band, was **not reported** under
 highest-value open experiment (`docs/TODO.md` §1), and the speed-graded midget
 dependence of §4.5 is the candidate mechanism that would resolve it.
 
-#### 4.7.6 Class-selective lesions — measured, but not interpretable as biology
+#### 4.7.6 Class-selective lesions — do not use these
 
-For the record: parasol-only gain 0.3 *raised* the direction peak by 22%, broadened
-the tuning (width +7.4%), degraded the direction selectivity index by 3.2%, and
-crashed coherence by 47% when seeded. (The −52% figure sometimes quoted came from
-an unseeded run and is about 5 points off.) An ON-only 1-frame delay was also run.
+Parasol-only and ON-only lesions were run, but through the midget-dominated MT of
+§2.3, so **even the sign of the parasol effect is an artifact of the fitting.**
+Nothing measured here is usable. Re-run them through the two-stream MT with
+`explore/compareLesionsToBaseline.m` before quoting anything.
 
-These came from the midget-dominated MT described in §2.3, so even the *sign* of
-the parasol effect is an artifact of the fitting. **They must be re-run through the
-two-stream MT before any of them is used.** `explore/compareLesionsToBaseline.m`
-exists for exactly this.
+A record of what was run, not of what is known: parasol-only gain 0.3, which
+*raised* the direction peak by 22%, broadened the tuning by 7.4%, degraded the
+direction selectivity index by 3.2% and cut coherence by 47% seeded (−52%
+unseeded); and an ON-only 1-frame delay.
 
-#### 4.7.7 A methodological note that changed numbers
+#### 4.7.7 Seeding changed the numbers
 
-The 2026-07 lesion figure scripts **never seeded the random number generator**, and
-Figs 11–14 use random dot fields. So differences between a lesion and its baseline
-were mixed up with differences between two dot samples, worth about 5 percentage
-points on the parasol coherence effect. `explore/compareLesionsToBaseline.m` seeds
-explicitly, plots lesion and baseline on shared axes, and labels the remaining gain
-unambiguously. It is the model for any new lesion script.
-`validateSHFigs9to14_lesions.m` still does not seed.
+The 2026-07 lesion figure scripts never seeded the random number generator, and
+Figs 11–14 use random dot fields, so lesion-versus-baseline differences were mixed
+up with dot-sample differences — about 5 percentage points on the parasol coherence
+effect. `explore/compareLesionsToBaseline.m` seeds and is the template for any new
+lesion script. `validateSHFigs9to14_lesions.m` still does not seed
+(`docs/TODO.md`, known problems).
 
 ### 4.8 Divisive normalization hides amplitude damage
 
@@ -569,6 +578,12 @@ terms: **a 50% cut in RGC gain costs only 12–25% of the MT response**, where
 without normalization it would cost 75%. Both presets agree, so this is a property
 of the normalization and not of the front-end. This quantitatively explains
 §4.7.2's null result.
+
+The 12–25% is the response ratio R(k=0.5)/R(k=1) as measured, not a figure derived
+from C. Do not try to recover it from the C range above: the slope is fitted over
+the whole gain range down to k = 0.1, so extrapolating C back to k = 0.5 gives a
+wider band (about 10–39%). C summarises the whole gain series; the ratio is the
+single point of clinical interest.
 
 **MT's motion signal is much weaker across the clinical speed band.** Unlesioned
 best moving-MT response, lagged preset with two streams:
@@ -627,7 +642,7 @@ Caveats on this measurement:
 | result | status |
 |---|---|
 | derivative preset reproduces the original model exactly | **current** — enforced by `tests/runAllTests.m` |
-| lagged preset's healthy fidelity to SH V1 | **current**, with the 0.985 versus 0.93–0.95 discrepancy unresolved (§4.2) |
+| lagged preset's healthy fidelity to SH V1 | **current**, with the 0.984 versus 0.93–0.95 discrepancy unresolved (§4.2) |
 | MT's measured speed tuning | **current** (2026-08-25) |
 | two-stream MT reproduces Maunsell's knockouts | **current** (2026-08-14) |
 | midget dependence graded by speed | **current but confounded** — one fixed grating for all units (§4.5) |
@@ -705,7 +720,8 @@ Three points from it change how §4.7 above should be read.
    across space and therefore gives a damaged location less gain rescue under
    patchy damage than under uniform damage.
 
-Until that work is done, phrase the §4.7 conclusions as *"patchy delay disrupts
-steady-state tuning where uniform amplitude loss does not"*, which is what was
-measured — rather than as *"amplitude lesions matter less"*, which is a claim about
-behaviour that a deterministic model cannot make.
+Until that work is done, phrase the §4.7 conclusions as *"delay that is
+desynchronised pixel by pixel disrupts steady-state tuning where uniform amplitude
+loss does not"*, which is what was measured — rather than as *"amplitude lesions
+matter less"*, which is a claim about behaviour that a deterministic model cannot
+make.
