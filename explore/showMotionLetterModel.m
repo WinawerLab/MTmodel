@@ -16,8 +16,9 @@
 %   run explore/showMotionLetterModel.m
 %
 % Tip: start with PRESET = 'quick'. Use 'experiment' once figures look sensible.
-% RGC_PRESET 'derivative' = exact legacy SH; 'midgetParasolLagged' = biological
-% midget/parasol with lagged copies (~0.985 healthy V1 fidelity).
+% RGC_PRESET = 'derivative' | 'midgetParasolLagged' (alias: lagged biological preset)
+% Model and stimulus defaults: pars/motionLetterPars.m (edit DEFAULTS there).
+% Script-specific overrides below.
 %
 % UNITS. The stimulus is built in the MODEL's units (shModelUnits: 10 px/deg,
 % 50 frames/sec), NOT the booth's ~100 px/deg. Converting a deg/s speed with
@@ -45,68 +46,52 @@ addpath(genpath(repoRoot));
 
 %% ======================== CONFIG (edit here) =============================
 PRESET     = 'experiment';        % 'quick' | 'experiment'
-RGC_PRESET = 'derivative';        % 'derivative' | 'midgetParasolLagged'
-LETTER   = 'H';
+RGC_PRESET = 'derivative';        % 'derivative' | 'midgetParasolLagged' | 'lagged'
+MT_MIX     = true;
+
+% Overrides passed to pars/motionLetterPars.m (empty = use file defaults only)
+ML_OVERRIDES = { ...
+    'letter', 'H', ...
+    'speedDegS', 5, ...          % 1 px/frame; clinical band is 0.19–3 deg/s (see header)
+    'rgcPreset', RGC_PRESET, ...
+    'mtMix', MT_MIX, ...
+    'seed', 1 ...
+};
+
 STAGE_MT = 'mtPattern';
 STAGE_V1 = 'v1Complex';
-SEED     = 1;
 
-% Dot speed in deg/s. See the SPEED note in the header for the literature bands.
-SPEED_DEG_S = 5;             % -> 1 px/frame at the current anchor
-
-% Letter height in MODEL pixels (see SPATIAL SCALE CAVEAT in the header).
-LETTER_SIZE_PX = [];         % [] = 60% of the shorter field dimension
-
-% Desired model *output* spatial size [Y X T] (shGetDims adds convolution padding)
-OUT_SZ   = [96 96 90];       % quick default; increase for finer maps (slower)
-PLAY_STIM_MOVIE = true;      % Figure 0 side-by-side movie (after static figures)
-MAX_MOVIE_FRAMES = 120;      % cap preview length
-SHOW_BOOTH_PREVIEW = false;  % booth-resolution preview; costs ~2.3 GB (see below)
-
-% mkMotionLetter args shared by both presets
-STIM_ARGS = { ...
-    'dotContrast', 1.0, ...
-    'drawBackgroundDots', true, ...
-    'fCovered', 0.3, ...
-    'dotShape', 'square', ...
-    'seed', SEED ...
-};
+PLAY_STIM_MOVIE = true;
+MAX_MOVIE_FRAMES = 120;
+SHOW_BOOTH_PREVIEW = false;
 %% ========================================================================
 
 switch lower(PRESET)
     case 'experiment'
-        OUT_SZ = [256 256 160];   % 3.2 s at 50 fps; finer maps than 96²
+        ML_OVERRIDES = [ML_OVERRIDES, {'outSz', [256 256 160]}];  % 3.2 s at 50 fps
     otherwise
-        % keep OUT_SZ above
+        ML_OVERRIDES = [ML_OVERRIDES, {'outSz', [96 96 90]}];
 end
 
-pars = shPars;
-pars = localConfigureRgcPreset(pars, RGC_PRESET, repoRoot);
-stimSz = shGetDims(pars, STAGE_MT, OUT_SZ);
+[cfg, pars, stimSz, stimArgs] = motionLetterPars(ML_OVERRIDES{:});
 nFrames = stimSz(3);
-
-% Build the stimulus in the MODEL's units, not the booth's.
-units = shModelUnits();
-if isempty(LETTER_SIZE_PX)
-    LETTER_SIZE_PX = round(0.6 * min(stimSz(1:2)));
-end
-STIM_ARGS = [STIM_ARGS, { ...
-    'referenceDisplaySize', [], ...
-    'ppd', units.pixelsPerDegree, ...
-    'frameRate', units.framesPerSecond, ...
-    'dotSpeedDegS', SPEED_DEG_S, ...
-    'letterSizePx', LETTER_SIZE_PX, ...
-    'dotSize', 3}];
+units = cfg.units;
+LETTER = cfg.letter;
+SPEED_DEG_S = cfg.speedDegS;
+SEED = cfg.seed;
+LETTER_SIZE_PX = cfg.letterPx;
 
 fprintf('=== Motion letter → model ===\n');
-fprintf('Letter: %s   preset: %s   RGC: %s   stim size: [%d %d %d]   MT output: [%s]\n', ...
-    LETTER, PRESET, RGC_PRESET, stimSz(1), stimSz(2), stimSz(3), num2str(OUT_SZ));
+fprintf('Letter: %s   preset: %s   RGC: %s   mtMix: %d   stim size: [%d %d %d]   outSz: %s\n', ...
+    LETTER, PRESET, cfg.rgcPreset, ...
+    isfield(pars.rgc, 'mtMix') && ~isempty(pars.rgc.mtMix), ...
+    stimSz(1), stimSz(2), stimSz(3), mat2str(cfg.outSz));
 fprintf('Model units: %.2f px/deg, %.1f frames/s, 1 px/frame = %.0f deg/s\n', ...
     units.pixelsPerDegree, units.framesPerSecond, units.degPerSecPerPixelPerFrame);
 
 fprintf('\n[1/3] Generating stimulus...\n');
 tic;
-[stim, stimInfo] = mkMotionLetter(stimSz, LETTER, STIM_ARGS{:});
+[stim, stimInfo] = mkMotionLetter(stimSz, LETTER, stimArgs{:});
 fprintf('      done (%.1f s).  letterContrast = %.3f\n', toc, stimInfo.letterContrast);
 fprintf('      speed %.2f deg/s = %.4f px/frame;  letter %d px = %.1f deg;  dot %d px\n', ...
     stimInfo.dotSpeedDegS, stimInfo.dotSpeedPxPerFrame, ...
@@ -288,41 +273,4 @@ fprintf('  3 MT heatmap (tuning x time)\n');
 fprintf('  4 MT spatial maps (mean over time) + opponent\n');
 fprintf('  5 V1 spatial maps\n');
 fprintf('  6 Stimulus vs MT snapshot\n');
-fprintf('\nEdit CONFIG at top of %s to change letter, PRESET, RGC_PRESET, or OUT_SZ.\n', mfilename);
-
-%% --- local helpers ---
-function pars = localConfigureRgcPreset(pars, preset, repoRoot)
-    key = lower(strrep(preset, ' ', ''));
-    switch key
-        case 'derivative'
-            return;
-        case {'midgetparasollagged', 'midgetparasoltiled'}
-            pars.rgc.enabled = 1;
-            pars.rgc.mode = 'custom';
-            pars.rgc.classes = shRgcClassesMidgetParasolLagged(pars, [0 1 2 3]);
-            pars.rgc.combine = 'weights';
-            pars.rgc.classesMode = 'custom';
-            pars.rgc.v1Weights = localLoadMidgetParasolLaggedWeights(repoRoot, pars);
-        otherwise
-            error('showMotionLetterModel:rgcPreset', ...
-                'RGC_PRESET must be ''derivative'' or ''midgetParasolLagged'', got ''%s''.', preset);
-    end
-end
-
-function W = localLoadMidgetParasolLaggedWeights(repoRoot, pars)
-    weightsFile = fullfile(repoRoot, 'pars', ...
-        'shRgcClassesMidgetParasolLagged_v1Weights_lag0123.mat');
-    if exist(weightsFile, 'file')
-        fprintf('  Loading lagged RGC V1 weights from %s\n', weightsFile);
-        cached = load(weightsFile);
-        W = cached.v1Weights;
-        return;
-    end
-    fprintf('  No cached lagged weights; fitting (one-time, may take a minute)...\n');
-    rng(42);
-    dims = shGetDims(pars, 'v1Complex', [5 5 20]);
-    W = shFitClassV1Weights(pars, {rand(dims)});
-    v1Weights = W; %#ok<NASGU>
-    save(weightsFile, 'v1Weights', '-v7.3');
-    fprintf('  Saved fitted weights to %s\n', weightsFile);
-end
+fprintf('\nEdit CONFIG at top of %s, or change defaults in pars/motionLetterPars.m\n', mfilename);

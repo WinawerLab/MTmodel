@@ -37,12 +37,8 @@ if ~exist(outDir, 'dir'), mkdir(outDir); end
 
 SEED = 42;   % every condition sees identical random dot fields
 
-% Lesions. `gainRemaining` is what the affected classes are scaled TO.
-lesions = struct( ...
-    'name', {'parasol_gain0p3', 'uniform_gain0p5'}, ...
-    'description', {'Parasol-only, gain 0.3 (70% reduction; midgets spared)', ...
-                    'All classes, gain 0.5 (50% reduction)'}, ...
-    'applyFn', {@lesionParasolGain, @lesionUniformGain});
+% Lesions from pars/lesionCatalog.m (edit gains in pars/lesionPars.m).
+lesions = lesionCatalog('compareAmplitude');
 
 if exist('ONLY_LESIONS', 'var') && ~isempty(ONLY_LESIONS)
     lesions = lesions(ismember({lesions.name}, ONLY_LESIONS));
@@ -94,27 +90,6 @@ if ~exist(weightsFile, 'file')
 end
 c = load(weightsFile);
 pars.rgc.v1Weights = c.v1Weights;
-end
-
-%% --------------------------------------------------------------- lesions
-function pars = lesionParasolGain(parsBase)
-% ALL parasol classes scaled to gain 0.3 (a 70% reduction). Midgets untouched.
-% Deterministic and uniform: `gain` is one scalar per class, so this is not a
-% random subset of cells - per-location heterogeneity needs the stochastic path.
-pars = parsBase;
-for i = 1:numel(pars.rgc.classes)
-    if contains(pars.rgc.classes(i).name, 'parasol', 'IgnoreCase', true)
-        pars.rgc.classes(i).gain = 0.3;
-    end
-end
-end
-
-function pars = lesionUniformGain(parsBase)
-% Every class scaled to gain 0.5 (a 50% reduction).
-pars = parsBase;
-for i = 1:numel(pars.rgc.classes)
-    pars.rgc.classes(i).gain = 0.5;
-end
 end
 
 %% ------------------------------------------------------- curve computation

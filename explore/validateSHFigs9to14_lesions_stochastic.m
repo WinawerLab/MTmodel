@@ -37,21 +37,9 @@ fprintf('Stochastic lesion figures will be saved to:\n  %s\n\n', outDir);
 
 FIELD_SIZE = 51;  % max X-Y needed across all Fig 9-14 panels (see header note)
 
-%% Define stochastic lesion types
-stochasticLesions = struct(...
-    'name', {'amplitude_random', 'delay_random', 'amplitude_patchy', 'delay_patchy', 'coupled'}, ...
-    'description', {...
-    'Random amplitude (0.3-0.7)', ...
-    'Random delay (0-3 frames)', ...
-    'Patchy amplitude (correlated)', ...
-    'Patchy delay (correlated)', ...
-    'Coupled amp+delay (realistic)'}, ...
-    'applyFn', {...
-    @(p) lesionAmplitudeStochastic(p, FIELD_SIZE), ...
-    @(p) lesionDelayStochastic(p, FIELD_SIZE), ...
-    @(p) lesionAmplitudePatchyCorrelated(p, FIELD_SIZE), ...
-    @(p) lesionDelayPatchyCorrelated(p, FIELD_SIZE), ...
-    @(p) lesionCoupledAmplitudeDelay(p, FIELD_SIZE)});
+%% Define stochastic lesion types (pars/lesionCatalog.m)
+stochasticLesions = lesionCatalog('phase2b', 'fieldSize', FIELD_SIZE, ...
+    'defaultFieldSize', FIELD_SIZE);
 
 %% Define model presets (same as uniform lesions)
 presets = struct(...
@@ -125,111 +113,9 @@ pars.rgc.v1Weights = cached.v1Weights;
 fprintf('    Loaded cached weights (%dx%d)\n', size(pars.rgc.v1Weights, 1), size(pars.rgc.v1Weights, 2));
 end
 
-%% Stochastic lesion functions
-% Each stores a FIELD_SIZE x FIELD_SIZE damage field on pars.rgc.impairment*FieldFull.
-% cropLesionForCall() crops it to the exact X-Y each stimulus needs, per call.
-
-function pars = lesionAmplitudeStochastic(parsBase, fieldSize)
-% Random uncorrelated amplitude: spatial heterogeneity Uniform(0.3, 0.7)
-pars = parsBase;
-rng(42);
-pars.rgc.impairmentEnabled = 1;
-pars.rgc.impairmentAmplitudeFieldFull = 0.3 + 0.4 * rand(fieldSize, fieldSize);
-end
-
-function pars = lesionDelayStochastic(parsBase, fieldSize)
-% Random uncorrelated delay: spatial heterogeneity {0, 1, 2, 3} frames
-pars = parsBase;
-rng(43);
-pars.rgc.impairmentEnabled = 1;
-pars.rgc.impairmentDelayFieldFull = randi([0 3], fieldSize, fieldSize);
-end
-
-function pars = lesionAmplitudePatchyCorrelated(parsBase, fieldSize)
-% Spatially correlated (patchy) amplitude deficit - realistic for ON
-pars = parsBase;
-rng(44);
-rawMap = rand(fieldSize, fieldSize);
-sigma = 3.0;
-smoothMap = imgaussfilt(rawMap, sigma);
-smoothMap = (smoothMap - min(smoothMap(:))) / (max(smoothMap(:)) - min(smoothMap(:)));
-
-pars.rgc.impairmentEnabled = 1;
-pars.rgc.impairmentAmplitudeFieldFull = 0.3 + 0.4 * smoothMap;
-end
-
-function pars = lesionDelayPatchyCorrelated(parsBase, fieldSize)
-% Spatially correlated (patchy) delay deficit
-pars = parsBase;
-rng(45);
-rawMap = rand(fieldSize, fieldSize);
-sigma = 3.0;
-smoothMap = imgaussfilt(rawMap, sigma);
-
-thresholds = [0.25 0.5 0.75];
-delayField = zeros(fieldSize, fieldSize);
-for i = 1:length(thresholds)
-    delayField(smoothMap > thresholds(i)) = i;
-end
-
-pars.rgc.impairmentEnabled = 1;
-pars.rgc.impairmentDelayFieldFull = delayField;
-end
-
-function pars = lesionCoupledAmplitudeDelay(parsBase, fieldSize)
-% Coupled: worse amplitude -> longer delay (realistic damage correlation)
-pars = parsBase;
-rng(46);
-rawMap = rand(fieldSize, fieldSize);
-sigma = 3.0;
-smoothMap = imgaussfilt(rawMap, sigma);
-smoothMap = (smoothMap - min(smoothMap(:))) / (max(smoothMap(:)) - min(smoothMap(:)));
-
-amplitudeField = 0.3 + 0.4 * smoothMap; % [0.3, 0.7]
-
-delayField = zeros(fieldSize, fieldSize);
-delayField(amplitudeField < 0.4) = 3;
-delayField(amplitudeField >= 0.4 & amplitudeField < 0.5) = 2;
-delayField(amplitudeField >= 0.5 & amplitudeField < 0.6) = 1;
-
-pars.rgc.impairmentEnabled = 1;
-pars.rgc.impairmentAmplitudeFieldFull = amplitudeField;
-pars.rgc.impairmentDelayFieldFull = delayField;
-end
-
-%% Crop helper: match the lesion field to whatever X-Y a given call needs
-%
-% stageName/outputDims must mirror the outputDims the target tuning function
-% passes to its OWN internal shGetDims call, so the cropped map lines up with
-% the stimulus that function actually builds. Only the spatial part of
-% outputDims matters (X-Y is independent of frame count T; verified).
-
+%% Crop helper (delegates to pars/lesionCropForCall.m)
 function parsOut = cropLesionForCall(pars, stageName, outputDims)
-parsOut = pars;
-if ~isfield(pars.rgc, 'impairmentEnabled') || pars.rgc.impairmentEnabled ~= 1
-    return;
-end
-
-d = shGetDims(pars, stageName, outputDims);
-Y = d(1); X = d(2);
-
-if isfield(pars.rgc, 'impairmentAmplitudeFieldFull') && ~isempty(pars.rgc.impairmentAmplitudeFieldFull)
-    parsOut.rgc.impairmentAmplitudeMap = localCenterCrop(pars.rgc.impairmentAmplitudeFieldFull, Y, X);
-end
-if isfield(pars.rgc, 'impairmentDelayFieldFull') && ~isempty(pars.rgc.impairmentDelayFieldFull)
-    parsOut.rgc.impairmentDelayMap = localCenterCrop(pars.rgc.impairmentDelayFieldFull, Y, X);
-end
-end
-
-function out = localCenterCrop(F, Y, X)
-if size(F,1) < Y || size(F,2) < X
-    error('cropLesionForCall:fieldTooSmall', ...
-        'Lesion field [%d %d] is smaller than required stimulus size [%d %d]. Increase FIELD_SIZE.', ...
-        size(F,1), size(F,2), Y, X);
-end
-offY = floor((size(F,1) - Y) / 2);
-offX = floor((size(F,2) - X) / 2);
-out = F(offY+1:offY+Y, offX+1:offX+X);
+parsOut = lesionCropForCall(pars, stageName, outputDims);
 end
 
 %% Figure generation functions

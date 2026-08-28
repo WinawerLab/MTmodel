@@ -35,28 +35,26 @@ FIG_DIR   = fullfile(repoRoot, 'classifier', '_figs', 'pilot');
 if ~exist(CACHE_DIR, 'dir'), mkdir(CACHE_DIR); end
 if ~exist(FIG_DIR, 'dir'), mkdir(FIG_DIR); end
 
-units = shModelUnits();
-pars = localLaggedPars(repoRoot);
-stimSz = shGetDims(pars, 'mtPattern', OUT_SZ);
-letterPx = round(0.6 * min(stimSz(1:2)));
-stimArgs = localStimArgs(units, SPEED_DEG_S, letterPx);
+[cfg, pars, stimSz, stimArgs] = motionLetterPars( ...
+    'speedDegS', SPEED_DEG_S, 'outSz', OUT_SZ);
+letterPx = cfg.letterPx;
 
 fprintf('=== Motion-letter classifier pilot ===\n');
 fprintf('letters %s   %d seeds   %.1f deg/s   out %s\n', ...
-    LETTERS, numel(SEEDS), SPEED_DEG_S, mat2str(OUT_SZ));
+    LETTERS, numel(SEEDS), cfg.speedDegS, mat2str(cfg.outSz));
 fprintf('stim [%d %d %d]   letter %d px   lagged preset\n', ...
     stimSz(1), stimSz(2), stimSz(3), letterPx);
 fprintf('cache -> %s\n\n', CACHE_DIR);
 
-% 1 deg/s is below MT's slowest moving shell (1 px/frame = 16 deg/s); the
-% metrics helper would warn on every trial. Hush it for this script only.
+% 1 deg/s (0.2 px/frame) is below MT's slowest moving shell (5 deg/s = 1 px/frame);
+% the metrics helper would warn on every trial. Hush it for this script only.
 warnState = warning('off', 'motionLetterMetrics:speedMismatch');
 warnCleanup = onCleanup(@() warning(warnState)); %#ok<NASGU>
 
 %% Templates (letter shape only; independent of dots / seed / speed)
 templates = localLetterTemplates(stimSz, LETTERS, stimArgs, OUT_SZ(1), OUT_SZ(2));
 save(fullfile(CACHE_DIR, 'templates.mat'), 'templates', 'LETTERS', 'stimSz', ...
-    'letterPx', 'SPEED_DEG_S', 'OUT_SZ');
+    'letterPx', 'SPEED_DEG_S', cfg.speedDegS, 'OUT_SZ', cfg.outSz);
 
 %% Healthy trials
 nLetters = numel(LETTERS);
@@ -203,7 +201,7 @@ exportgraphics(fig2, fullfile(FIG_DIR, 'pilot_exampleMaps.png'), 'Resolution', 1
 
 resultFile = fullfile(CACHE_DIR, 'pilot_results.mat');
 save(resultFile, 'trials', 'cls', 'trueLab', 'acc', 'chance', 'C', ...
-    'LETTERS', 'SEEDS', 'SPEED_DEG_S', 'OUT_SZ', 'stimSz', 'letterPx');
+    'LETTERS', 'SEEDS', 'SPEED_DEG_S', cfg.speedDegS, 'OUT_SZ', cfg.outSz, 'stimSz', 'letterPx');
 
 fprintf('\nCached %d trials, ran %d new. Results ->\n  %s\n  %s\n', ...
     nCached, nRan, resultFile, FIG_DIR);
@@ -212,37 +210,6 @@ fprintf(['\nHow to read this: >>25%% means identity survives in the map. ' ...
     'name a letter. Then we change features, not lesions.\n']);
 
 %% ---- helpers -----------------------------------------------------------
-function pars = localLaggedPars(repoRoot)
-pars = shPars;
-pars.rgc.enabled = 1;
-pars.rgc.mode = 'custom';
-pars.rgc.classes = shRgcClassesMidgetParasolLagged(pars, [0 1 2 3]);
-pars.rgc.combine = 'weights';
-pars.rgc.classesMode = 'custom';
-weightsFile = fullfile(repoRoot, 'pars', ...
-    'shRgcClassesMidgetParasolLagged_v1Weights_lag0123.mat');
-if ~exist(weightsFile, 'file')
-    error('runMotionLetterClassifierPilot:missingWeights', ...
-        'Cached weights not found: %s', weightsFile);
-end
-c = load(weightsFile);
-pars.rgc.v1Weights = c.v1Weights;
-end
-
-function args = localStimArgs(units, speedDegS, letterPx)
-args = { ...
-    'referenceDisplaySize', [], ...
-    'ppd', units.pixelsPerDegree, ...
-    'frameRate', units.framesPerSecond, ...
-    'dotSpeedDegS', speedDegS, ...
-    'letterSizePx', letterPx, ...
-    'dotSize', 3, ...
-    'dotContrast', 1.0, ...
-    'drawBackgroundDots', true, ...
-    'fCovered', 0.3, ...
-    'dotShape', 'square'};
-end
-
 function templates = localLetterTemplates(stimSz, letters, stimArgs, mapY, mapX)
 maskSz = [stimSz(1) stimSz(2) 1];
 nL = numel(letters);

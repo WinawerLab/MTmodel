@@ -40,7 +40,7 @@ function [stim, info] = mkMotionLetter(stimSz, letter, varargin)
     p.addParameter('letterSizeArcmin', 168);
     p.addParameter('letterSizePx', []);
     p.addParameter('dotContrast', 1.0);
-    p.addParameter('dotSize', 4);
+    p.addParameter('dotSize', 2);
     p.addParameter('dotShape', 'square');
     p.addParameter('referenceDisplaySize', [960 1280]);
     p.addParameter('fCovered', 0.5);

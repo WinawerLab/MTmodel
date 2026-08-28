@@ -7,7 +7,7 @@
 %
 % For every condition the script computes MT and V1 letter-vs-background d' and
 % plots comparison figures with the healthy baseline on the same axes / color
-% limits as the lesioned runs.
+% limits as the lesioned runs. A stimulus movie plays first (PLAY_STIM_MOVIE).
 %
 % Edit CONFIG below, then:
 %   run explore/runMotionLetterLesionPhase2.m
@@ -17,30 +17,28 @@
 %   ONLY_LESIONS    cellstr subset, e.g. {'healthy','delay_uniform','delay_random'}
 %   INCLUDE_PHASE2B true/false — include stochastic delay_random (default true)
 %
-% Speed: default 2 deg/s matches the lab's typical supra-threshold trials.
-% Set SPEED_DEG_S = 0.04 in CONFIG to probe near healthy participant threshold.
+% Stimulus and model defaults live in pars/motionLetterPars.m. Override below
+% only what this script needs (letter, speed, output size, mtMix, seed).
 
 thisFile = mfilename('fullpath');
 repoRoot = fileparts(fileparts(thisFile));
 addpath(genpath(repoRoot));
 
 %% ======================== CONFIG ========================================
-LETTER      = 'H';
-SPEED_DEG_S = 1;              % lab default (supra-threshold max ~2 deg/s)
-                              % use 0.04 to probe near healthy threshold
-OUT_SZ      = [128 128 120];  % model output [Y X T]; stim Y/X may be larger (padding)
-SEED        = 1;
+% Overrides for pars/motionLetterPars.m (defaults: letter C, 5 deg/s, dotSize 3, …)
+ML_OVERRIDES = { ...
+    'letter',    'V', ...
+    'speedDegS', 2, ...          % clinical low band (0.4 px/frame); see MODEL_AND_LESIONS §1
+    'outSz',     [128 128 120], ...
+    'seed',      1, ...
+    'mtMix',     true ...
+};
+
 % FIELD_SIZE  optional override for stochastic impairment maps; if omitted,
 %             sized automatically from the padded stimulus (see below).
 INCLUDE_PHASE2B = true;       % delay_random stochastic lesion
-
-STIM_ARGS = { ...
-    'dotContrast', 1.0, ...
-    'drawBackgroundDots', true, ...
-    'fCovered', 0.3, ...
-    'dotShape', 'square', ...
-    'seed', SEED ...
-};
+PLAY_STIM_MOVIE = true;       % play stimulus movie before running the model
+MAX_MOVIE_FRAMES = [];        % [] = all frames; set e.g. 120 to cap preview length
 %% ========================================================================
 
 if exist('OUT_DIR', 'var') && ~isempty(OUT_DIR)
@@ -55,56 +53,44 @@ else
     includePhase2b = INCLUDE_PHASE2B;
 end
 
-units = shModelUnits();
-parsBase = setupLaggedBiological(repoRoot);
+[cfg, parsBase, stimSz, stimArgs] = motionLetterPars(ML_OVERRIDES{:});
+units = cfg.units;
 
-stimSz = shGetDims(parsBase, 'mtPattern', OUT_SZ);
 % Padded input size (shGetDims adds RF support); stochastic maps must cover this.
 fieldSize = max(stimSz(1:2));
 if exist('FIELD_SIZE', 'var') && ~isempty(FIELD_SIZE)
     fieldSize = max(fieldSize, FIELD_SIZE);
 end
-letterPx = round(0.6 * min(stimSz(1:2)));
-STIM_ARGS = [STIM_ARGS, { ...
-    'referenceDisplaySize', [], ...
-    'ppd', units.pixelsPerDegree, ...
-    'frameRate', units.framesPerSecond, ...
-    'dotSpeedDegS', SPEED_DEG_S, ...
-    'letterSizePx', letterPx, ...
-    'dotSize', 3}];
 
 fprintf('=== Motion letter Phase 2 lesions ===\n');
-fprintf('Letter %s   %.1f deg/s   stim [%d %d %d]   field %d   seed %d\n', ...
-    LETTER, SPEED_DEG_S, stimSz(1), stimSz(2), stimSz(3), fieldSize, SEED);
+fprintf('Letter %s   %.1f deg/s   stim [%d %d %d]   field %d   mtMix %d   seed %d\n', ...
+    cfg.letter, cfg.speedDegS, stimSz(1), stimSz(2), stimSz(3), fieldSize, ...
+    isfield(parsBase.rgc, 'mtMix') && ~isempty(parsBase.rgc.mtMix), cfg.seed);
 fprintf('Results -> %s\n\n', figDir);
 
-rng(SEED);
-[stim, stimInfo] = mkMotionLetter(stimSz, LETTER, STIM_ARGS{:});
-fprintf('Stimulus: %.4f px/frame, letter %d px (%.1f deg), font %s\n\n', ...
-    stimInfo.dotSpeedPxPerFrame, stimInfo.letterSizePx, stimInfo.letterSizeDeg, stimInfo.fontName);
+rng(cfg.seed);
+[stim, stimInfo] = mkMotionLetter(stimSz, cfg.letter, stimArgs{:});
+fprintf('Stimulus: %.4f px/frame, letter %d px (%.1f deg), dot %d px, font %s\n\n', ...
+    stimInfo.dotSpeedPxPerFrame, stimInfo.letterSizePx, stimInfo.letterSizeDeg, ...
+    stimInfo.dotSize, stimInfo.fontName);
 
-%% Lesion catalogue (Phase 2 + optional Phase 2b headline)
-lesions = struct( ...
-    'name', {'healthy', 'amplitude_uniform', 'delay_uniform', ...
-             'amplitude_parasol', 'amplitude_midget', 'delay_ON_only'}, ...
-    'shortLabel', {'Healthy', 'Amp uniform', 'Delay uniform', ...
-                   'Amp parasol', 'Amp midget', 'Delay ON'}, ...
-    'description', { ...
-        'Healthy baseline (no lesion)', ...
-        'All classes, gain 0.5 (50% amplitude reduction)', ...
-        'All classes, +2 frame conduction delay', ...
-        'Parasol only, gain 0.3 (70% reduction; midgets spared)', ...
-        'Midget only, gain 0.3 (70% reduction; parasols spared)', ...
-        'ON pathway only, +1 frame delay (OFF spared)'}, ...
-    'applyFn', {@(p) p, @lesionAmplitudeUniform, @lesionDelayUniform, ...
-                @lesionAmplitudeParasol, @lesionAmplitudeMidget, @lesionDelayONOnly});
+if exist('PLAY_STIM_MOVIE', 'var') && PLAY_STIM_MOVIE
+    nPlay = size(stim, 3);
+    if exist('MAX_MOVIE_FRAMES', 'var') && ~isempty(MAX_MOVIE_FRAMES)
+        nPlay = min(nPlay, MAX_MOVIE_FRAMES);
+    end
+    fprintf('Playing stimulus movie (%d frames @ %.1f fps)...\n', ...
+        nPlay, units.framesPerSecond);
+    figure('Name', sprintf('Motion letter ''%s'' @ %.1g deg/s', cfg.letter, cfg.speedDegS), ...
+        'Color', [0.5 0.5 0.5]);
+    playStimMovie(stim(:, :, 1:nPlay), 1 / units.framesPerSecond, [0 1]);
+    fprintf('\n');
+end
 
-if includePhase2b
-    lesions(end+1) = struct( ...
-        'name', 'delay_random', ...
-        'shortLabel', 'Delay random', ...
-        'description', 'Stochastic spatial delay {0–3} frames (Phase 2b)', ...
-        'applyFn', @(p) lesionDelayStochastic(p, fieldSize));
+%% Lesion catalogue (pars/lesionCatalog.m + pars/lesionPars.m)
+lesions = lesionCatalog('motionLetterPhase2', 'fieldSize', fieldSize);
+if ~includePhase2b
+    lesions = lesions(~strcmp({lesions.name}, 'delay_random'));
 end
 
 if exist('ONLY_LESIONS', 'var') && ~isempty(ONLY_LESIONS)
@@ -119,7 +105,7 @@ for iC = 1:nCond
     L = lesions(iC);
     fprintf('[%d/%d] %s — %s\n', iC, nCond, L.name, L.description);
     pars = L.applyFn(parsBase);
-    pars = cropImpairmentToStim(pars, stimSz(1), stimSz(2));
+    pars = lesionCropToStim(pars, stimSz(1), stimSz(2));
 
     tic;
     [popMt, indMt] = shModel(stim, pars, 'mtPattern');
@@ -162,7 +148,7 @@ grid on; ylabel('d'''); title('V1 opponent');
 xtickangle(30);
 subtitle(sprintf('Baseline V1 d'' = %+.2f', base.dV1));
 
-sgtitle(sprintf('Letter ''%s'' @ %.1f deg/s — Phase 2 lesion comparison', LETTER, SPEED_DEG_S));
+sgtitle(sprintf('Letter ''%s'' @ %.1f deg/s — Phase 2 lesion comparison', cfg.letter, cfg.speedDegS));
 exportgraphics(figD, fullfile(figDir, 'motionLetter_phase2_dprime.png'), 'Resolution', 130);
 
 %% Figure 2 — MT opponent maps (shared color limits from healthy)
@@ -227,102 +213,6 @@ for iC = 1:nCond
 end
 
 fprintf('\nWrote figures to:\n  %s\n', figDir);
-
-%% --- setup and lesion helpers (Phase 2 from validateSHFigs9to14_lesions.m) ---
-
-function pars = setupLaggedBiological(repoRoot)
-pars = shPars;
-pars.rgc.enabled = 1;
-pars.rgc.mode = 'custom';
-pars.rgc.classes = shRgcClassesMidgetParasolLagged(pars, [0 1 2 3]);
-pars.rgc.combine = 'weights';
-pars.rgc.classesMode = 'custom';
-weightsFile = fullfile(repoRoot, 'pars', ...
-    'shRgcClassesMidgetParasolLagged_v1Weights_lag0123.mat');
-if ~exist(weightsFile, 'file')
-    error('Cached weights not found. Run validateSHFigs9to14.m first (Phase 1).');
-end
-c = load(weightsFile);
-pars.rgc.v1Weights = c.v1Weights;
-end
-
-function pars = lesionAmplitudeUniform(parsBase)
-pars = parsBase;
-for i = 1:numel(pars.rgc.classes)
-    pars.rgc.classes(i).gain = 0.5;
-end
-end
-
-function pars = lesionDelayUniform(parsBase)
-pars = parsBase;
-delayFrames = 2;
-for i = 1:numel(pars.rgc.classes)
-    origKernel = pars.rgc.classes(i).temporalKernel;
-    pars.rgc.classes(i).temporalKernel = [zeros(delayFrames, 1); origKernel];
-end
-end
-
-function pars = lesionAmplitudeParasol(parsBase)
-pars = parsBase;
-for i = 1:numel(pars.rgc.classes)
-    if contains(pars.rgc.classes(i).name, 'parasol', 'IgnoreCase', true)
-        pars.rgc.classes(i).gain = 0.3;
-    end
-end
-end
-
-function pars = lesionAmplitudeMidget(parsBase)
-pars = parsBase;
-for i = 1:numel(pars.rgc.classes)
-    if contains(pars.rgc.classes(i).name, 'midget', 'IgnoreCase', true)
-        pars.rgc.classes(i).gain = 0.3;
-    end
-end
-end
-
-function pars = lesionDelayONOnly(parsBase)
-pars = parsBase;
-delayFrames = 1;
-for i = 1:numel(pars.rgc.classes)
-    if contains(pars.rgc.classes(i).rectify, 'on', 'IgnoreCase', true)
-        origKernel = pars.rgc.classes(i).temporalKernel;
-        pars.rgc.classes(i).temporalKernel = [zeros(delayFrames, 1); origKernel];
-    end
-end
-end
-
-function pars = lesionDelayStochastic(parsBase, fieldSize)
-pars = parsBase;
-rng(43);
-pars.rgc.impairmentEnabled = 1;
-pars.rgc.impairmentDelayFieldFull = randi([0 3], fieldSize, fieldSize);
-end
-
-function parsOut = cropImpairmentToStim(pars, Y, X)
-parsOut = pars;
-if ~isfield(pars.rgc, 'impairmentEnabled') || pars.rgc.impairmentEnabled ~= 1
-    return;
-end
-if isfield(pars.rgc, 'impairmentAmplitudeFieldFull') && ~isempty(pars.rgc.impairmentAmplitudeFieldFull)
-    parsOut.rgc.impairmentAmplitudeMap = localCenterCrop( ...
-        pars.rgc.impairmentAmplitudeFieldFull, Y, X);
-end
-if isfield(pars.rgc, 'impairmentDelayFieldFull') && ~isempty(pars.rgc.impairmentDelayFieldFull)
-    parsOut.rgc.impairmentDelayMap = localCenterCrop( ...
-        pars.rgc.impairmentDelayFieldFull, Y, X);
-end
-end
-
-function out = localCenterCrop(F, Y, X)
-if size(F, 1) < Y || size(F, 2) < X
-    error('runMotionLetterLesionPhase2:fieldTooSmall', ...
-        'Lesion field [%d %d] smaller than stimulus [%d %d]. Increase FIELD_SIZE.', ...
-        size(F, 1), size(F, 2), Y, X);
-end
-offY = floor((size(F, 1) - Y) / 2);
-offX = floor((size(F, 2) - X) / 2);
-out = F(offY+1:offY+Y, offX+1:offX+X);
-end
 
 function cmap = redbluecmap
 % Simple diverging red-blue for difference maps (no toolbox dependency).

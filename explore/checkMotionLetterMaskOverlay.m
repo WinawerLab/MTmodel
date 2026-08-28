@@ -10,35 +10,16 @@ thisFile = mfilename('fullpath');
 repoRoot = fileparts(fileparts(thisFile));
 addpath(genpath(repoRoot));
 
-LETTER      = 'H';
-SPEED_DEG_S = 1;
-OUT_SZ      = [96 96 60];   % small on purpose — this is a geometry check
-SEED        = 1;
-
-pars = shPars;
-pars.rgc.enabled = 1;
-pars.rgc.mode = 'custom';
-pars.rgc.classes = shRgcClassesMidgetParasolLagged(pars, [0 1 2 3]);
-pars.rgc.combine = 'weights';
-pars.rgc.classesMode = 'custom';
-w = load(fullfile(repoRoot, 'pars', ...
-    'shRgcClassesMidgetParasolLagged_v1Weights_lag0123.mat'));
-pars.rgc.v1Weights = w.v1Weights;
-
-u = shModelUnits();
-stimSz = shGetDims(pars, 'mtPattern', OUT_SZ);
-letterPx = round(0.6 * min(stimSz(1:2)));
+[cfg, pars, stimSz, stimArgs] = motionLetterPars( ...
+    'letter', 'H', 'speedDegS', 1, 'outSz', [96 96 60], 'seed', 1);
 
 fprintf('Overlay check: letter %s, %.1f deg/s, stim [%d %d %d]\n', ...
-    LETTER, SPEED_DEG_S, stimSz(1), stimSz(2), stimSz(3));
+    cfg.letter, cfg.speedDegS, stimSz(1), stimSz(2), stimSz(3));
 
 warnState = warning('off', 'motionLetterMetrics:speedMismatch');
 cleanupObj = onCleanup(@() warning(warnState)); %#ok<NASGU>
 
-[stim, info] = mkMotionLetter(stimSz, LETTER, ...
-    'referenceDisplaySize', [], 'ppd', u.pixelsPerDegree, ...
-    'frameRate', u.framesPerSecond, 'dotSpeedDegS', SPEED_DEG_S, ...
-    'letterSizePx', letterPx, 'dotSize', 3, 'fCovered', 0.3, 'seed', SEED);
+[stim, info] = mkMotionLetter(stimSz, cfg.letter, stimArgs{:});
 
 [popMt, indMt] = shModel(stim, pars, 'mtPattern');
 met = motionLetterMetrics(popMt, indMt, [], [], pars, info);
@@ -46,24 +27,18 @@ met = motionLetterMetrics(popMt, indMt, [], [], pars, info);
 oldMask = imresize(double(info.binaryMask), size(met.mtOpp), 'nearest') > 0.5;
 newMask = met.mask;
 
-fprintf('stim %dx%d  map %dx%d  letter %d px\n', ...
-    stimSz(1), stimSz(2), size(met.mtOpp, 1), size(met.mtOpp, 2), letterPx);
-fprintf('old (imresize) letter fraction %.2f   new (crop) %.2f\n', ...
-    mean(oldMask(:)), mean(newMask(:)));
-
-figure('Color', 'w', 'Name', 'Letter contour vs MT blob', 'Position', [80 400 980 420]);
+fig = figure('Color', 'w', 'Position', [80 420 820 360]);
 tiledlayout(1, 2, 'Padding', 'compact', 'TileSpacing', 'compact');
 
 nexttile;
 imagesc(met.mtOpp); axis image off; colormap(gca, parula); colorbar;
-hold on; contour(oldMask, [0.5 0.5], 'w', 'LineWidth', 1.2); hold off;
-title(sprintf('Old: imresize (too small)\nletter covers %.0f%% of map', 100*mean(oldMask(:))));
+hold on; contour(oldMask, [0.5 0.5], 'w', 'LineWidth', 1); hold off;
+title('imresize mask (wrong)');
 
 nexttile;
 imagesc(met.mtOpp); axis image off; colormap(gca, parula); colorbar;
-hold on; contour(newMask, [0.5 0.5], 'w', 'LineWidth', 1.2); hold off;
-title(sprintf('New: center-crop\nletter covers %.0f%% of map', 100*mean(newMask(:))));
+hold on; contour(newMask, [0.5 0.5], 'w', 'LineWidth', 1); hold off;
+title('center-crop mask (motionLetterMaskOnMap)');
 
-sgtitle(sprintf(['MT opponent, ''%s'' @ %.1f deg/s. ' ...
-    'The white contour should sit on the letter blob, with only a blur halo outside it.'], ...
-    LETTER, SPEED_DEG_S));
+sgtitle(sprintf('Letter ''%s'' @ %.1f deg/s — mask overlay check', ...
+    cfg.letter, cfg.speedDegS));

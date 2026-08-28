@@ -15,19 +15,23 @@ thisFile = mfilename('fullpath');
 repoRoot = fileparts(fileparts(thisFile));
 addpath(genpath(repoRoot));
 
-%% CONFIG
-LETTER      = 'C';
-SPEED_DEG_S = 5;              % -> 1 px/frame at the current anchor (10 px/deg, 50 fps)
-OUT_SZ      = [128 128 120];  % model output [Y X T]
-SEED        = 7;
-FIGDIR      = fullfile(repoRoot, 'explore', '_figs');
+%% CONFIG — overrides for pars/motionLetterPars.m (see DEFAULTS block there)
+ML_OVERRIDES = { ...
+    'letter', 'C', ...
+    'speedDegS', 5, ...          % 1 px/frame at the current anchor (10 px/deg, 50 fps)
+    'outSz', [128 128 120], ...
+    'seed', 7, ...
+    'mtMix', true ...
+};
+FIGDIR = fullfile(repoRoot, 'explore', '_figs');
 
 if ~exist(FIGDIR, 'dir'), mkdir(FIGDIR); end
-u = shModelUnits();
+[cfg, ~, stimSz, stimArgs] = motionLetterPars(ML_OVERRIDES{:});
+u = cfg.units;
 
 fprintf('=== Motion-defined letter demo ===\n');
 fprintf('letter %s   %.1f deg/s   out %s   seed %d\n', ...
-    LETTER, SPEED_DEG_S, mat2str(OUT_SZ), SEED);
+    cfg.letter, cfg.speedDegS, mat2str(cfg.outSz), cfg.seed);
 fprintf('model units: %.2f px/deg, %.1f fps, 1 px/frame = %.0f deg/s\n\n', ...
     u.pixelsPerDegree, u.framesPerSecond, u.degPerSecPerPixelPerFrame);
 
@@ -35,24 +39,16 @@ presets = {'derivative', 'midgetParasolLagged'};
 results = struct('name', {}, 'mtOpp', {}, 'v1Opp', {}, 'mtTrace', {}, ...
                  'dMt', {}, 'dV1', {}, 'mtPair', {}, 'v1Pair', {});
 
+[stim, info] = mkMotionLetter(stimSz, cfg.letter, stimArgs{:});
+speedPx = info.dotSpeedPxPerFrame;
+fprintf('stimulus: %d dots, dot %d px, letter %d px (%.1f deg), %.4f px/frame, %.2f s, font %s\n', ...
+    info.numDots, info.dotSize, info.letterSizePx, info.letterSizeDeg, ...
+    speedPx, stimSz(3) / u.framesPerSecond, info.fontName);
+stimKeep = stim; infoKeep = info;
+
 for pIdx = 1:numel(presets)
     presetName = presets{pIdx};
-    pars = localPreset(presetName, repoRoot);
-
-    stimSz = shGetDims(pars, 'mtPattern', OUT_SZ);
-    letterPx = round(0.62 * min(stimSz(1:2)));
-    [stim, info] = mkMotionLetter(stimSz, LETTER, 'seed', SEED, ...
-        'referenceDisplaySize', [], 'ppd', u.pixelsPerDegree, ...
-        'frameRate', u.framesPerSecond, 'dotSpeedDegS', SPEED_DEG_S, ...
-        'letterSizePx', letterPx, 'dotSize', 3, 'fCovered', 0.3);
-    speedPx = info.dotSpeedPxPerFrame;
-
-    if pIdx == 1
-        fprintf('stimulus: %d dots, dot %d px, letter %d px (%.1f deg), %.4f px/frame, %.2f s, font %s\n', ...
-            info.numDots, info.dotSize, info.letterSizePx, info.letterSizeDeg, ...
-            speedPx, stimSz(3) / u.framesPerSecond, info.fontName);
-        stimKeep = stim; infoKeep = info;
-    end
+    pars = motionLetterModelPars(presetName, cfg.mtMix);
 
     fprintf('\n[%s]\n', presetName);
     tic; [popMt, indMt] = shModel(stim, pars, 'mtPattern');
@@ -111,9 +107,9 @@ title('Mean |frame difference|');
 
 nexttile;
 imagesc(infoKeep.binaryMask); axis image off; colormap(gca, gray);
-title(sprintf('Ground-truth mask (''%s'')', LETTER));
+title(sprintf('Ground-truth mask (''%s'')', cfg.letter));
 sgtitle(sprintf('Motion-defined letter: %.1f deg/s (%.4f px/frame), %d dots', ...
-    SPEED_DEG_S, infoKeep.dotSpeedPxPerFrame, infoKeep.numDots));
+    cfg.speedDegS, infoKeep.dotSpeedPxPerFrame, infoKeep.numDots));
 exportgraphics(fig1, fullfile(FIGDIR, 'motionLetter_stimulus.png'), 'Resolution', 130);
 
 %% ---- Figure: opponent maps, both presets, V1 and MT --------------------
@@ -139,7 +135,7 @@ for r = 1:numel(results)
     title(sprintf('MT letter vs background\n%s', results(r).name));
 end
 sgtitle(sprintf(['Right-minus-left opponent maps, %.1f deg/s. ' ...
-    'White contour = true letter.'], SPEED_DEG_S));
+    'White contour = true letter.'], cfg.speedDegS));
 exportgraphics(fig2, fullfile(FIGDIR, 'motionLetter_opponentMaps.png'), 'Resolution', 130);
 
 %% ---- Figure: the control that shows this is really motion ---------------
@@ -147,18 +143,13 @@ exportgraphics(fig2, fullfile(FIGDIR, 'motionLetter_opponentMaps.png'), 'Resolut
 % count, density, contrast and speed. If the letter still appeared, the model
 % would be using something other than motion.
 fprintf('\n=== Motion control ===\n');
-pars = localPreset('derivative', repoRoot);
-stimSz = shGetDims(pars, 'mtPattern', OUT_SZ);
-letterPx = round(0.62 * min(stimSz(1:2)));
+pars = motionLetterModelPars('derivative');
 ctlScales = [-1 0 1];
 ctlNames = {'opposite drift (Regan)', 'static background', 'same drift (control)'};
 ctlMaps = cell(1, 3); ctlD = zeros(1, 3);
 
 for k = 1:3
-    [s, inf_] = mkMotionLetter(stimSz, LETTER, 'seed', SEED, ...
-        'referenceDisplaySize', [], 'ppd', u.pixelsPerDegree, ...
-        'frameRate', u.framesPerSecond, 'dotSpeedDegS', SPEED_DEG_S, ...
-        'letterSizePx', letterPx, 'dotSize', 3, 'fCovered', 0.3, ...
+    [s, inf_] = mkMotionLetter(stimSz, cfg.letter, stimArgs{:}, ...
         'backgroundVelocityScale', ctlScales(k));
     [pM, iM] = shModel(s, pars, 'mtPattern');
     [iR, iL] = localOpponentPair(pars.mtPopulationVelocities, inf_.dotSpeedPxPerFrame);
@@ -187,20 +178,6 @@ fprintf('\nWrote:\n  %s\n  %s\n  %s\n', ...
     fullfile(FIGDIR, 'motionLetter_control.png'));
 
 %% ---- helpers ----
-function pars = localPreset(name, repoRoot)
-    pars = shPars;
-    if strcmpi(name, 'derivative'), return; end
-    pars.rgc.enabled = 1;
-    pars.rgc.mode = 'custom';
-    pars.rgc.classes = shRgcClassesMidgetParasolLagged(pars, [0 1 2 3]);
-    pars.rgc.combine = 'weights';
-    pars.rgc.classesMode = 'custom';
-    wf = fullfile(repoRoot, 'pars', ...
-        'shRgcClassesMidgetParasolLagged_v1Weights_lag0123.mat');
-    cached = load(wf);
-    pars.rgc.v1Weights = cached.v1Weights;
-end
-
 function localShowMap(map, mask)
     imagesc(map); axis image off; colormap(gca, parula); colorbar;
     hold on; contour(mask, [0.5 0.5], 'w', 'LineWidth', 1.1); hold off;

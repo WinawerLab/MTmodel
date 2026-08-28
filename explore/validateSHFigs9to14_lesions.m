@@ -33,18 +33,9 @@ end
 
 fprintf('Lesion validation figures will be saved to:\n  %s\n\n', outDir);
 
-%% Define lesion types to test
-% Universal lesions (apply to both presets)
-universalLesions = struct(...
-    'name', {'amplitude_uniform', 'delay_uniform'}, ...
-    'description', {'Uniform 50% amplitude', 'Uniform 2-frame delay'}, ...
-    'applyFn', {@lesionAmplitudeUniform, @lesionDelayUniform});
-
-% Biological lesions (only for lagged midget/parasol preset)
-biologicalLesions = struct(...
-    'name', {'amplitude_parasol', 'delay_ON_only'}, ...
-    'description', {'Parasol-only 70% amplitude', 'ON-only 1-frame delay'}, ...
-    'applyFn', {@lesionAmplitudeParasol, @lesionDelayONOnly});
+%% Define lesion types to test (pars/lesionCatalog.m)
+universalLesions = lesionCatalog('phase2Uniform');
+biologicalLesions = lesionCatalog('phase2Biological');
 
 %% Define model presets to test (derivative and lagged midget/parasol)
 presets = struct(...
@@ -133,59 +124,6 @@ end
 cached = load(weightsFile);
 pars.rgc.v1Weights = cached.v1Weights;
 fprintf('    Loaded cached weights (%dx%d)\n', size(pars.rgc.v1Weights, 1), size(pars.rgc.v1Weights, 2));
-end
-
-%% Lesion application functions
-
-function pars = lesionAmplitudeUniform(parsBase)
-% Uniform 50% amplitude deficit across all RGC classes
-pars = parsBase;
-nClasses = length(pars.rgc.classes);
-for i = 1:nClasses
-    pars.rgc.classes(i).gain = 0.5; % 50% reduction
-end
-end
-
-function pars = lesionDelayUniform(parsBase)
-% Uniform 2-frame conduction delay across all RGC classes
-pars = parsBase;
-nClasses = length(pars.rgc.classes);
-delayFrames = 2;
-
-for i = 1:nClasses
-    % Prepend zeros to temporal kernel (causal delay)
-    origKernel = pars.rgc.classes(i).temporalKernel;
-    pars.rgc.classes(i).temporalKernel = [zeros(delayFrames, 1); origKernel];
-end
-end
-
-function pars = lesionAmplitudeParasol(parsBase)
-% Parasol-only 70% amplitude deficit (spare midgets)
-pars = parsBase;
-nClasses = length(pars.rgc.classes);
-
-for i = 1:nClasses
-    name = pars.rgc.classes(i).name;
-    if contains(name, 'parasol', 'IgnoreCase', true)
-        pars.rgc.classes(i).gain = 0.3; % 70% reduction
-    end
-end
-end
-
-function pars = lesionDelayONOnly(parsBase)
-% ON pathway only: 1-frame conduction delay (OFF spared)
-pars = parsBase;
-nClasses = length(pars.rgc.classes);
-delayFrames = 1;
-
-for i = 1:nClasses
-    rectify = pars.rgc.classes(i).rectify;
-    if contains(rectify, 'on', 'IgnoreCase', true) % 'onHalf'
-        % Prepend zeros to temporal kernel
-        origKernel = pars.rgc.classes(i).temporalKernel;
-        pars.rgc.classes(i).temporalKernel = [zeros(delayFrames, 1); origKernel];
-    end
-end
 end
 
 %% Figure generation functions (same as Phase 1)

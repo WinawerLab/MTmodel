@@ -5,7 +5,7 @@
 % sees a mask at test time. Same movie is used for healthy and lesioned;
 % only pars.rgc.classes(:).gain changes.
 %
-% Speeds are classified separately (locked plan: 1 deg/s and 16 deg/s).
+% Speeds are classified separately (locked plan: 1 and 5 deg/s = 0.2 and 1 px/frame).
 % Chance = 10%.
 %
 % Edit CONFIG, then:
@@ -22,7 +22,7 @@ addpath(genpath(repoRoot));
 %% ======================== CONFIG ========================================
 LETTERS     = 'CDHKNORSVZ';    % full Sloan set from the experiment
 SEEDS       = 1:16;
-SPEEDS_DEG_S = [1 16];         % classified separately
+SPEEDS_DEG_S = [1 5];          % clinical low band + MT slow unit (1 px/frame)
 OUT_SZ      = [128 128 120];   % same as the pilot / Phase 2
 FORCE_RECOMPUTE = false;
 INCLUDE_SAME_DRIFT = true;     % 1 seed per letter at 1 deg/s
@@ -39,13 +39,12 @@ condNames  = {'healthy', 'amp_parasol'};
 condLabels = {'Healthy', 'Amp parasol'};
 nCond = numel(condNames);
 
-units = shModelUnits();
-parsHealthy = localLaggedPars(repoRoot);
-parsLesion  = localLesionAmpParasol(parsHealthy);
+parsHealthy = motionLetterModelPars('lagged', true);
+parsLesion  = lesionApply(parsHealthy, 'amplitude_parasol');
 parsByCond  = {parsHealthy, parsLesion};
 
-stimSz = shGetDims(parsHealthy, 'mtPattern', OUT_SZ);
-letterPx = round(0.6 * min(stimSz(1:2)));
+[cfg, ~, stimSz, ~] = motionLetterPars('outSz', OUT_SZ, 'speedDegS', SPEEDS_DEG_S(1));
+letterPx = cfg.letterPx;
 
 nLetters = numel(LETTERS);
 nSeeds = numel(SEEDS);
@@ -64,7 +63,7 @@ warnState = warning('off', 'motionLetterMetrics:speedMismatch');
 warnCleanup = onCleanup(@() warning(warnState)); %#ok<NASGU>
 
 %% Templates (shape only; speed and dots do not matter)
-stimArgsT = localStimArgs(units, SPEEDS_DEG_S(1), letterPx);
+[~, ~, ~, stimArgsT] = motionLetterPars('outSz', OUT_SZ, 'speedDegS', SPEEDS_DEG_S(1));
 templates = localLetterTemplates(stimSz, LETTERS, stimArgsT, OUT_SZ(1), OUT_SZ(2));
 save(fullfile(CACHE_DIR, 'templates.mat'), 'templates', 'LETTERS', 'stimSz', ...
     'letterPx', 'SPEEDS_DEG_S', 'OUT_SZ');
@@ -81,7 +80,7 @@ tAll = tic;
 
 for iSp = 1:nSpeeds
     speedDegS = SPEEDS_DEG_S(iSp);
-    stimArgs = localStimArgs(units, speedDegS, letterPx);
+    [~, ~, ~, stimArgs] = motionLetterPars('outSz', OUT_SZ, 'speedDegS', speedDegS);
     for iL = 1:nLetters
         letter = LETTERS(iL);
         for iS = 1:nSeeds
@@ -195,7 +194,7 @@ localPrintPerLetter(clsTab, SPEEDS_DEG_S(end), LETTERS);
 %% Same-drift control (no relative motion)
 if INCLUDE_SAME_DRIFT
     speedCtl = 1;
-    stimArgs = localStimArgs(units, speedCtl, letterPx);
+    [~, ~, ~, stimArgs] = motionLetterPars('outSz', OUT_SZ, 'speedDegS', speedCtl);
     ctlMaps = zeros(mapY, mapX, nLetters);
     ctlD = zeros(1, nLetters);
     fprintf('\n--- Same-drift control at %.0f deg/s ---\n', speedCtl);
@@ -313,46 +312,6 @@ fprintf('\nCached %d, ran %d new, elapsed %.1f min.\n', ...
 fprintf('Results ->\n  %s\n  %s\n', resultFile, FIG_DIR);
 
 %% ---- helpers -----------------------------------------------------------
-function pars = localLaggedPars(repoRoot)
-pars = shPars;
-pars.rgc.enabled = 1;
-pars.rgc.mode = 'custom';
-pars.rgc.classes = shRgcClassesMidgetParasolLagged(pars, [0 1 2 3]);
-pars.rgc.combine = 'weights';
-pars.rgc.classesMode = 'custom';
-weightsFile = fullfile(repoRoot, 'pars', ...
-    'shRgcClassesMidgetParasolLagged_v1Weights_lag0123.mat');
-if ~exist(weightsFile, 'file')
-    error('runMotionLetterClassifierFull:missingWeights', ...
-        'Cached weights not found: %s', weightsFile);
-end
-c = load(weightsFile);
-pars.rgc.v1Weights = c.v1Weights;
-end
-
-function pars = localLesionAmpParasol(parsBase)
-pars = parsBase;
-for i = 1:numel(pars.rgc.classes)
-    if contains(pars.rgc.classes(i).name, 'parasol', 'IgnoreCase', true)
-        pars.rgc.classes(i).gain = 0.3;
-    end
-end
-end
-
-function args = localStimArgs(units, speedDegS, letterPx)
-args = { ...
-    'referenceDisplaySize', [], ...
-    'ppd', units.pixelsPerDegree, ...
-    'frameRate', units.framesPerSecond, ...
-    'dotSpeedDegS', speedDegS, ...
-    'letterSizePx', letterPx, ...
-    'dotSize', 3, ...
-    'dotContrast', 1.0, ...
-    'drawBackgroundDots', true, ...
-    'fCovered', 0.3, ...
-    'dotShape', 'square'};
-end
-
 function templates = localLetterTemplates(stimSz, letters, stimArgs, mapY, mapX)
 maskSz = [stimSz(1) stimSz(2) 1];
 nL = numel(letters);

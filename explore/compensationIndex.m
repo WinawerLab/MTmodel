@@ -1,6 +1,6 @@
 %% compensationIndex.m
 % How much of a uniform RGC amplitude lesion does divisive normalization absorb,
-% and does the absorption depend on stimulus speed?
+% and does the absorption depend on stimulus drive (speed × coherence)?
 %
 % WHY. Both cortical stages compute R = s*N / (strength*D + sigma^2), with the
 % normalization pool D driven by the LESIONED input. So scaling the RGC drive by
@@ -9,17 +9,12 @@
 %   high drive (strength*k^2*D >> sigma^2):  R ~ independent of k   -> compensated
 %   low  drive (strength*k^2*D << sigma^2):  R ~ k^2                -> not compensated
 %
-% This decides two things at once:
-%
-%   1. How much of docs/MODEL_AND_LESIONS.md 4.7.2's null result ("50% gain cut
-%      barely moves direction tuning") is normalization absorbing the lesion.
-%   2. JW's signal-starvation hypothesis (docs/NOISE_AND_DEMYELINATION.md 5.5):
-%      the clinical low-speed deficit may not need low-speed-selective damage.
-%      MT is tuned to {0,1,6} px/frame = {0,5,30} deg/s, so the bottom of the
-%      clinical band (0.2-3 deg/s) sits below MT's slowest moving unit and MT is
-%      weakly driven there. If low speed also sits in the uncompensated regime, an amplitude
-%      lesion costs the full k^2 on an already-small signal - a deficit that is
-%      about the operating point, not about which cells were damaged.
+% Phase 1 (speed only, coherence = 1) quantifies §4.8. Phase 2 adds a coherence
+% axis and re-expresses the lesion signature against unlesioned MT drive rather
+% than speed (NOISE §5.5, TODO §1 step 1): if low-speed, high-speed and
+% low-coherence conditions collapse onto one curve in drive space, the
+% operating-point account wins; residual speed dependence at matched drive
+% implicates something speed-specific.
 %
 % MEASURES. Reported separately, because "MT response" is ambiguous at low speed:
 %   mtMove   best response over the 18 MOVING MT units (speed 1 and 6 px/frame)
@@ -29,9 +24,7 @@
 %   v1Max    best over the 28 V1 neurons
 %
 % The compensation index is C = 1 - slope/2, where slope = dlogR/dlogk fitted
-% over GAINS. C = 0 is no compensation (R ~ k^2, the numerator exponent), C = 1
-% is full compensation (R flat in k). The k^2 reference is checked empirically
-% at the end by re-running V1 with normalization off.
+% over GAINS. C = 0 is no compensation (R ~ k^2), C = 1 is full compensation.
 %
 % Deterministic - no noise anywhere. This measures the gain headroom that noise
 % would later act on.
@@ -44,10 +37,11 @@ thisFile = mfilename('fullpath');
 repoRoot = fileparts(fileparts(thisFile));
 addpath(genpath(repoRoot));
 
-SPEEDS_PXF = [0.0625 0.125 0.3125 0.625 1 3 6];   % px/frame
-GAINS      = [1 0.7 0.5 0.3 0.1];                  % remaining RGC amplitude
-DOT_SEED   = 4242;                                 % same dots for every gain
-DOT_DENS   = 0.1;
+SPEEDS_PXF  = [0.0625 0.125 0.3125 0.625 1 3 6];          % px/frame
+COHERENCES  = [0.05 0.125 0.25 0.5 0.75 1];                % dot motion coherence
+GAINS       = [1 0.7 0.5 0.3 0.1];                         % remaining RGC amplitude
+DOT_SEED    = 4242;                                        % same dots per condition
+DOT_DENS    = 0.1;
 
 U = shModelUnits;
 SPEEDS_DEG = SPEEDS_PXF * U.degPerSecPerPixelPerFrame;
@@ -56,49 +50,36 @@ outDir = fullfile(repoRoot, 'explore', '_figs');
 if ~exist(outDir, 'dir'), mkdir(outDir); end
 
 fprintf('=== Compensation index: normalization vs. uniform RGC amplitude lesion ===\n');
-fprintf('units: 1 px/frame = %.3g deg/s, 1 frame = %.3g ms\n\n', ...
-        U.degPerSecPerPixelPerFrame, U.msPerFrame*1);
+fprintf('units: 1 px/frame = %.3g deg/s, 1 frame = %.3g ms\n', ...
+        U.degPerSecPerPixelPerFrame, U.msPerFrame);
+fprintf('grid: %d speeds x %d coherences x %d gains\n\n', ...
+        numel(SPEEDS_PXF), numel(COHERENCES), numel(GAINS));
 
 presets = {'derivative', 'laggedMagno'};
 S = struct();
+G = struct();
 
 for ip = 1:numel(presets)
     presetName = presets{ip};
     parsBase = localSetup(presetName, repoRoot);
     stimSz = shGetDims(parsBase, 'mtPattern', [1 1 31]);
-    [iMove, iSpd1, iSpd6, iStatic] = localMtGroups(parsBase);
+    mtGroups = localMtGroups(parsBase);
 
-    fprintf('--- preset: %s   (stim %dx%dx%d, %d MT units: %d static, %d @1, %d @6)\n', ...
+    fprintf('--- preset: %s   (stim %dx%dx%d, %d MT units)\n', ...
         presetName, stimSz(1), stimSz(2), stimSz(3), ...
-        size(parsBase.mtPopulationVelocities,1), numel(iStatic), numel(iSpd1), numel(iSpd6));
-
-    nS = numel(SPEEDS_PXF); nG = numel(GAINS);
-    R = struct('mtMove', zeros(nS,nG), 'mtSpd1', zeros(nS,nG), 'mtSpd6', zeros(nS,nG), ...
-               'mtStatic', zeros(nS,nG), 'v1Max', zeros(nS,nG));
+        size(parsBase.mtPopulationVelocities, 1));
 
     tAll = tic;
-    for is = 1:nS
-        rng(DOT_SEED);                                  % identical dots across gains
-        stim = mkDots(stimSz, 0, SPEEDS_PXF(is), DOT_DENS, 1);
-        for ig = 1:nG
-            pars = localLesion(parsBase, GAINS(ig), stimSz);
+    G.(presetName) = localMeasureGrid(parsBase, stimSz, mtGroups, ...
+        SPEEDS_PXF, COHERENCES, GAINS, DOT_SEED, DOT_DENS);
+    fprintf('  grid done (%.1f s)\n\n', toc(tAll));
 
-            [pop, ind] = shModel(stim, pars, 'mtPattern');
-            rMT = mean(shGetNeuron(pop, ind), 2);
-            R.mtMove(is,ig)   = max(rMT(iMove));
-            R.mtSpd1(is,ig)   = max(rMT(iSpd1));
-            R.mtSpd6(is,ig)   = max(rMT(iSpd6));
-            R.mtStatic(is,ig) = max(rMT(iStatic));
+    % Speed-only slice (coherence = 1) for backward-compatible §4.8 tables
+    iCoh1 = find(COHERENCES == 1, 1);
+    S.(presetName) = localSliceAtCoherence(G.(presetName), iCoh1);
 
-            [pv, iv] = shModel(stim, pars, 'v1Complex');
-            R.v1Max(is,ig) = max(mean(shGetNeuron(pv, iv), 2));
-        end
-        fprintf('  speed %6.2f deg/s done\n', SPEEDS_DEG(is));
-    end
-    fprintf('  (%.1f s)\n\n', toc(tAll));
-
-    S.(presetName) = R;
-    localReport(presetName, R, SPEEDS_DEG, SPEEDS_PXF, GAINS);
+    localReport(presetName, S.(presetName), SPEEDS_DEG, SPEEDS_PXF, GAINS);
+    localDriveReport(presetName, G.(presetName), SPEEDS_DEG, COHERENCES);
 end
 
 %% Empirical check on the k^2 reference: V1 with normalization off
@@ -121,12 +102,76 @@ catch ME
     fprintf('  skipped (%s)\n\n', ME.message);
 end
 
-save(fullfile(outDir, 'compensationIndex.mat'), 'S', 'SPEEDS_PXF', 'SPEEDS_DEG', 'GAINS');
+save(fullfile(outDir, 'compensationIndex.mat'), ...
+    'S', 'G', 'SPEEDS_PXF', 'SPEEDS_DEG', 'COHERENCES', 'GAINS');
 fprintf('Saved %s\n', fullfile(outDir, 'compensationIndex.mat'));
 
-localPlot(S, SPEEDS_DEG, GAINS, outDir);
+localPlotSpeed(S, SPEEDS_DEG, GAINS, outDir);
+localPlotDrive(G, SPEEDS_DEG, COHERENCES, GAINS, outDir);
 
 % ======================================================================
+function meas = localMeasureGrid(parsBase, stimSz, mtGroups, ...
+        speedsPxf, coherences, gains, dotSeed, dotDens)
+
+    nS = numel(speedsPxf);
+    nC = numel(coherences);
+    nG = numel(gains);
+
+    meas = struct();
+    meas.driveMt   = zeros(nS, nC);
+    meas.driveV1   = zeros(nS, nC);
+    meas.Cmt       = zeros(nS, nC);
+    meas.Cv1       = zeros(nS, nC);
+    meas.ratioMt   = zeros(nS, nC);
+    meas.ratioV1   = zeros(nS, nC);
+    meas.RmtMove   = zeros(nS, nC, nG);
+    meas.Rv1Max    = zeros(nS, nC, nG);
+
+    iMove = mtGroups.iMove;
+
+    for ic = 1:nC
+        coh = coherences(ic);
+        for is = 1:nS
+            spd = speedsPxf(is);
+            rng(dotSeed);
+            stim = mkDots(stimSz, 0, spd, dotDens, coh);
+
+            rMove = zeros(1, nG);
+            rV1   = zeros(1, nG);
+            for ig = 1:nG
+                pars = localLesion(parsBase, gains(ig), stimSz);
+                [pop, ind] = shModel(stim, pars, 'mtPattern');
+                rMT = mean(shGetNeuron(pop, ind), 2);
+                rMove(ig) = max(rMT(iMove));
+
+                [pv, iv] = shModel(stim, pars, 'v1Complex');
+                rV1(ig) = max(mean(shGetNeuron(pv, iv), 2));
+            end
+
+            meas.RmtMove(is, ic, :) = rMove;
+            meas.Rv1Max(is, ic, :)  = rV1;
+            meas.driveMt(is, ic) = rMove(1);
+            meas.driveV1(is, ic) = rV1(1);
+
+            bMt = polyfit(log(gains), log(max(rMove, realmin)), 1);
+            bV1 = polyfit(log(gains), log(max(rV1, realmin)), 1);
+            meas.Cmt(is, ic) = 1 - bMt(1) / 2;
+            meas.Cv1(is, ic) = 1 - bV1(1) / 2;
+
+            iHalf = find(gains == 0.5, 1);
+            meas.ratioMt(is, ic) = rMove(iHalf) / rMove(1);
+            meas.ratioV1(is, ic) = rV1(iHalf) / rV1(1);
+        end
+        fprintf('  coherence %.3g done\n', coh);
+    end
+end
+
+function R = localSliceAtCoherence(meas, iCoh)
+    R = struct();
+    R.mtMove = squeeze(meas.RmtMove(:, iCoh, :));
+    R.v1Max  = squeeze(meas.Rv1Max(:, iCoh, :));
+end
+
 function pars = localSetup(name, repoRoot)
     pars = shPars;
     pars.rgc.enabled = 1;
@@ -134,7 +179,7 @@ function pars = localSetup(name, repoRoot)
         case 'derivative'
             pars.rgc.mode = 'derivative';
         case 'laggedMagno'
-            pars.rgc.mode        = 'custom';   % else shModelV1Linear rebuilds the classes
+            pars.rgc.mode        = 'custom';
             pars.rgc.classes     = shRgcClassesMidgetParasolLagged(pars, [0 1 2 3]);
             pars.rgc.combine     = 'weights';
             pars.rgc.classesMode = 'custom';
@@ -152,25 +197,26 @@ end
 function pars = localLesion(pars, gainRemaining, stimSz)
     if gainRemaining == 1
         pars.rgc.impairmentEnabled = 0;
+        pars.rgc.impairmentAmplitudeMap = [];
         return;
     end
-    pars.rgc.impairmentEnabled = 1;
-    pars.rgc.impairmentAmplitudeMap = gainRemaining * ones(stimSz(1), stimSz(2));
+    pars = lesionApply(pars, 'amplitude_uniform_map', 'stimSize', stimSz(1:2), ...
+        'uniformGain', gainRemaining);
 end
 
-function [iMove, iSpd1, iSpd6, iStatic] = localMtGroups(pars)
+function g = localMtGroups(pars)
     v = pars.mtPopulationVelocities(:, 2);
-    iStatic = find(v == 0);
-    iSpd1   = find(v == 1);
-    iSpd6   = find(v == 6);
-    iMove   = find(v > 0);
+    g.iStatic = find(v == 0);
+    g.iSpd1   = find(v == 1);
+    g.iSpd6   = find(v == 6);
+    g.iMove   = find(v > 0);
 end
 
 function localReport(name, R, spdDeg, spdPxf, gains)
-    flds = {'mtMove', 'mtSpd1', 'mtSpd6', 'mtStatic', 'v1Max'};
+    flds = {'mtMove', 'v1Max'};
     for f = 1:numel(flds)
         fld = flds{f};
-        fprintf('  %s / %s\n', name, fld);
+        fprintf('  %s / %s  (coherence = 1)\n', name, fld);
         fprintf('    %8s %8s | %9s | %8s %8s | %6s %6s\n', ...
                 'deg/s', 'px/fr', 'R(k=1)', 'R.5/R1', 'R.1/R1', 'slope', 'C');
         for is = 1:size(R.(fld), 1)
@@ -185,7 +231,50 @@ function localReport(name, R, spdDeg, spdPxf, gains)
     end
 end
 
-function localPlot(S, spdDeg, gains, outDir)
+function localDriveReport(name, meas, spdDeg, coherences)
+    nS = numel(spdDeg);
+    nC = numel(coherences);
+    drive = meas.driveMt(:);
+    C = meas.Cmt(:);
+    spdRep = repmat(spdDeg(:), nC, 1);
+    cohRep = kron(coherences(:), ones(nS, 1));
+
+    valid = drive > 0 & isfinite(C);
+    x = log10(drive(valid));
+    y = C(valid);
+    spdV = spdRep(valid);
+    cohV = cohRep(valid);
+
+    bDrive = polyfit(x, y, 1);
+    yHat = polyval(bDrive, x);
+    ssRes = sum((y - yHat).^2);
+    ssTot = sum((y - mean(y)).^2);
+    r2Drive = 1 - ssRes / max(ssTot, eps);
+
+    X = [ones(numel(x), 1), x, log10(spdV)];
+    bFull = X \ y;
+    yFull = X * bFull;
+    ssResFull = sum((y - yFull).^2);
+    r2DriveSpeed = 1 - ssResFull / max(ssTot, eps);
+
+    fprintf('  %s / collapse test (MT moving, all speed x coherence)\n', name);
+    fprintf('    R^2(C ~ log10 drive)             = %.3f\n', r2Drive);
+    fprintf('    R^2(C ~ log10 drive + log speed) = %.3f\n', r2DriveSpeed);
+    fprintf('    mean C at drive < 0.25: %.2f   at drive > 0.75: %.2f\n', ...
+        mean(C(valid & drive < 0.25)), mean(C(valid & drive > 0.75)));
+    fprintf('    JW check: high speed (>=5 deg/s) + low coherence (<=0.25):\n');
+    hiSpdLoCoh = valid & spdRep >= 5 & cohRep <= 0.25;
+    if any(hiSpdLoCoh)
+        fprintf('      n=%d  mean drive=%.3f  mean C=%.2f  mean R(0.5)/R(1)=%.3f\n', ...
+            sum(hiSpdLoCoh), mean(drive(hiSpdLoCoh)), mean(C(hiSpdLoCoh)), ...
+            mean(meas.ratioMt(hiSpdLoCoh)));
+    else
+        fprintf('      (no grid points in this bin)\n');
+    end
+    fprintf('\n');
+end
+
+function localPlotSpeed(S, spdDeg, gains, outDir)
     presets = fieldnames(S);
     figure('Position', [80 80 1150 460]);
     for ip = 1:numel(presets)
@@ -193,12 +282,10 @@ function localPlot(S, spdDeg, gains, outDir)
 
         subplot(numel(presets), 2, (ip-1)*2 + 1);
         semilogx(spdDeg, R.mtMove(:,1), 'o-', 'LineWidth', 1.6); hold on;
-        semilogx(spdDeg, R.mtSpd1(:,1), 's--');
-        semilogx(spdDeg, R.mtSpd6(:,1), 'd--');
         semilogx(spdDeg, R.v1Max(:,1),  '^-');
         xlabel('stimulus speed (deg/s)'); ylabel('unlesioned response');
-        title(sprintf('%s: baseline drive', presets{ip}), 'Interpreter', 'none');
-        legend({'MT moving','MT @1 px/frame','MT @6 px/frame','V1'}, 'Location', 'northwest');
+        title(sprintf('%s: baseline drive (coh=1)', presets{ip}), 'Interpreter', 'none');
+        legend({'MT moving', 'V1'}, 'Location', 'northwest');
         grid on;
 
         subplot(numel(presets), 2, (ip-1)*2 + 2);
@@ -212,9 +299,50 @@ function localPlot(S, spdDeg, gains, outDir)
         yline(0, 'k:'); yline(1, 'k:');
         ylim([-0.1 1.1]);
         xlabel('stimulus speed (deg/s)'); ylabel('compensation index C');
-        title(sprintf('%s: 0 = no rescue, 1 = full', presets{ip}), 'Interpreter', 'none');
-        legend({'MT moving','V1'}, 'Location', 'southeast'); grid on;
+        title(sprintf('%s: C vs speed (coh=1)', presets{ip}), 'Interpreter', 'none');
+        legend({'MT moving', 'V1'}, 'Location', 'southeast'); grid on;
     end
     saveas(gcf, fullfile(outDir, 'compensationIndex.png'));
     fprintf('Saved %s\n', fullfile(outDir, 'compensationIndex.png'));
+end
+
+function localPlotDrive(G, spdDeg, coherences, gains, outDir)
+    presets = fieldnames(G);
+    nC = numel(coherences);
+
+    figure('Position', [60 60 1280 820]);
+    for ip = 1:numel(presets)
+        meas = G.(presets{ip});
+        row = ip - 1;
+
+        subplot(numel(presets), 3, row*3 + 1);
+        imagesc(coherences, spdDeg, meas.driveMt);
+        set(gca, 'YDir', 'normal');
+        colorbar;
+        xlabel('coherence'); ylabel('speed (deg/s)');
+        title(sprintf('%s: unlesioned MT drive', presets{ip}), 'Interpreter', 'none');
+
+        % C vs drive — collapse test (color = speed)
+        subplot(numel(presets), 3, row*3 + 2);
+        drive = meas.driveMt(:);
+        C = meas.Cmt(:);
+        spdRep = repmat(spdDeg(:), nC, 1);
+        scatter(drive, C, 36, spdRep, 'filled'); hold on;
+        colormap(gca, parula); colorbar;
+        yline(0, 'k:'); yline(1, 'k:');
+        xlabel('unlesioned MT drive (moving units)'); ylabel('compensation index C');
+        title(sprintf('%s: C vs drive (colour = speed)', presets{ip}), 'Interpreter', 'none');
+        grid on;
+
+        % Lesion ratio R(0.5)/R(1) vs drive — deficit in response space
+        subplot(numel(presets), 3, row*3 + 3);
+        ratio = meas.ratioMt(:);
+        scatter(drive, ratio, 36, spdRep, 'filled'); hold on;
+        colormap(gca, parula); colorbar;
+        xlabel('unlesioned MT drive'); ylabel('R(k=0.5) / R(k=1)');
+        title(sprintf('%s: 50%% lesion vs drive', presets{ip}), 'Interpreter', 'none');
+        grid on;
+    end
+    saveas(gcf, fullfile(outDir, 'compensationIndex_driveCoherence.png'));
+    fprintf('Saved %s\n', fullfile(outDir, 'compensationIndex_driveCoherence.png'));
 end
