@@ -550,7 +550,7 @@ the **high-pass** neuron (1–10 px/frame = 5–50 deg/s). The clinical deficit 
 **low** speeds. The low-pass neuron (0.0375–0.6 px/frame = 0.19–3 deg/s), which is
 squarely the clinically interesting band, was **not reported** under
 `delay_random`. So this is currently unknown rather than contradicted. It is the
-highest-value open experiment (`docs/TODO.md` §1), and the speed-graded midget
+highest-value lesion experiment (`docs/TODO.md` §2), and the speed-graded midget
 dependence of §4.5 is the candidate mechanism that would resolve it.
 
 #### 4.7.6 Class-selective lesions — do not use these

@@ -29,7 +29,7 @@
 % below it. V1 tiles four shells from 0.22 to 1.63 px/frame (1.1-8.2 deg/s),
 % which reaches lower. Expect weak MT opponency at the bottom of the clinical
 % band -- that is a real property of the model, not a bug, and it is the tension
-% recorded in docs/TODO.md 1.
+% recorded in docs/TODO.md 2.
 %
 % SPATIAL SCALE. At 10 px/deg a clinically sized letter (168 arcmin = 2.8 deg)
 % is 28 pixels, which is usable. LETTER_SIZE_PX below still sets the letter in

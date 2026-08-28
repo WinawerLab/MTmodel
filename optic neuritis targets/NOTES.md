@@ -29,7 +29,7 @@ deficit it constrains**, (a) or (b). A figure with no citation is not usable as 
 target.
 
 Also note what would count as reproducing it — the model-side observable, and the
-comparison. `docs/TODO.md` §2 flags that this is not yet settled for VEP latency.
+comparison. `docs/TODO.md` §3 flags that this is not yet settled for VEP latency.
 Is it the time to peak of the population response to a transient? The
 cross-correlation lag against the unlesioned response? Quoting a number in
 milliseconds before settling that would be premature.

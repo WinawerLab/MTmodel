@@ -116,7 +116,7 @@ The model this repo implements. Two points that are easy to miss:
   measurable. What is missing is the **dynamics of normalization** in cortex (see
   ORGaNICs, and delayed-normalization accounts of temporal dynamics in visual
   cortex). An earlier draft overstated this as "cannot predict latency at all",
-  which is wrong. See `docs/TODO.md` §2.
+  which is wrong. See `docs/TODO.md` §3.
 
 SH also note (p. 754) that parvocellular neurons make up about 90% of the LGN while
 the majority of MT afferents appear to be magnocellular, citing Tootell et al.

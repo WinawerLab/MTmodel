@@ -1,6 +1,6 @@
 # MTmodel — start here
 
-Last updated: 2026-08-25.
+Last updated: 2026-08-27.
 
 Read this first, then follow the reading list at the bottom.
 
@@ -17,6 +17,24 @@ question:
 > Can damage at the level of retinal ganglion cells explain the two things seen in
 > optic neuritis — (a) a slower visual evoked potential, and (b) worse recognition
 > of shapes defined only by motion, especially at slow speeds?
+
+## If you are picking this up cold, the next step is internal noise
+
+**[docs/TODO.md](docs/TODO.md) §1**, with the full plan in
+[docs/NOISE_AND_DEMYELINATION.md](docs/NOISE_AND_DEMYELINATION.md) §6. The model
+is deterministic, and that is the single biggest thing standing between it and the
+clinical question: normalization absorbs most of an amplitude lesion, and three of
+the mechanisms by which demyelination degrades a signal cannot be written down at
+all without noise.
+
+Two things worth knowing before you start. The first two steps of that build order
+need **no noise code** — they are deterministic drive maps. And **five decisions
+have to be settled first**, listed in `NOISE_AND_DEMYELINATION.md` §6; the one
+easiest to miss is that every observable must be reported alongside a measure of
+trial-to-trial variability, not as a mean alone.
+
+Read the report before writing anything. Everything below is context for doing
+that well.
 
 ## The rule that cannot be broken
 
@@ -136,7 +154,7 @@ Full account in [docs/MODEL_AND_LESIONS.md](docs/MODEL_AND_LESIONS.md) §2.
 | [docs/MODEL_AND_LESIONS.md](docs/MODEL_AND_LESIONS.md) | **The main report.** How the model is built and why, everything that has been measured, and how far each result can be trusted. Read before writing code or quoting a number. |
 | [docs/RGC_lagged_preset_summary.md](docs/RGC_lagged_preset_summary.md) | A closer look at the biological front-end, with figures. |
 | [docs/NOISE_AND_DEMYELINATION.md](docs/NOISE_AND_DEMYELINATION.md) | Why the model needs internal noise, and what it should predict once it has some. Mostly not built yet. |
-| [docs/TODO.md](docs/TODO.md) | What is open, in priority order. |
+| [docs/TODO.md](docs/TODO.md) | What is open, in priority order. §1 is internal noise, and it is where to start. |
 | [literature/NOTES.md](literature/NOTES.md) | The papers, and what each one constrains. |
 | [optic neuritis targets/NOTES.md](optic%20neuritis%20targets/NOTES.md) | The clinical figures the model should eventually match. |
 | [explore/README.md](explore/README.md) | Index of the exploratory scripts. |

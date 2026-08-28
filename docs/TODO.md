@@ -21,9 +21,57 @@ px/frame = 5–50 deg/s.
 
 ---
 
-## 1. Re-run the lesion matrix through the two-stream MT
+## 1. Internal noise
 
-**Highest value. It decides the standing low-speed tension.**
+**Highest value, and it can start cold** — nothing in its build order depends on
+§2 below. The model is deterministic, and that is the single biggest thing
+standing between it and the clinical question.
+
+**Full treatment: [`NOISE_AND_DEMYELINATION.md`](NOISE_AND_DEMYELINATION.md).**
+
+Short version. Because the model is deterministic, a uniform amplitude lesion is
+close to a reduction in contrast — and normalization absorbs most of it, which is
+why a 50% gain cut barely moved direction tuning. **The compensation is the
+lesion's signature, not the model failing to notice it**, but only once there is
+noise for the raised gain to act on. Three of the mechanisms by which
+demyelination degrades a signal — trial-to-trial jitter, stochastic conduction
+block, and failure at high firing rates — cannot be written down at all without
+it.
+
+Build order, from that document's §6. The first two steps need **no noise code**:
+
+1. **Coherence × speed drive map, still deterministic.** Extend
+   `explore/compensationIndex.m` with a coherence axis and re-express the deficit
+   against unlesioned drive rather than speed. If the low-speed, high-speed and
+   low-coherence conditions collapse onto one curve, the operating-point account
+   wins outright.
+2. **High-frequency failure** as a change in filter shape.
+3. **Noise, one site at a time.** Site 2 first — added into `N` in
+   `shModelV1Normalization_Tuned`, before the division — since it carries the
+   mechanism. Site 1 goes into the class channels in `shClassV1Basis`; site 3 into
+   the read-out. Run them separately before combining; they have different
+   signatures, and combining first makes the result uninterpretable.
+4. **Temporal noise** — jitter per trial, and Bernoulli dropout.
+
+**Five decisions have to be made before any of the noise steps**, set out in full
+in `NOISE_AND_DEMYELINATION.md` §6. Do not start from this list alone:
+
+- **Does the noise scale with the response, or have fixed variance?** This changes
+  the *sign* of several predictions. It is not a detail.
+- **How is it correlated across space?** Independent everywhere is the easy default
+  and it is wrong.
+- **Dropout is not Gaussian.** Stochastic conduction block is multiplicative,
+  all-or-none, and correlated in time.
+- **Which observables?** Motion-letter d′ is the natural one, but it must be
+  reported **alongside a measure of trial-to-trial variability** in the MT
+  response, because §4.2 of that document predicts the mean and the variability
+  move in opposite directions. Reporting only the mean reproduces the current blind
+  spot with extra steps.
+- **The observable for deficit (a) does not exist yet.** See §3 below.
+
+## 2. Re-run the lesion matrix through the two-stream MT
+
+**Decides the standing low-speed tension.**
 
 Every lesion number on record was measured before `pars.rgc.mtMix` existed, so it
 came through the midget-dominated MT. The class-agnostic results probably survive.
@@ -58,7 +106,7 @@ tuning measures. `explore/compareLesionsToBaseline.m` is the template — it see
 and it plots against baseline on shared axes. `explore/validateSHFigs9to14_lesions.m`
 still does not seed and should not be extended as it stands.
 
-## 2. Decide what the model's version of VEP latency is
+## 3. Decide what the model's version of VEP latency is
 
 Deficit (a) is approachable now, with one scope limit stated up front: predicted
 latency reflects retinal and feedforward filtering only, not the dynamics of
@@ -83,33 +131,6 @@ latency." That is wrong:
 exactly is the model-side observable? Time to peak of the population response to a
 transient? Cross-correlation lag against the unlesioned response? Pin this down
 first.
-
-## 3. Internal noise
-
-**Full treatment: [`NOISE_AND_DEMYELINATION.md`](NOISE_AND_DEMYELINATION.md).**
-
-Short version. The model is deterministic, so a uniform amplitude lesion is close
-to a reduction in contrast — and normalization absorbs most of it, which is why a
-50% gain cut barely moved direction tuning. **The compensation is the lesion's
-signature, not the model failing to notice it**, but only once there is noise for
-the raised gain to act on. Three of the mechanisms by which demyelination degrades a
-signal — trial-to-trial jitter, stochastic conduction block, and failure at high
-firing rates — cannot be written down at all without it.
-
-Build order, from that document's §6:
-
-1. **Coherence × speed drive map, still deterministic.** Extend
-   `explore/compensationIndex.m` with a coherence axis and re-express the deficit
-   against unlesioned drive rather than speed. If the low-speed, high-speed and
-   low-coherence conditions collapse onto one curve, the operating-point account
-   wins outright. No noise code needed.
-2. **High-frequency failure** as a change in filter shape. Also no noise code.
-3. **Noise, one site at a time**, starting with local cortical noise.
-4. **Temporal noise** — jitter per trial, and Bernoulli dropout.
-
-Two decisions have to be made before any of the noise steps: whether the noise
-scales with the response or has fixed variance (this changes the *sign* of several
-predictions), and how it is correlated across space.
 
 ## 4. Does the biological front-end say anything SH cannot?
 
