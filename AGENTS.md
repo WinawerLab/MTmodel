@@ -1,6 +1,6 @@
 # MTmodel — start here
 
-Last updated: 2026-08-25.
+Last updated: 2026-08-27.
 
 Read this first, then follow the reading list at the bottom.
 
@@ -17,6 +17,36 @@ question:
 > Can damage at the level of retinal ganglion cells explain the two things seen in
 > optic neuritis — (a) a slower visual evoked potential, and (b) worse recognition
 > of shapes defined only by motion, especially at slow speeds?
+
+## If you are picking this up cold: internal noise and the lesion matrix, iteratively
+
+The open work is **[docs/TODO.md](docs/TODO.md) §1–§3**, and those three are one
+investigation rather than three tasks. How lesions affect the results and how noise
+affects the results are the same question asked from two sides:
+
+- **§1, internal noise.** The model is deterministic, which is the single biggest
+  thing standing between it and the clinical question. Normalization absorbs most
+  of an amplitude lesion, and three of the mechanisms by which demyelination
+  degrades a signal cannot be written down at all without noise. Full plan in
+  [docs/NOISE_AND_DEMYELINATION.md](docs/NOISE_AND_DEMYELINATION.md) §6.
+- **§2, the lesion matrix through the two-stream MT.** Supplies the deterministic
+  baseline that §1 has to be read against, and decides the standing low-speed
+  tension.
+- **§3, re-read the two against each other — repeatedly.** Not a closing step. What
+  noise shows changes which lesion conditions are worth running; what the matrix
+  shows changes which noise model and which observables are worth building.
+
+**Start with §1 for convenience, not because it comes first.** Neither blocks the
+other, and §1's first two steps need no noise code — they are deterministic drive
+maps. Expect several passes rather than one pass each, and treat neither half as
+finished until the pair stops changing each other's reading.
+
+**Five decisions have to be settled before any noise step**, listed in
+`NOISE_AND_DEMYELINATION.md` §6. The one easiest to miss: every observable must be
+reported alongside a measure of trial-to-trial variability, never as a mean alone.
+
+Read the report before writing anything. Everything below is context for doing
+that well.
 
 ## The rule that cannot be broken
 
@@ -68,23 +98,27 @@ Full account in [docs/MODEL_AND_LESIONS.md](docs/MODEL_AND_LESIONS.md) §2.
   this up already.** MT pools a mixture of two streams,
   `popMT = (1-alpha)*streamA + alpha*delay(streamB, d)`, built after normalization
   in `shModelV1ComplexForMt`. Stream A is the parasol-only read-out (the fast
-  magnocellular drive). Stream B is the mixed read-out that reaches MT by way of
-  V2. `alpha = 0.10`, `d = 0`. Without the mixture, MT comes out midget-dominated,
-  which is Maunsell et al. (1990) backwards.
-  - Both streams read out of the **same** 160-feature basis. They are two 28×160
-    weight matrices, not two bases. The basis is computed twice per call, once per
-    stream, so `'lagged'` costs about twice as much as a single-stream run.
+  magnocellular drive), stream B the mixed read-out that reaches MT by way of V2.
+  `alpha = 0.10`, `d = 0`. Why it has to be there, and how alpha was set: §2.3 and
+  §4.4 of the report.
   - The switch is `pars.rgc.mtMix`, with fields `weightsA`, `alpha`, `delay`.
-    Clearing it gives the single-stream model and reproduces results from before
-    2026-08-14 bit for bit.
+    Clearing it gives the single-stream model.
+  - Both streams read out of the same 160-feature basis, as two 28×160 weight
+    matrices. The basis is computed once per stream, so `'lagged'` costs about
+    twice a single-stream run.
   - `'v1Complex'` is untouched. Only the MT stages see the mixture.
 - **Lesions** go through `pars.rgc.impairmentAmplitudeMap` and
   `impairmentDelayMap` (these vary across the visual field), or by editing
   `pars.rgc.classes(i).gain` and `.temporalKernel` (these pick out cell types).
   Weights are never refitted after a lesion.
-- **Physical units are pinned** in `pars/shModelUnits.m`: 1 pixel = 0.430 deg,
-  1 frame = 26.9 ms (37.2 frames/sec), 1 pixel/frame = 16 deg/sec. Use it for
-  every conversion.
+- **Physical units are anchored** in `pars/shModelUnits.m`: 1 pixel = 0.1 deg,
+  1 frame = 20 ms (50 frames/sec), 1 pixel/frame = 5 deg/sec. Use it for every
+  conversion; never hard-code the constants. This anchor was set on 2026-08-27
+  and **disagrees with Simoncelli & Heeger 1998 Appendix I**, which would give
+  0.430 deg/pixel and 16 deg/sec. Nothing the model computes depends on it — it
+  is a label for the sample grid — but every deg/s figure written before that
+  date is 3.2x larger than the same figure is now. See
+  `docs/RGC_lagged_preset_summary.md` §7.1.
 
 ## Traps that have already cost time
 
@@ -104,9 +138,9 @@ Full account in [docs/MODEL_AND_LESIONS.md](docs/MODEL_AND_LESIONS.md) §2.
   directions, so removing V1 neurons wrecks MT tuning for reasons of geometry that
   have nothing to do with biology. Change *what drives* the 28 neurons, not *which*
   28 they are.
-- **Do not quote 0.985 as a fixed property of the lagged preset.** A separate
-  measurement puts the same population at 0.93–0.95, and the worst single neuron is
-  0.709. See the report §4.2.
+- **Do not quote the 0.984 pooled correlation as a fixed property of the lagged
+  preset.** A separate measurement puts the same population at 0.93–0.95, and the
+  worst single neuron is 0.709. See the report §4.2.
 - **Do not use frame-scrambling as a motion control** for the motion letter. It
   leaves relative direction intact.
 
@@ -124,7 +158,6 @@ Full account in [docs/MODEL_AND_LESIONS.md](docs/MODEL_AND_LESIONS.md) §2.
   `set(0,'DefaultFigureVisible','on')`. This machine does that from a `startup.m`
   in `userpath`, which sits outside the repo and does not travel with it.
 - Get the healthy model comparable before adding complexity.
-- `explainV1RFs.m` at the repo root is scratch work. It is not authoritative.
 
 ## What to read next
 
@@ -133,7 +166,7 @@ Full account in [docs/MODEL_AND_LESIONS.md](docs/MODEL_AND_LESIONS.md) §2.
 | [docs/MODEL_AND_LESIONS.md](docs/MODEL_AND_LESIONS.md) | **The main report.** How the model is built and why, everything that has been measured, and how far each result can be trusted. Read before writing code or quoting a number. |
 | [docs/RGC_lagged_preset_summary.md](docs/RGC_lagged_preset_summary.md) | A closer look at the biological front-end, with figures. |
 | [docs/NOISE_AND_DEMYELINATION.md](docs/NOISE_AND_DEMYELINATION.md) | Why the model needs internal noise, and what it should predict once it has some. Mostly not built yet. |
-| [docs/TODO.md](docs/TODO.md) | What is open, in priority order. |
+| [docs/TODO.md](docs/TODO.md) | What is open, in priority order. §1–§3 are one iterative investigation; start at §1. |
 | [literature/NOTES.md](literature/NOTES.md) | The papers, and what each one constrains. |
 | [optic neuritis targets/NOTES.md](optic%20neuritis%20targets/NOTES.md) | The clinical figures the model should eventually match. |
 | [explore/README.md](explore/README.md) | Index of the exploratory scripts. |

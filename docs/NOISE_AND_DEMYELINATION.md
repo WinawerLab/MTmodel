@@ -7,7 +7,14 @@ should predict once it exists.
 Almost nothing here is built. The one part that has been measured — how much of an
 amplitude lesion divisive normalization absorbs — lives in
 [`MODEL_AND_LESIONS.md`](MODEL_AND_LESIONS.md) §4.8, and this document interprets
-it rather than repeating the numbers. The work-plan entry is `TODO.md` §3.
+it rather than repeating the numbers. The work-plan entry is `TODO.md` §1.
+
+**Noise is not a separate question from the lesion work.** How lesions affect the
+results and how noise affects the results are the same question asked from two
+sides, and they have to be worked iteratively: what noise shows changes which
+lesion conditions are worth running, and what the lesion matrix shows changes
+which noise model and which observables are worth building. See the callout above
+`TODO.md` §1, and §3 there for the recurring re-read.
 
 The framing in §4 and §5.5 below is JW's. The pathophysiology in §2 arrived as an
 AI-search summary — read the provenance warning there before relying on any of it.
@@ -115,7 +122,7 @@ been tried.
 
 **Functionally it is a parasol-selective lesion.** The high-temporal-frequency
 content in this model lives in the fast parasol filters (τ = 0.6/1.2, peak about
-27 ms) and in the lag structure that builds SH's high temporal orders (report
+20 ms) and in the lag structure that builds SH's high temporal orders (report
 §2.2). Attenuating high temporal frequencies therefore removes magnocellular drive
 preferentially — and with the two-stream MT, magnocellular drive is nearly all of
 MT's input. **Prediction: a high-frequency-failure lesion should hit MT far harder
@@ -196,7 +203,7 @@ A psychophysical one would not.
 
 If cortical gain control amplifies its *own* circuit noise, or loses stability at
 low drive, the effect would exceed the static account above. That needs
-normalization **dynamics** (ORGaNICs and relatives) — the same gap `TODO.md` §2
+normalization **dynamics** (ORGaNICs and relatives) — the same gap `TODO.md` §4
 flags for VEP latency, where static normalization is why latency effects arising in
 cortex are out of reach. The static analysis here is a **lower bound** on the
 mechanism, not the whole of it. If §5 finds the static version already sufficient,
@@ -273,24 +280,17 @@ while a small uniform delay persists**. Since a uniform delay is invisible to
 steady-state tuning (report §4.7.3), the model predicts **motion-form
 discrimination recovering while VEP latency stays prolonged.**
 
-**The real data are harder than that clean story, and the target already exists.**
-Brusa, Jones & Plant (2001), "Long-term remyelination after optic neuritis: a
-2-year visual evoked potential and psychophysical serial study," *Brain*
-124(3):468–479,
-[doi:10.1093/brain/124.3.468](https://doi.org/10.1093/brain/124.3.468) — 31
-patients, serial VEP and psychophysics over 24 months. They find that VEP latency
-*does* shorten significantly (6–7 ms between months 3 and 6, about 4 ms more by 24
-months), so recovery is partial rather than absent; that contrast sensitivity
-improved for nine months and then **declined**; and they conclude that long-term
-remyelination may mostly protect axons from degenerating rather than restore
-function.
+**The real data are harder than that clean story.** The target is Brusa, Jones &
+Plant (2001), 31 patients with serial VEP and psychophysics over 24 months. What it
+reports, and its full citation, are in
+[`optic neuritis targets/NOTES.md`](../optic%20neuritis%20targets/NOTES.md).
 
-Two things follow. First, the prediction has to be stated as a difference in
-*rate* — measures driven by variability recovering faster and more completely than
-latency — not as an absolute dissociation. Second, and this matters for the
-planned affected-eye versus fellow-eye design: **Brusa et al. report the fellow eye
-deteriorating over the same window**, so the fellow eye is not a clean
-within-subject control. This paper belongs in `optic neuritis targets/`.
+Two things follow for the model. First, the prediction has to be stated as a
+difference in *rate* — measures driven by variability recovering faster and more
+completely than latency — not as an absolute dissociation, because latency recovery
+in the real data is partial rather than absent. Second, their fellow eye
+deteriorates over the same window, so **the fellow eye is not a clean
+within-subject control** for the planned affected-versus-fellow design.
 
 ### 5.5 The low-speed deficit is probably about the operating point (JW)
 
@@ -311,10 +311,10 @@ one of several ways to lower it. It has a sharp falsifiable consequence, also JW
 because low coherence starves the signal just as low speed does.
 
 Report §4.8 measured the premise and it holds, by two routes rather than one. MT's
-motion signal across 1–5 deg/s is 4 to 5 times smaller than at 10–16 deg/s while V1
-is flat, so the starvation is real and specific to MT. And compensation is
-*strongest* where the drive is weakest (C = 0.89 at 1 deg/s against 0.64 at 10
-deg/s), which was the opposite of what was predicted. High compensation means the
+motion signal across 0.0625–0.3125 px/frame is 4 to 5 times smaller than at
+0.625–1 px/frame while V1 is flat, so the starvation is real and specific to MT.
+And compensation is *strongest* where the drive is weakest (C = 0.89 at 0.0625
+px/frame against 0.64 at 0.625), which was the opposite of what was predicted. High compensation means the
 lesion drives a *large* increase in gain, and that increase is precisely what
 amplifies site-2 cortical noise. So at low speeds the signal is smallest and the
 gain increase is largest. Both point the same way.
@@ -323,9 +323,9 @@ gain increase is largest. Both point the same way.
 drive rather than speed, then every way of lowering drive should expose the same
 deficit:
 
-- Drive is **U-shaped in speed**, collapsing at 1–2 deg/s and again at 96 deg/s and
-  peaking at 16 deg/s. So the model predicts impairment at **both** ends, not a
-  deficit that only grows as speed falls.
+- Drive is **U-shaped in speed**, collapsing at 0.0625–0.125 px/frame and again at
+  6 px/frame, and peaking at 1 px/frame. So the model predicts impairment at
+  **both** ends, not a deficit that only grows as speed falls.
 - Lowering coherence lowers drive at any speed, so a coherence staircase at high
   speed should be elevated too.
 - **Plot the deficit against unlesioned MT response, not against speed.** If the
@@ -372,7 +372,7 @@ deficit:
   mean and the variability move in opposite directions. Reporting only the mean
   would reproduce the current blind spot with extra steps.
 - **The observable for deficit (a) still does not exist.** A noisy analogue of VEP
-  latency has to be defined at all — see `TODO.md` §2.
+  latency has to be defined at all — see `TODO.md` §4.
 
 ---
 

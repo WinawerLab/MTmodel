@@ -24,14 +24,14 @@ output, never a record.
 | `fitMagnoMtPopulation.m` | fits the parasol-only V1 weight matrix (stream A) and caches it for `pars.rgc.mtMix`. |
 | `knockoutAndAlphaCalibration.m` | the Maunsell (1990) knockout check and the `alpha` bisection. Produces the table in the report §4.4. |
 | `measurePreferredTfSf.m` | measured preferred spatial and temporal frequency for both V1 populations — why the parasol-only fit loses the slow neurons. |
-| `measureMtSpeedTuning.m` | MT speed tuning in deg/s for both presets. Found that the nominal 96 deg/s tier actually peaks near 50 (derivative) or 59 (lagged), while the 16 deg/s tier lands correctly. Report §4.3. |
+| `measureMtSpeedTuning.m` | MT speed tuning for both presets. Found that the nominal 6 px/frame tier actually peaks near 3.1 (derivative) or 3.7 (lagged), while the 1 px/frame tier lands correctly. Report §4.3. |
 | `compensationIndex.m` | how much of a uniform amplitude lesion divisive normalization absorbs, against stimulus speed. Measures the gain headroom that noise would act on. Report §4.8. |
 | `compareLesionsToBaseline.m` | lesion and baseline on shared axes, **seeded**, with unambiguous gain labels. The template for any new lesion script. |
 | `makeLaggedPresetDocFigures.m` | regenerates the figures in `docs/figures/` for the front-end summary. |
 | `temporalTilingFromLags.m` | shows that lagged biphasic filters reconstruct SH's order 0–3 temporal basis — the justification for the lags. |
 | `compareTemporalKernels.m` | the SH derivative basis against the biological fast and slow filters, in time and as amplitude spectra. |
 | `demoDerivativePipeline.m` | end-to-end walkthrough of the derivative preset. |
-| `testONOFFAsymmetryNonvacuousness.m` | the open question of whether ON/OFF-asymmetric timing exploits the rectification SH lacks. Established that timing lesions are about 90% irreducible to an SH amplitude rescaling, but all three lesion types scored similarly, so it does not yet isolate a signature specific to rectification. See `../docs/TODO.md` §4. |
+| `testONOFFAsymmetryNonvacuousness.m` | the open question of whether ON/OFF-asymmetric timing exploits the rectification SH lacks. Established that timing lesions are about 90% irreducible to an SH amplitude rescaling, but all three lesion types scored similarly, so it does not yet isolate a signature specific to rectification. See `../docs/TODO.md` §5. |
 
 ## The SH Figs 9–14 campaign — still runs, but the results are superseded
 

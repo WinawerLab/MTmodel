@@ -6,7 +6,6 @@
 % Authors: Timothy Saint (saint@cns.nyu.edu) and Eero Simoncelli (eero.simoncelli@nyu.edu)
 %
 % See README file for brief description.
-% See ChangeLog file for latest modifications. 
 % See HELP subdirectory for demonstrations.
 % Type "help <command-name>" for documentation on individual commands.
 % ----------------------------------------------------------------------
@@ -64,7 +63,7 @@
 % ----------------- PARS functions ---------------------------------------
 %
 % mkGaussianFilter          Make a 1D gaussian filter with a given SIGMA.
-% shModelUnits              Pinned physical scale (0.430 deg/px, 26.9 ms/frame, 16 deg/s per px/frame)
+% shModelUnits              Anchored physical scale (0.1 deg/px, 20 ms/frame, 5 deg/s per px/frame)
 % shPars                    Get a PARS structure: shPars (derivative) or shPars('lagged') - the only two ways to run the model
 % shQuadratureKernel        90-deg Hilbert phase shift of a temporal kernel (retired ON/OFF quadrature)
 % shRgcClass                Constructor for one RGC class (spatial RF, temporal kernel, rectification, gain)

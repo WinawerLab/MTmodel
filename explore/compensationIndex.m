@@ -15,16 +15,16 @@
 %      barely moves direction tuning") is normalization absorbing the lesion.
 %   2. JW's signal-starvation hypothesis (docs/NOISE_AND_DEMYELINATION.md 5.5):
 %      the clinical low-speed deficit may not need low-speed-selective damage.
-%      MT is tuned to {0,1,6} px/frame = {0,16,96} deg/s, so the clinical band
-%      (1-10 deg/s) sits BELOW MT's slowest moving unit and MT is weakly driven
-%      there. If low speed also sits in the uncompensated regime, an amplitude
+%      MT is tuned to {0,1,6} px/frame = {0,5,30} deg/s, so the bottom of the
+%      clinical band (0.2-3 deg/s) sits below MT's slowest moving unit and MT is
+%      weakly driven there. If low speed also sits in the uncompensated regime, an amplitude
 %      lesion costs the full k^2 on an already-small signal - a deficit that is
 %      about the operating point, not about which cells were damaged.
 %
 % MEASURES. Reported separately, because "MT response" is ambiguous at low speed:
 %   mtMove   best response over the 18 MOVING MT units (speed 1 and 6 px/frame)
-%   mtSpd1   best over the 6 units tuned to 1 px/frame (16 deg/s)
-%   mtSpd6   best over the 12 units tuned to 6 px/frame (96 deg/s)
+%   mtSpd1   best over the 6 units tuned to 1 px/frame (5 deg/s)
+%   mtSpd6   best over the 12 units tuned to 6 px/frame (30 deg/s)
 %   mtStatic the single unit tuned to 0 px/frame - not a motion signal
 %   v1Max    best over the 28 V1 neurons
 %
@@ -198,7 +198,7 @@ function localPlot(S, spdDeg, gains, outDir)
         semilogx(spdDeg, R.v1Max(:,1),  '^-');
         xlabel('stimulus speed (deg/s)'); ylabel('unlesioned response');
         title(sprintf('%s: baseline drive', presets{ip}), 'Interpreter', 'none');
-        legend({'MT moving','MT @16 deg/s','MT @96 deg/s','V1'}, 'Location', 'northwest');
+        legend({'MT moving','MT @1 px/frame','MT @6 px/frame','V1'}, 'Location', 'northwest');
         grid on;
 
         subplot(numel(presets), 2, (ip-1)*2 + 2);

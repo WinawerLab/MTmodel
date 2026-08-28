@@ -25,17 +25,19 @@
 % for every neuron so the columns are directly comparable; preferences are
 % therefore quantized to the grid.
 %
-% Units use the frame rate pinned in docs/RGC_lagged_preset_summary.md 7.1:
-% 1 pixel = 0.430 deg, 1 frame = 26.9 ms (37.2 fps).
+% Units come from shModelUnits (docs/RGC_lagged_preset_summary.md 7.1):
+% 1 pixel = 0.1 deg, 1 frame = 20 ms (50 fps). That is the repo's anchor, not
+% Simoncelli & Heeger's Appendix I convention -- see shModelUnits.
 
 clear; clc;
 thisFile = mfilename('fullpath');
 repoRoot = fileparts(fileparts(thisFile));
 addpath(genpath(repoRoot));
 
-DEG_PER_PX   = 0.430;
-MS_PER_FRAME = 26.9;
-FPS          = 1000 / MS_PER_FRAME;
+U            = shModelUnits();
+DEG_PER_PX   = U.degPerPixel;
+MS_PER_FRAME = U.msPerFrame;
+FPS          = U.framesPerSecond;
 NPTS         = 15;
 SF_GRID      = logspace(log10(0.02), log10(0.45), NPTS);   % cycles/pixel
 TF_GRID      = logspace(log10(0.01), log10(0.45), NPTS);   % cycles/frame
