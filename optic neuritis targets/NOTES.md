@@ -93,7 +93,14 @@ Three standing caveats before any quantitative claim:
   below it, but MT is still weakly driven at the bottom of that band
   (`docs/TODO.md` §6).
 - The **0.05 deg/sec** psychophysical speed threshold is out of the model's reach
-  in any units (`docs/RGC_lagged_preset_summary.md` §7.2).
+  in any units (`docs/RGC_lagged_preset_summary.md` §7.2). Note what this is and
+  is not: it is *not* a low-frequency cutoff — nothing in the lagged preset blocks
+  DC, and V1 units there respond to a perfectly static stimulus. It is that
+  direction selectivity is zero at zero speed by symmetry and grows only linearly
+  from there, so at 0.05 °/s the model keeps about 5% of the direction signal it
+  has at 2 °/s. The limit is graded, not a wall, and it bites because the
+  object-from-motion task's only cue *is* the direction difference across the
+  object boundary.
 
 ## Brusa, Jones & Plant (2001) — why this one is worth pulling
 
