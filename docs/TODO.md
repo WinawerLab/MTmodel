@@ -231,6 +231,73 @@ against measured time courses.
 
 ---
 
+## 8. Cross-check the direction-selectivity-vs-speed measurement in MATLAB
+
+**Needs MATLAB. Nothing else in this item does.** Everything below is committed;
+what is missing is one run.
+
+### What prompted it
+
+`RGC_lagged_preset_summary.md` §7.2 used to say the model's slow-speed limit was
+that "a motion-energy filter cannot tell that from static". That was wrong twice,
+and §7.2 has been rewritten:
+
+1. **Wrong preset.** `shClassV1Basis` never touches `pars.v1TemporalFilters`. It
+   uses `v1SpatialFilters` for the **spatial** read-out only; all temporal
+   filtering is each class's own causal bigamma kernel plus its integer frame lag,
+   combined by the fitted `v1Weights`. Only the *derivative* preset puts the
+   zero-DC 3rd-derivative temporal filters into V1, via `shRgcClassesDerivative`.
+   So in the lagged preset **no stage has structurally zero DC gain** — parasol
+   kernel DC = +0.234, its DoG passes 0.75 of DC, midget larger still, and
+   half-wave rectification adds more. V1 units there respond to perfectly static
+   input. There is no low-frequency cutoff.
+2. **A wall where the truth is a slope.** The limit is on direction
+   *discrimination*, not responsiveness. DSI = (Rpref − Rnull)/(Rpref + Rnull) is
+   exactly 0 at zero speed for any system whatever — the two stimuli are the same
+   movie — and since both responses are smooth in speed and equal at s = 0, DSI
+   grows *linearly* from there. The slow-speed failure is direction contrast
+   collapsing onto a large direction-blind pedestal. Graded, not a wall.
+
+The shape (zero at zero, linear rise) is analytic and needs no checking. Only the
+scale does.
+
+### The open task
+
+Two scripts measure the same thing:
+
+- `explore/measureDirectionSelectivityVsSpeed.m` — full pipeline, **never run**,
+  no MATLAB in the environment where it was written. Assume it may not even
+  execute cleanly on the first try.
+- `explore/measureDirectionSelectivityVsSpeed_reduced.py` — a reduced 1-D
+  reimplementation of `shClassV1Basis`/`localClassChannel`. This produced the
+  numbers currently in §7.2. The reduction to one spatial dimension is exact, not
+  approximate: for a y-constant stimulus every `yorder >= 1` read-out is
+  identically zero, so only the four `yorder == 0` columns per class carry
+  anything.
+
+**Run the `.m`, compare against the `.py`, and reconcile.** The committed table is
+median |DSI| = 0.044 at 0.05 deg/s against 0.909 at 2 deg/s — about 5% of the
+achievable direction signal at the slowest clinical condition. If the two agree,
+drop the "not yet cross-checked" hedge in §7.2 and in
+`optic neuritis targets/NOTES.md`. If they disagree, the MATLAB result wins and
+§7.2's table must be corrected.
+
+Both scripts assert the zero-speed row is exactly 0. That catches sign and
+indexing errors but **not gain errors**, which is the failure mode a
+reimplementation is most likely to have. The reimplementation risk is real and is
+the whole reason this item exists.
+
+### One result worth keeping either way
+
+Raising spatial frequency does not help at the slow end. For a
+directional-derivative read-out the response goes as f_x³(a_x + a_t·s)³, so f_x
+cancels out of the pref/null ratio entirely — only s·a_t/a_x survives. Broadband
+dot stimuli buy nothing. The only lever on slow-speed direction signal is units
+with a larger a_t/a_x: longer temporal filters and slower-tuned units. That is
+the same prescription §7.2 already reaches, now with a reason.
+
+---
+
 ## Known problems, not currently being worked on
 
 **Defects in live code only.** Caveats about *results* belong in
