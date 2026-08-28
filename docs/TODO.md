@@ -11,10 +11,13 @@ were reversed is in `docs/_archive/`.
 > explain the optic-neuritis pattern of **(a) a slower visual evoked potential**
 > and **(b) worse recognition of shapes defined only by motion, at slow speeds**?
 
-Conversions: 1 pixel = 0.430 deg, 1 frame = 26.9 ms (37.2 fps), 1 pixel/frame =
-16 deg/sec. The Fig-10 **low-pass** neuron spans 0.0375–0.6 px/frame = 0.6–9.6
-deg/s, which is the clinically interesting band. The **high-pass** neuron spans
-1–10 px/frame = 16–160 deg/s.
+Conversions (`pars/shModelUnits.m`, re-anchored 2026-08-27 and **no longer SH's
+Appendix I convention** — see `RGC_lagged_preset_summary.md` §7.1): 1 pixel = 0.1
+deg, 1 frame = 20 ms (50 fps), 1 pixel/frame = 5 deg/sec. Every deg/s figure here
+is 3.2x smaller than it would be under SH's anchors; nothing the model computes
+changed. The Fig-10 **low-pass** neuron spans 0.0375–0.6 px/frame = 0.19–3 deg/s,
+which is the clinically interesting band. The **high-pass** neuron spans 1–10
+px/frame = 5–50 deg/s.
 
 ---
 
@@ -32,7 +35,7 @@ Two cells of the matrix have also never been run:
 - **uniform amplitude and uniform delay together.** There is no combined uniform
   condition anywhere. The only combined condition, `coupled`, ties the two axes
   together rather than varying them independently.
-- **the low-pass (0.6–9.6 deg/s) neuron under `delay_random`.** This is the cell
+- **the low-pass (0.0375–0.6 px/frame) neuron under `delay_random`.** This is the cell
   that decides the tension below, and it was never reported.
 
 **The tension.** `delay_random` — delay drawn independently at every pixel —
@@ -120,32 +123,39 @@ a conduction delay is *not* a lesion SH cannot express. What the biological pres
 buys is that a lesion can be stated in terms of cell types. A genuine test would
 have to exploit the ON/OFF rectification that SH lacks.
 
-## 5. Reconcile the spatial scale before making any quantitative clinical claim
+## 5. What is left of the spatial-scale problem after the re-anchor
 
-Two problems that have to be resolved together:
+The 2026-08-27 re-anchor to 10 px/deg and 50 fps closed most of this. A clinically
+sized letter (2.8 deg) is now 28 pixels rather than 6.5, and MT's tuning is
+{0, 5, 30} deg/s rather than {0, 16, 96}, so the clinical low-speed band straddles
+MT's slow moving unit instead of sitting entirely below it.
 
-- At 2.33 pixels per degree, a clinically sized letter (2.8 deg) is only about 6.5
-  pixels across. `explore/showMotionLetterModel.m` therefore sets the letter in
-  model pixels, implying about 34 deg, and reports the angular size it used.
-- The model's RGC receptive fields are about an order of magnitude larger than real
-  midget and parasol cells at this scale. The midget centre is 0.34 deg against a
-  real 0.02–0.05 deg.
+Three things are still open:
 
-This is the main thing standing between the motion-letter stimulus and a
-quantitative clinical claim.
+- **The midget centre is still 2–4x too large** (0.08 deg against a real 0.02–0.05).
+  This is structural, not a units problem: the model's spatial ladder, from midget
+  centre to MT receptive field, spans about 4.6x where real cortex spans 25–35x, so
+  no single pixels-per-degree fixes both ends. The fix is a front-end that runs the
+  retina on a finer grid than V1. `RGC_lagged_preset_summary.md` §7.1 sets out what
+  that would take.
+- **`explore/showMotionLetterModel.m` still sets the letter in model pixels** and
+  reports the implied angular size. With 28 pixels available it can now set a real
+  angular size instead. Not yet done.
+- **The psychophysical 0.05 deg/s speed threshold is out of the model's reach in
+  any units.** Do not treat this as a calibration problem; the reasoning is in
+  `RGC_lagged_preset_summary.md` §7.2. For now, test lesion effects at speeds slow
+  *relative to MT's own tuning* and compare the shape of the effect.
 
-A related standing tension: MT is tuned to {0, 1, 6} px/frame = {0, 16, 96} deg/s,
-so the entire clinical low-speed band sits below MT's slowest moving unit.
-`localOpponentPair` now warns when the population does not sample the stimulus
-speed.
+`localOpponentPair` warns when the population does not sample the stimulus speed.
 
 ## 6. Calibrate the RGC filter time courses against Kling (2020)
 
-Now actionable, since the frame rate is pinned. The preset's midget filter peaks at
-about 107 ms and its parasol filter at about 27 ms. Real parasol cells peak at
-20–40 ms, so parasol is fine; midget is slow, against a real 50–80 ms. The midget
-sign reversal at 376 ms and the 645 ms filter length are both very long for an RGC
-impulse response. These can finally be checked against measured time courses.
+At 50 fps the preset's midget filter peaks at about 80 ms and its parasol filter at
+about 20 ms. Real parasol cells peak at 20–40 ms and real midget cells at 50–80 ms,
+so after the re-anchor both peaks are in range — parasol at its fast edge, midget
+at its slow edge. What is still off is the tail: the midget sign reversal at 280 ms
+and the 480 ms filter length are both long for an RGC impulse response. Check these
+against measured time courses.
 
 ---
 

@@ -81,9 +81,14 @@ Full account in [docs/MODEL_AND_LESIONS.md](docs/MODEL_AND_LESIONS.md) §2.
   `impairmentDelayMap` (these vary across the visual field), or by editing
   `pars.rgc.classes(i).gain` and `.temporalKernel` (these pick out cell types).
   Weights are never refitted after a lesion.
-- **Physical units are pinned** in `pars/shModelUnits.m`: 1 pixel = 0.430 deg,
-  1 frame = 26.9 ms (37.2 frames/sec), 1 pixel/frame = 16 deg/sec. Use it for
-  every conversion.
+- **Physical units are anchored** in `pars/shModelUnits.m`: 1 pixel = 0.1 deg,
+  1 frame = 20 ms (50 frames/sec), 1 pixel/frame = 5 deg/sec. Use it for every
+  conversion; never hard-code the constants. This anchor was set on 2026-08-27
+  and **disagrees with Simoncelli & Heeger 1998 Appendix I**, which would give
+  0.430 deg/pixel and 16 deg/sec. Nothing the model computes depends on it — it
+  is a label for the sample grid — but every deg/s figure written before that
+  date is 3.2x larger than the same figure is now. See
+  `docs/RGC_lagged_preset_summary.md` §7.1.
 
 ## Traps that have already cost time
 

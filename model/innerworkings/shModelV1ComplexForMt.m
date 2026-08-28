@@ -34,9 +34,9 @@
 %              against Maunsell et al. (1990): P block should be small for most
 %              MT units, detectable for a minority. [0.1]
 %   delay      integer frame delay d applied to stream B. [0] -- the 2-3 extra
-%              synapses are ~5-10 ms, well under one 26.9 ms frame, so the
+%              synapses are ~5-10 ms, well under one 20 ms frame, so the
 %              latency separation is already carried by the slow midget kernel
-%              (~107 ms peak vs parasol ~27 ms). Use 1 only to represent the V2
+%              (~80 ms peak vs parasol ~20 ms). Use 1 only to represent the V2
 %              detour explicitly; it already overstates it.
 %
 % Setting alpha = 0 skips stream B entirely (one pass, pure magno) -- the

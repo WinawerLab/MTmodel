@@ -16,25 +16,25 @@
 % RGC_PRESET 'derivative' = exact legacy SH; 'midgetParasolLagged' = biological
 % midget/parasol with lagged copies (~0.985 healthy V1 fidelity).
 %
-% UNITS. The stimulus is built in the MODEL's units (shModelUnits: 2.33 px/deg,
-% 37.2 frames/sec), NOT the booth's ~100 px/deg. Converting a deg/s speed with
-% booth geometry makes it ~43x too slow in the units the MT filters live in.
+% UNITS. The stimulus is built in the MODEL's units (shModelUnits: 10 px/deg,
+% 50 frames/sec), NOT the booth's ~100 px/deg. Converting a deg/s speed with
+% booth geometry makes it ~10x too slow in the units the MT filters live in.
 %
 % SPEED. Set SPEED_DEG_S from the literature band you want to probe:
-%   0.6 - 9.6 deg/s   the clinically interesting low-speed band, and the range
-%                     the Fig-10 "lowpass" neuron spans (0.0375-0.6 px/frame)
-%   16 - 160 deg/s    the "highpass" neuron's range (1-10 px/frame)
-% MT is tuned to speeds {0, 1, 6} px/frame = {0, 16, 96} deg/s, so the whole
-% clinical band sits BELOW MT's slowest non-zero tuned speed. V1 tiles four
-% shells from 0.22 to 1.63 px/frame (3.5-26 deg/s), which reaches lower. Expect
-% weak MT opponency at clinical speeds -- that is a real property of the model,
-% not a bug, and it is the tension recorded in docs/TODO.md 1.
+%   0.19 - 3 deg/s   the clinically interesting low-speed band, and the range
+%                    the Fig-10 "lowpass" neuron spans (0.0375-0.6 px/frame)
+%   5 - 50 deg/s     the "highpass" neuron's range (1-10 px/frame)
+% MT is tuned to speeds {0, 1, 6} px/frame = {0, 5, 30} deg/s, so the clinical
+% band straddles MT's slowest non-zero tuned speed rather than sitting wholly
+% below it. V1 tiles four shells from 0.22 to 1.63 px/frame (1.1-8.2 deg/s),
+% which reaches lower. Expect weak MT opponency at the bottom of the clinical
+% band -- that is a real property of the model, not a bug, and it is the tension
+% recorded in docs/TODO.md 1.
 %
-% SPATIAL SCALE CAVEAT. At 2.33 px/deg a clinically sized letter (168 arcmin =
-% 2.8 deg) is only ~6.5 pixels -- far too small to be a letter. LETTER_SIZE_PX
-% below therefore sets the letter in model pixels and the script reports the
-% implied angular size, which will be much larger than the booth's. This is the
-% known order-of-magnitude spatial-scale offset (docs/TODO.md 5).
+% SPATIAL SCALE. At 10 px/deg a clinically sized letter (168 arcmin = 2.8 deg)
+% is 28 pixels, which is usable. LETTER_SIZE_PX below still sets the letter in
+% model pixels and the script reports the implied angular size; setting a real
+% angular size instead is open work (docs/TODO.md 5).
 
 thisFile = mfilename('fullpath');
 repoRoot = fileparts(fileparts(thisFile));
@@ -49,7 +49,7 @@ STAGE_V1 = 'v1Complex';
 SEED     = 1;
 
 % Dot speed in deg/s. See the SPEED note in the header for the literature bands.
-SPEED_DEG_S = 5;             % clinical low-speed band (-> 0.3125 px/frame)
+SPEED_DEG_S = 5;             % -> 1 px/frame at the current anchor
 
 % Letter height in MODEL pixels (see SPATIAL SCALE CAVEAT in the header).
 LETTER_SIZE_PX = [];         % [] = 60% of the shorter field dimension
@@ -72,7 +72,7 @@ STIM_ARGS = { ...
 
 switch lower(PRESET)
     case 'experiment'
-        OUT_SZ = [256 256 160];   % ~4.3 s at 37.2 fps; finer maps than 96²
+        OUT_SZ = [256 256 160];   % 3.2 s at 50 fps; finer maps than 96²
     otherwise
         % keep OUT_SZ above
 end

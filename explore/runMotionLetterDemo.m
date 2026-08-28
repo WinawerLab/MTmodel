@@ -17,7 +17,7 @@ addpath(genpath(repoRoot));
 
 %% CONFIG
 LETTER      = 'C';
-SPEED_DEG_S = 5;              % clinical low-speed band -> 0.3125 px/frame
+SPEED_DEG_S = 5;              % -> 1 px/frame at the current anchor
 OUT_SZ      = [128 128 120];  % model output [Y X T]
 SEED        = 7;
 FIGDIR      = fullfile(repoRoot, 'explore', '_figs');

@@ -14,14 +14,14 @@
 % letterSizeArcmin) convert through info.ppd, the pixels-per-degree of the
 % OUTPUT field. By default that comes from the display geometry
 % (screenWidthCm / viewDistCm), giving ~100 px/deg at booth resolution. The
-% MODEL's own scale is ~2.33 px/deg and 37.2 frames/sec (shModelUnits), i.e.
-% about 43x coarser, so a speed converted with booth geometry lands far below
-% the speeds the MT population is tuned to. To work in the model's units:
+% MODEL's own scale is 10 px/deg and 50 frames/sec (shModelUnits), i.e. about
+% 10x coarser, so a speed converted with booth geometry lands far below the
+% speeds the MT population is tuned to. To work in the model's units:
 %
 %   u = shModelUnits();
 %   stim = mkMotionLetter(sz, 'C', 'referenceDisplaySize', [], ...
 %       'ppd', u.pixelsPerDegree, 'frameRate', u.framesPerSecond, ...
-%       'dotSpeedDegS', 5);          % -> 0.3125 px/frame, as intended
+%       'dotSpeedDegS', 5);          % -> 1 px/frame, as intended
 %
 % Passing ppd overrides the display geometry entirely. letterSizePx, when
 % given, is in output-field pixels.
@@ -92,7 +92,7 @@ function [stim, info] = mkMotionLetter(stimSz, letter, varargin)
     % Pixels-per-degree of the OUTPUT field, which is what every angular
     % quantity below must convert through. Supplying ppd overrides the display
     % geometry entirely -- that is how a caller asks for the model's own scale
-    % (shModelUnits: 2.33 px/deg) rather than a booth's (~100 px/deg).
+    % (shModelUnits: 10 px/deg) rather than a booth's (~100 px/deg).
     if ~isempty(opts.ppd)
         ppdField = opts.ppd;
     else

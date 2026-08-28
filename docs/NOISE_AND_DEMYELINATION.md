@@ -115,7 +115,7 @@ been tried.
 
 **Functionally it is a parasol-selective lesion.** The high-temporal-frequency
 content in this model lives in the fast parasol filters (τ = 0.6/1.2, peak about
-27 ms) and in the lag structure that builds SH's high temporal orders (report
+20 ms) and in the lag structure that builds SH's high temporal orders (report
 §2.2). Attenuating high temporal frequencies therefore removes magnocellular drive
 preferentially — and with the two-stream MT, magnocellular drive is nearly all of
 MT's input. **Prediction: a high-frequency-failure lesion should hit MT far harder
@@ -304,10 +304,10 @@ one of several ways to lower it. It has a sharp falsifiable consequence, also JW
 because low coherence starves the signal just as low speed does.
 
 Report §4.8 measured the premise and it holds, by two routes rather than one. MT's
-motion signal across 1–5 deg/s is 4 to 5 times smaller than at 10–16 deg/s while V1
-is flat, so the starvation is real and specific to MT. And compensation is
-*strongest* where the drive is weakest (C = 0.89 at 1 deg/s against 0.64 at 10
-deg/s), which was the opposite of what was predicted. High compensation means the
+motion signal across 0.0625–0.3125 px/frame is 4 to 5 times smaller than at
+0.625–1 px/frame while V1 is flat, so the starvation is real and specific to MT.
+And compensation is *strongest* where the drive is weakest (C = 0.89 at 0.0625
+px/frame against 0.64 at 0.625), which was the opposite of what was predicted. High compensation means the
 lesion drives a *large* increase in gain, and that increase is precisely what
 amplifies site-2 cortical noise. So at low speeds the signal is smallest and the
 gain increase is largest. Both point the same way.
@@ -316,9 +316,9 @@ gain increase is largest. Both point the same way.
 drive rather than speed, then every way of lowering drive should expose the same
 deficit:
 
-- Drive is **U-shaped in speed**, collapsing at 1–2 deg/s and again at 96 deg/s and
-  peaking at 16 deg/s. So the model predicts impairment at **both** ends, not a
-  deficit that only grows as speed falls.
+- Drive is **U-shaped in speed**, collapsing at 0.0625–0.125 px/frame and again at
+  6 px/frame, and peaking at 1 px/frame. So the model predicts impairment at
+  **both** ends, not a deficit that only grows as speed falls.
 - Lowering coherence lowers drive at any speed, so a coherence staircase at high
   speed should be elevated too.
 - **Plot the deficit against unlesioned MT response, not against speed.** If the

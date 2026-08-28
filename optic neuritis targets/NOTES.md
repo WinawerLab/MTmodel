@@ -37,17 +37,22 @@ milliseconds before settling that would be premature.
 ## Units
 
 Model outputs are in pixels and frames. To compare against a clinical figure,
-convert with `pars/shModelUnits.m`: **1 pixel = 0.430 deg**, **1 frame = 26.9 ms
-(37.2 fps)**, **1 pixel/frame = 16 deg/sec**.
+convert with `pars/shModelUnits.m`: **1 pixel = 0.1 deg**, **1 frame = 20 ms
+(50 fps)**, **1 pixel/frame = 5 deg/sec**. This anchor was set on 2026-08-27 and
+is **not** Simoncelli & Heeger's Appendix I convention, which would give 0.430
+deg/pixel and 16 deg/sec; figures written before that date are 3.2x larger.
 
-Two standing caveats before any quantitative claim:
+Three standing caveats before any quantitative claim:
 
-- The model's RGC receptive fields are about an order of magnitude larger than real
-  midget and parasol cells at this scale
+- The model's midget receptive field centre is still 2–4x larger than a real one
+  (0.08 deg against 0.02–0.05), and no choice of units fixes it
   (`docs/RGC_lagged_preset_summary.md` §7.1).
-- MT is tuned to {0, 1, 6} px/frame = {0, 16, 96} deg/s, so the clinically
-  interesting low-speed band sits **below** MT's slowest moving unit
+- MT is tuned to {0, 1, 6} px/frame = {0, 5, 30} deg/s. The clinically interesting
+  low-speed band now straddles MT's slowest moving unit rather than sitting wholly
+  below it, but MT is still weakly driven at the bottom of that band
   (`docs/TODO.md` §5).
+- The **0.05 deg/sec** psychophysical speed threshold is out of the model's reach
+  in any units (`docs/RGC_lagged_preset_summary.md` §7.2).
 
 ## Brusa, Jones & Plant (2001) — why this one is worth pulling
 

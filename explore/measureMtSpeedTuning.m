@@ -4,7 +4,7 @@
 % For each probed MT neuron, sweeps dot speed with dots drifting in THAT
 % neuron's preferred direction, records the mean mtPattern response, and locates
 % the peak by parabolic refinement in log2 speed. Converts px/frame -> deg/sec
-% with shModelUnits (16 deg/s per px/frame). Seeded per stimulus: unseeded dot
+% with shModelUnits (5 deg/s per px/frame). Seeded per stimulus: unseeded dot
 % fields confound a speed effect with dot-sample noise (AGENTS.md).
 %
 % RESULT (2026-08-25, and the reason this script exists). The population's
@@ -12,15 +12,20 @@
 % parameters for the MT pooling weights -- do NOT match the measured tuning at
 % the high tier:
 %
-%   nominal  0 deg/s (1 neuron)   measured: low-pass, peak at or below 2 deg/s
-%   nominal 16 deg/s (6 neurons)  measured: 14.9 (derivative) / 16.5 (lagged)
-%   nominal 96 deg/s (12 neurons) measured: 49.7 (derivative) / 58.7 (lagged)
+%   nominal 0 px/frame (1 neuron)   measured: low-pass, peak at or below 0.125
+%   nominal 1 px/frame (6 neurons)  measured: 0.93 (derivative) / 1.03 (lagged)
+%   nominal 6 px/frame (12 neurons) measured: 3.11 (derivative) / 3.67 (lagged)
 %
-% The 16 deg/s tier lands where SH's own convention puts it (1 px/frame). The
-% 96 deg/s tier peaks near HALF its nominal value, with a clean interior peak,
-% consistent with 6 px/frame sitting past what the filter bank can represent
-% (the V1 filters peak at 0.2148 cyc/sample on both axes). Do not quote the
-% nominal 96 deg/s as those neurons' preferred speed.
+% In deg/s at the current anchor (5 deg/s per px/frame) that is 4.7 / 5.2 for the
+% 1 px/frame tier and 15.5 / 18.3 for the 6 px/frame tier. Recorded 2026-08-25
+% under the old SH anchor, where the same measurements read 14.9 / 16.5 and
+% 49.7 / 58.7 deg/s.
+%
+% The 1 px/frame tier lands on its nominal speed. The 6 px/frame tier peaks near
+% HALF its nominal value, with a clean interior peak, consistent with 6 px/frame
+% sitting past what the filter bank can represent (the V1 filters peak at 0.2148
+% cyc/sample on both axes). Do not quote 6 px/frame as those neurons' preferred
+% speed.
 %
 % Caveats: probes 7 of the 19 MT neurons (3 per moving tier, spanning
 % directions; within-tier spread was under 0.5 px/frame, so the tiers do behave
@@ -35,7 +40,7 @@ OUTDIR   = fullfile(repoRoot, 'explore', '_figs');
 if ~exist(OUTDIR, 'dir'), mkdir(OUTDIR); end
 PROG     = fullfile(OUTDIR, 'mtSpeedTuning_progress.txt');
 u       = shModelUnits();
-K       = u.degPerSecPerPixelPerFrame;      % 16 deg/s per px/frame
+K       = u.degPerSecPerPixelPerFrame;      % 5 deg/s per px/frame
 SPEEDS  = 2 .^ linspace(-3, 4, 13);         % px/frame: 0.125 .. 16
 NF      = 71;
 

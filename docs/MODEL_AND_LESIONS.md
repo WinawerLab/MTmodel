@@ -30,19 +30,26 @@ much, and how that varies across the visual field. Second, healthy behaviour tha
 is trustworthy enough that a change caused by damage means something. Everything
 below serves one of those two needs.
 
-The physical scale is fixed by SH 1998 Appendix I, p. 761. The derivation is in
-`docs/RGC_lagged_preset_summary.md` §7, and the code is `pars/shModelUnits.m`:
+The physical scale is set in `pars/shModelUnits.m`. The derivation is in
+`docs/RGC_lagged_preset_summary.md` §7.1:
 
-**1 pixel = 0.430 deg · 1 frame = 26.9 ms (37.2 frames/sec) · 1 pixel/frame = 16 deg/sec**
+**1 pixel = 0.1 deg · 1 frame = 20 ms (50 frames/sec) · 1 pixel/frame = 5 deg/sec**
+
+> **This changed on 2026-08-27 and it disagrees with the published paper.** SH
+> 1998 Appendix I, p. 761 would give 0.430 deg/pixel, 26.9 ms/frame and 16
+> deg/sec per pixel/frame. Every deg/s figure below is therefore **3.2x smaller**
+> than the same figure computed SH's way. Nothing the model computes changed —
+> only the labels. Full statement of the departure, and why, in
+> `RGC_lagged_preset_summary.md` §7.1.
 
 Useful conversions for the clinical speed range:
 
 | clinical speed | model units |
 |---|---|
-| 1 deg/s | 0.063 px/frame |
-| 2 deg/s | 0.125 px/frame |
-| 5 deg/s | 0.313 px/frame |
-| 10 deg/s | 0.625 px/frame |
+| 1 deg/s | 0.2 px/frame |
+| 2 deg/s | 0.4 px/frame |
+| 5 deg/s | 1.0 px/frame |
+| 10 deg/s | 2.0 px/frame |
 
 ---
 
@@ -107,12 +114,14 @@ plausible. **The high-order structure lives in the combination, not in any cell.
 A full description of the front-end, with figures and with the physical sizes of
 every parameter, is in `docs/RGC_lagged_preset_summary.md`.
 
-Two known problems with the scale, carried openly (details in that document, §7):
-at 0.43 deg per pixel the midget centre is about 0.34 deg across against roughly
-0.02–0.05 deg for real midget cells, so the midget-to-parasol *ratio* is right but
-the absolute scale is off by about a factor of ten; and the 0–3 frame lags are
-0–81 ms, far too long for differences in optic nerve conduction (a few ms) and
-better justified as lagged LGN cells or delayed inhibition.
+Two known problems with the scale, carried openly (details in that document, §7.1):
+at 0.1 deg per pixel the midget centre σ is 0.08 deg against roughly 0.02–0.05 deg
+for real midget cells, so the midget-to-parasol *ratio* is right but the midget is
+still 2–4x too large, and no choice of pixels-per-degree fixes that because the
+model's spatial ladder is about six times more compressed than the real one; and
+the 0–3 frame lags are 0–60 ms, far too long for differences in optic nerve
+conduction (a few ms) and better justified as lagged LGN cells or delayed
+inhibition.
 
 ### 2.3 Two streams into MT
 
@@ -165,9 +174,9 @@ popMT = (1 - alpha) * popA  +  alpha * delay(popB, d)
 - **alpha = 0.10, d = 0.** The midget drive is *imposed and never fitted*. If the
   midget columns were unmasked, ridge regression would re-inflate the midget share,
   because nothing in the objective holds it down. `d = 0` because the V2 detour is
-  roughly 5–10 ms, well under one 26.9 ms frame — and the difference in latency is
-  already there for free, since the midget filter peaks at about 107 ms against the
-  parasol filter's 27 ms.
+  roughly 5–10 ms, well under one 20 ms frame — and the difference in latency is
+  already there for free, since the midget filter peaks at about 80 ms against the
+  parasol filter's 20 ms.
 
 The MT stage is linear in `pop`, so the mixture is exactly
 `(1-alpha)*MT(popA) + alpha*MT(popB delayed)`. That makes knockout bookkeeping
@@ -257,25 +266,24 @@ edits to a class's temporal filter.
 ### 4.3 MT's nominal speeds are not its measured speeds
 
 `pars.mtPopulationVelocities(:,2)` holds three speed tiers: 0, 1 and 6 px/frame,
-which is 0, 16 and 96 deg/s at the pinned scale. Those are *construction*
+which is 0, 5 and 30 deg/s at the anchored scale. Those are *construction*
 parameters for the MT pooling weights. At the top tier they are not the tuning you
 actually get. Measured with drifting dots at each neuron's preferred direction
 (`explore/measureMtSpeedTuning.m`, 2026-08-25):
 
 | nominal | derivative | lagged (both streams) |
 |---|---|---|
-| 0 deg/s | low-pass, peak ≤ 2 deg/s | low-pass, peak ≤ 2 deg/s |
-| 16 deg/s | **14.9** (14.2–15.3) | **16.5** (16.1–17.1) |
-| 96 deg/s | **49.7** (47.0–50.3) | **58.7** (54.6–60.5) |
+| 0 deg/s | low-pass, peak ≤ 0.6 deg/s | low-pass, peak ≤ 0.6 deg/s |
+| 5 deg/s | **4.7** (4.4–4.8) | **5.2** (5.0–5.3) |
+| 30 deg/s | **15.5** (14.7–15.7) | **18.3** (17.1–18.9) |
 
-The 16 deg/s tier lands where SH's own convention puts it — 1 px/frame, and SH
-describe their normalization pool as tuned to "moderate speeds (16 deg/sec)". The
-96 deg/s tier peaks near **half** its nominal value. The curves have a clean
+The 1 px/frame tier lands on its nominal speed. The 6 px/frame tier peaks near
+**half** its nominal value. The curves have a clean
 interior peak with falloff on both sides, so this is real tuning and not an
 artifact of the grid. It fits with 6 px/frame sitting past what the filter bank can
 represent, since the V1 filters peak at 0.2148 cycles/sample on both axes.
 
-**Do not quote 96 deg/s as those neurons' preferred speed.** The lagged preset also
+**Do not quote 30 deg/s as those neurons' preferred speed.** The lagged preset also
 prefers systematically faster speeds than the derivative one, by 11% at the low
 tier and 18% at the high tier. That is the expected direction, since stream A is
 parasol-masked and the parasol filter peaks at 1 frame against the midget filter's
@@ -379,7 +387,7 @@ Scripts: `explore/fitMagnoMtPopulation.m` (the fit),
 ### 4.5 Midget damage costs slow speeds most — the first clue to the clinical picture
 
 Dependence on midget input concentrates sharply at **low** preferred speed. Median
-effect of a midget knockout, by the MT neuron's preferred speed (1 px/frame = 16
+effect of a midget knockout, by the MT neuron's preferred speed (1 px/frame = 5
 deg/s):
 
 | preferred speed | alpha=0.05 | alpha=0.10 |
@@ -402,7 +410,8 @@ tuning with alpha on and off.
 
 `stim/mkMotionLetter.m` builds a Regan-style motion-defined letter: the dots inside
 the letter drift one way, the background dots drift the other. This is the
-stimulus for deficit (b). Seeded, 5 deg/s, letter 'C', 128×128×120, from
+stimulus for deficit (b). Seeded, 0.3125 px/frame (1.6 deg/s at the current
+anchor; it was run and reported as 5 deg/s under SH's), letter 'C', 128×128×120, from
 `explore/runMotionLetterDemo.m`:
 
 | stage | derivative preset | lagged preset |
@@ -428,14 +437,14 @@ outside.
 MT d′ is **flat** across the clinical band, while V1's weaker opponent signal does
 rise with speed (96×96 field, derivative preset, seeded):
 
-| deg/s | px/frame | MT opponent d′ | V1 opponent d′ |
+| px/frame | deg/s | MT opponent d′ | V1 opponent d′ |
 |---|---|---|---|
-| 1.0 | 0.0625 | 1.31 | 0.18 |
-| 2.0 | 0.1250 | 1.31 | 0.26 |
-| 5.0 | 0.3125 | 1.29 | 0.31 |
-| 9.6 | 0.6000 | 1.31 | 0.33 |
-| 16.0 | 1.0000 | 1.34 | 0.33 |
-| 48.0 | 3.0000 | 1.29 | 0.32 |
+| 0.0625 | 0.31 | 1.31 | 0.18 |
+| 0.1250 | 0.63 | 1.31 | 0.26 |
+| 0.3125 | 1.56 | 1.29 | 0.31 |
+| 0.6000 | 3.0 | 1.31 | 0.33 |
+| 1.0000 | 5.0 | 1.34 | 0.33 |
+| 3.0000 | 15.0 | 1.29 | 0.32 |
 
 An earlier claim that MT d′ improved with speed came from a broken opponent-unit
 selector, since fixed.
@@ -444,15 +453,19 @@ selector, since fixed.
 the letter dots and the background dots by equal and opposite amounts, so relative
 direction survives it.
 
-**Open, and it blocks any quantitative clinical claim.** At 2.33 pixels per degree,
-a clinically sized letter (2.8 deg) is only about 6.5 pixels across. The demo
-therefore sets the letter size in model pixels, implying about 34 deg, and reports
-the angular size it used. Reconciling that with the factor-of-ten offset in RGC
-spatial scale (§2.2) is unresolved.
+**Largely resolved by the 2026-08-27 re-anchor, but the demo has not been re-run.**
+At the old 2.33 pixels per degree a clinically sized letter (2.8 deg) was only
+about 6.5 pixels across, so the demo set the letter size in model pixels, implying
+about 34 deg, and reported the angular size it used. At 10 px/deg the same letter
+is 28 pixels, which is usable directly. The demo still sets size in pixels and
+should be revisited.
 
-A related tension runs through all of §4.7 as well: MT is tuned to {0, 1, 6}
-px/frame = {0, 16, 96} deg/s, so **the entire clinical low-speed band sits below
-MT's slowest moving unit.**
+The related tension has also eased: MT is tuned to {0, 1, 6} px/frame, which is
+{0, 5, 30} deg/s at the current anchor rather than {0, 16, 96}. The clinical
+low-speed band now straddles MT's slow moving unit instead of sitting entirely
+below it. What re-anchoring does *not* touch is the RGC size offset — the midget
+centre is still 2–4x too large — or the psychophysical 0.05 deg/s threshold, which
+is out of the model's reach in any units (`RGC_lagged_preset_summary.md` §7.2).
 
 ### 4.7 Lesion results
 
@@ -533,8 +546,8 @@ producing both clinical signs: *uniform* slowing gives the VEP latency,
 *desynchronised* conduction across the field gives the motion deficit.
 
 **But there is a standing tension.** The heterogeneous-delay effect was largest on
-the **high-pass** neuron (1–10 px/frame = 16–160 deg/s). The clinical deficit is at
-**low** speeds. The low-pass neuron (0.0375–0.6 px/frame = 0.6–9.6 deg/s), which is
+the **high-pass** neuron (1–10 px/frame = 5–50 deg/s). The clinical deficit is at
+**low** speeds. The low-pass neuron (0.0375–0.6 px/frame = 0.19–3 deg/s), which is
 squarely the clinically interesting band, was **not reported** under
 `delay_random`. So this is currently unknown rather than contradicted. It is the
 highest-value open experiment (`docs/TODO.md` §1), and the speed-graded midget
@@ -588,23 +601,26 @@ single point of clinical interest.
 **MT's motion signal is much weaker across the clinical speed band.** Unlesioned
 best moving-MT response, lagged preset with two streams:
 
-| stimulus speed | 1 | 2 | 5 | 10 | 16 | 48 | 96 deg/s |
+| stimulus speed, px/frame | 0.0625 | 0.125 | 0.3125 | 0.625 | 1 | 3 | 6 |
 |---|---|---|---|---|---|---|---|
+| = deg/s | 0.31 | 0.63 | 1.6 | 3.1 | 5 | 15 | 30 |
 | MT, moving unit | 0.18 | 0.19 | 0.40 | 0.79 | **0.97** | 0.89 | 0.30 |
 | V1, best unit | 0.46 | 0.47 | 0.34 | 0.47 | 0.48 | 0.40 | 0.24 |
 
-Across 1–5 deg/s the MT motion signal is 4 to 5 times smaller than at 10–16 deg/s,
-while V1 is essentially flat over the same range. At 1 deg/s in the derivative
-preset the *static* MT unit responds 1.60 against the best moving unit's 0.22, so
-the population is dominated by a non-motion signal. The starvation is specific to MT,
-which is what you would expect given that MT is tuned to {0, 16, 96} deg/s. Note
-the shape is a **U**, not a ramp: drive collapses again at 96 deg/s.
+Across the three slowest speeds the MT motion signal is 4 to 5 times smaller than
+at 0.625–1 px/frame, while V1 is essentially flat over the same range. At 0.0625
+px/frame in the derivative preset the *static* MT unit responds 1.60 against the
+best moving unit's 0.22, so the population is dominated by a non-motion signal.
+The starvation is specific to MT, which is what you would expect given that MT is
+tuned to {0, 1, 6} px/frame. Note the shape is a **U**, not a ramp: drive
+collapses again at the fastest speed.
 
 **Compensation is strongest where the drive is weakest**, which is the opposite of
 what was predicted:
 
-| stimulus speed | 1 | 2 | 5 | 10 | 16 | 48 | 96 deg/s |
+| stimulus speed, px/frame | 0.0625 | 0.125 | 0.3125 | 0.625 | 1 | 3 | 6 |
 |---|---|---|---|---|---|---|---|
+| = deg/s | 0.31 | 0.63 | 1.6 | 3.1 | 5 | 15 | 30 |
 | C, MT moving unit | **0.89** | 0.88 | 0.74 | 0.64 | 0.66 | 0.65 | **0.81** |
 
 C tracks the inverse of drive: about 0.65 in the well-driven middle, about 0.9 at
@@ -617,7 +633,7 @@ begin with, and it also keeps them in the compensated regime down to small *k*.
 Why this matters for the clinical question is set out in
 `NOISE_AND_DEMYELINATION.md` §4 and §6. In short: high C means the lesion drives a
 large *increase* in gain, and that gain increase is exactly what would amplify
-cortical noise. So at 1–5 deg/s the signal is smallest and the gain increase is
+cortical noise. So at the slow end the signal is smallest and the gain increase is
 largest, and both point the same way.
 
 Caveats on this measurement:
@@ -625,8 +641,8 @@ Caveats on this measurement:
 - **C describes the mean response only.** It measures the gain headroom that noise
   would act on. By itself it says nothing about discriminability.
 - **The size of the starvation is specific to this model.** MT tiles only three
-  speeds here. A real MT with denser speed tuning would be less starved at 5 deg/s,
-  so the 4–5× figure is not a quantitative clinical prediction.
+  speeds here. A real MT with denser speed tuning would be less starved in the
+  middle of the range, so the 4–5× figure is not a quantitative clinical prediction.
 - **Units far from their preferred speed behave erratically and should not be
   read.** They show C > 1, meaning the response *rises* under lesion, because the
   lesion cuts their normalization pool more than their numerator. That is real

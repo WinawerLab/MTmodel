@@ -104,9 +104,12 @@ The model this repo implements. Two points that are easy to miss:
 
 - **Units (Appendix I, p. 761).** Frequency units are fixed so the tiling annulus
   crosses ω_t = 8 cycles/sec and ω_x = 0.5 cycles/deg. With this codebase's filters
-  that makes **1 pixel = 0.430 deg** and **1 frame = 26.9 ms (37.2 fps)**, so
-  1 pixel/frame = 16 deg/sec. Derivation and consequences in
-  `docs/RGC_lagged_preset_summary.md` §7.1.
+  that would make **1 pixel = 0.430 deg** and **1 frame = 26.9 ms (37.2 fps)**, so
+  1 pixel/frame = 16 deg/sec. **This repo does not use SH's anchors.** Since
+  2026-08-27 `pars/shModelUnits.m` sets 0.1 deg/pixel and 20 ms/frame, i.e. 5
+  deg/sec per pixel/frame, because SH's scale puts every stage of the model 3–15x
+  too coarse. The model's responses are the same either way. Derivation and
+  consequences in `docs/RGC_lagged_preset_summary.md` §7.1.
 - **Static normalization (p. 758).** SH flag as "one notable deficiency" that their
   outputs correspond to **steady-state firing rates**. Note the scope of that
   carefully. The feedforward temporal filtering *is* causal, so response latency is
@@ -135,9 +138,10 @@ Kept for provenance; see `explore/_archive/README.md` and
 
 The functional organisation of midget and parasol ganglion cells. This is the
 intended calibration target for the filter time courses, and it is now actionable
-because the frame rate is pinned: the preset's midget filter peaks at about 107 ms
-and its parasol filter at about 27 ms, which can finally be checked against
-measured time courses. `docs/TODO.md` §6.
+because the frame rate is anchored: at 50 fps the preset's midget filter peaks at
+about 80 ms and its parasol filter at about 20 ms, both of which now fall inside
+the measured ranges. What is still off is the tail — a 280 ms sign reversal and a
+480 ms filter length. `docs/TODO.md` §6.
 
 ---
 
