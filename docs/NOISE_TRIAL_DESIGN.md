@@ -1,6 +1,9 @@
-# Noise implementation — locked decisions (Step 0) and trial-loop API (Step 1)
+# Noise implementation — locked decisions, trial API, and results
 
-**Status:** Step 0 locked 2026-08-28. Step 1 specified but not implemented.
+**Status:** Step 0 locked. Step 1 harness done. Step 2 **Phase A locked**
+(2026-08-28): V1 numerator, independent, **σ = 0.05**, N = 50. Coherence × speed
+drive map done. **Next:** Phase B (spatial correlation). MT Site-2 is its own
+later arm.
 
 This document is the contract for the noise work described in
 [`NOISE_AND_DEMYELINATION.md`](NOISE_AND_DEMYELINATION.md) §6 and [`TODO.md`](TODO.md) §3.
@@ -34,7 +37,8 @@ largest). Speeds here use the current anchor (`shModelUnits`: 1 deg/s = 0.2 px/f
 when adding RGC noise — spike-count analogy (NOISE §4.1).
 
 **Parameter (Step 2).** `pars.noise.site2.mode = 'fixed'`, `pars.noise.site2.sigma`
-(start ~0.02–0.05 in units of rectified `N`; tune against benchmark).
+(**0.05**, locked 2026-08-28 after a 0.03 / 0.05 / 0.08 sweep). Independent,
+V1 numerator only.
 
 **Falsifier.** If lesion + noise at 1 deg/s does **not** raise trial SD while mean
 d′ and tuning stay near healthy, check injection site and σ before revisiting fixed
@@ -102,12 +106,20 @@ Every new noise feature must pass this before expanding the matrix.
 | Trials | **N = 50** |
 | Seeds | Dot seed fixed (see §2); noise seed varies per trial |
 
-**Success criteria (deterministic → noisy):**
+**Success criteria (deterministic → noisy) — all passed 2026-08-28:**
 
-1. **Healthy, no noise:** MT d′ ≳ +1.0 (report: ~+1.3 at 1 deg/s).
-2. **Lesion, no noise:** d′ may drop modestly; tuning curves still near flat (§4.7.2).
-3. **Lesion + noise:** d′ **drops further** vs (2); **SD(d′)** and **SD(center opponent)**
-   **rise** vs healthy; mean opponent map still relatively flat vs lesion-only.
+1. **Healthy, no noise:** MT d′ ≳ +1.0. Measured **+4.510** (letter C, 1 deg/s,
+   128², seed 7, lagged + mtMix). High d′ with a small center opponent (0.109)
+   means spatial scatter is tiny, not that MT is strongly driven. Script:
+   `explore/runMotionLetterDeterministicBaseline.m`.
+2. **Lesion, no noise:** d′ **+4.423** (delta **−0.087**). Modest, as
+   normalization predicts. Center opponent 0.109 → 0.089 (−18%).
+3. **Lesion + noise (σ = 0.05, N = 50):** d′ **3.814 ± 0.083** vs lesion-off
+   4.423 and vs healthy+noise **4.388 ± 0.033**. SD(d′) **2.5×** healthy+noise.
+   Mean letter map is visibly weaker, not only more variable.
+
+Do **not** overwrite `explore/_figs/site2_phaseA/` (σ = 0.03, N = 20 first look).
+The lock lives in `explore/_figs/site2_phaseA_sigma005_n50/`.
 
 **Control arm (optional):** `mtMix = false` — same benchmark, documents stream
 contribution; not the biological default.
@@ -123,7 +135,7 @@ contribution; not the biological default.
 | Letter size in degrees / RF scale | `TODO.md` §5 — blocks quantitative clinical claims |
 | Jitter, Bernoulli dropout | Step 5 — not Gaussian approximations |
 | Site 1 + Site 3 noise combined | Step 4 — separate first (NOISE §6) |
-| Exact σ, σ_corr | Tuned against benchmark, not philosophical choices |
+| Exact σ | **Locked: 0.05** (sweep 0.03 / 0.05 / 0.08). σ_corr still open (Phase B). |
 
 ---
 
@@ -186,8 +198,8 @@ Defaults block (Step 1 — noise off):
 cfg.enabled = false;
 cfg.site2.enabled = false;
 cfg.site2.mode = 'fixed';       % locked Step 0
-cfg.site2.sigma = 0.03;         % tune in Step 2
-cfg.spatialCorrelation = 'none'; % 'none' | 'gaussian' (Phase B)
+cfg.site2.sigma = 0.05;         % locked 2026-08-28 after σ sweep
+cfg.spatialCorrelation = 'none'; % 'none' | 'gaussian' (Phase B — not implemented)
 cfg.spatialCorrSigmaPx = 3;     % Phase B
 cfg.noiseSeed = 9000;
 cfg.nTrials = 50;
@@ -304,6 +316,8 @@ R.lesion  = motionLetterTrials(stim, info, parsL, cfgMl, cfgNoise);
 - [x] `motionLetterTrialMetrics.m` — scalar fields added
 - [x] `motionLetterTrials.m` — loop + seed discipline (`runV1` optional, default off)
 - [x] `motionLetterSummarizeTrials.m` — aggregation
+- [x] `explore/runMotionLetterDeterministicBaseline.m` — **2 full-field MT
+      forwards** (healthy + gain-0.5), same movie; run this before Step 2
 - [x] `explore/runMotionLetterTrialsDemo.m` — small-field smoke test @ 1 deg/s;
       confirms **deterministic** N trials match single-trial d′ when noise is off
 - [ ] Wire optional call from `runMotionLetterLesionPhase2.m` behind a flag
@@ -314,25 +328,140 @@ Step 2 to hook `rng(noiseSeed+tr)` into Site-2 draw without changing explore scr
 
 ---
 
-### 2.5 Step 2 hook (for implementer — not Step 1)
+### 2.5 Step 2 hook — implemented (V1 only)
 
-In `shModelV1Normalization_Tuned.m` (and MT analogue if needed):
+`shApplySite2Noise` adds `sigma * randn(size(N))` to the V1 numerator (`nume`)
+in `shModelV1Normalization_Tuned.m` **before** the division. Gated on
+`pars.noise.enabled` and `pars.noise.site2.enabled` (both false by default, so
+existing tests are unchanged; `tests/runAllTests.m` still 12/12). MT
+normalization is **not** noised yet — that is a later, separate arm.
 
-```matlab
-% After rectified N computed, before division:
-if isfield(pars, 'noise') && pars.noise.site2.enabled
-    N = N + localDrawSite2Noise(size(N), pars.noise.site2, rngState);
-end
-```
+`shSite2LastND` records mean `N` and `D` on noisy trials. Phase B spatial
+correlation still errors if requested.
 
-`localDrawSite2Noise`: if `mode=='fixed'`, `sigma * randn(size(N))`; Phase B adds
-spatial smoothing when `spatialCorrelation=='gaussian'`.
+Scripts:
 
-Instrument **`D`** and **`N`** (report §4.8) in the same edit.
+- `explore/runMotionLetterSite2PhaseA.m` — locked σ = 0.05, N = 50
+- `explore/runMotionLetterSite2SigmaSweep.m` — already run (0.03 / 0.05 / 0.08)
 
 ---
 
-## 3. Related repo pointers
+## 3. Results recorded 2026-08-28
+
+Geometry unless noted: letter **C**, **1 deg/s** (0.2 px/frame), lagged + `mtMix`,
+output **128×128×120**, **dot seed 7**, **noise seed 9000**, `amplitude_uniform`
+gain **0.5**. Units: `shModelUnits` (10 px/deg, 50 fps).
+
+### 3.1 Infra (not a science step)
+
+Central `pars/motionLetterPars.m` and `pars/lesionPars.m` / `lesionApply.m` so
+scripts stop duplicating defaults. `Kristin` merged `origin/main` including the
+2026-08-27 unit re-anchor.
+
+### 3.2 Coherence × speed drive map (TODO §1 step 1)
+
+Script: `explore/compensationIndex.m`. Output:
+`explore/_figs/compensationIndex_speedCoherence/`.
+
+Grid: 7 speeds × 6 coherences × 5 gains, both presets. **Why:** if C is a function
+of unlesioned drive rather than of speed, JW's operating-point account wins
+(NOISE §5.5).
+
+| Preset | R²(C ~ log10 drive) | R²(+ log speed) | C (drive below 0.25) | C (drive above 0.75) |
+|--------|---------------------|-----------------|----------------------|----------------------|
+| derivative | 0.966 | 0.981 | 0.91 | 0.68 |
+| laggedMagno | **0.984** | 0.984 | 0.86 | 0.65 |
+
+JW check (speed ≥ 5 deg/s, coherence ≤ 0.25): 9 cells, lagged mean drive 0.231,
+mean C **0.85**, mean R(0.5)/R(1) **0.90**. Low coherence at high speed behaves
+like low speed.
+
+Speed-only slice (coherence = 1) still matches report §4.8 (lagged C = 0.89 at
+0.31 deg/s, 0.64 at 3.1 deg/s). k² check with normalization off: slope = 2.000.
+
+**Reading:** the deterministic mean is organized by drive, not by the speed label.
+This does not yet speak to trial SD — that needed Site-2.
+
+### 3.3 Step 1 harness
+
+Files: `pars/noisePars.m`, `explore/motionLetterTrials.m` (MT-only by default),
+`motionLetterTrialMetrics.m`, `motionLetterSummarizeTrials.m`.
+
+Smoke test (`runMotionLetterTrialsDemo.m`, 48², 3 trials, noise off): **std(d′) =
+0**, exact match to a single forward. API ready for Site-2.
+
+### 3.4 Deterministic two-forward baseline
+
+`explore/runMotionLetterDeterministicBaseline.m`. Same geometry as the noise
+benchmark. **Why two forwards, not N = 50:** with noise off every trial is
+identical.
+
+| | MT d′ | Center opponent |
+|--|-------|-----------------|
+| Healthy | **+4.5104** | **+0.1090** |
+| Lesion (gain 0.5) | **+4.4230** | **+0.0891** |
+| Delta | −0.0874 (−2%) | −0.0199 (−18%) |
+
+d′ ≫ +1 because spatial scatter is tiny, not because the letter-region signal is
+large (center opponent is only 0.11). Report §4.6's +1.32 was a **different**
+stimulus (0.3125 px/frame, 1.6 deg/s). Do not treat +4.51 as a contradiction of
+that number.
+
+### 3.5 Site-2 Phase A
+
+Injection: `nume = nume + σ·randn(size(nume))` in
+`shModelV1Normalization_Tuned`, before the division. Independent in space.
+`tests/runAllTests.m` 12/12 with noise off.
+
+**First look** (σ = 0.03, N = 20): `explore/_figs/site2_phaseA/`. Sign of all
+predictions already correct (lesion+noise d′ 4.12 ± 0.045 vs healthy+noise
+4.44 ± 0.019). Kept; not the lock.
+
+**σ sweep** (N = 15): `explore/_figs/site2_sigmaSweep/`. **Why sweep before
+N = 50:** cheaper than 50 copies at the wrong σ.
+
+| σ | Healthy d′ | Lesion d′ | Gap | SD(d′) h / L | SD ratio |
+|---|------------|-----------|-----|----------------|----------|
+| 0.03 | 4.44 | 4.11 | −0.33 | 0.018 / 0.048 | 2.73 |
+| **0.05** | 4.37 | 3.78 | **−0.59** | 0.026 / 0.076 | **2.91** |
+| 0.08 | 4.26 | 3.22 | −1.05 | 0.039 / 0.104 | 2.63 |
+
+All three keep rankSD and rankDrop. **Locked σ = 0.05:** highest lesion/healthy
+SD ratio, mean gap almost 2× σ = 0.03, healthy still ~4.37. σ = 0.08 is harsher
+than needed (SD ratio falls because healthy variability catches up).
+
+**Locked benchmark** (σ = 0.05, N = 50):
+`explore/_figs/site2_phaseA_sigma005_n50/` (25.6 min).
+
+| Condition | Mean d′ | SD(d′) | Center opp mean | Center opp SD |
+|-----------|---------|--------|-----------------|---------------|
+| Healthy, noise off | 4.510 | 0 | 0.109 | 0 |
+| Lesion, noise off | 4.423 | 0 | 0.089 | 0 |
+| Healthy + noise | 4.388 | 0.033 | 0.093 | 0.0015 |
+| Lesion + noise | **3.814** | **0.083** | **0.052** | **0.0034** |
+
+Mean N / D (healthy+noise vs lesion+noise): **0.115 / 0.117** vs **0.029 / 0.029**
+(≈ k² = 0.25). Same σ is a much larger fraction of a smaller signal; raised gain
+from smaller D amplifies it after the division.
+
+Figures: `dprime_hist.png` (distributions do not overlap), `mean_maps.png` (mean
+C is visibly weaker under lesion+noise at this σ, unlike the milder 0.03 look).
+
+**What this does not mean:** d′ is still ~3.8 — the letter is still easy. Phase A
+asked for the **sign** of the JW interaction, not a clinical match. Independent
+noise is still wrong for cortex (Phase B).
+
+### 3.6 Next (do not skip ahead)
+
+1. Phase B: spatially correlated Site-2, same σ = 0.05; ranking must survive.
+2. N = 50 is already locked; do not re-run it for its own sake.
+3. More lesions with noise only after Phase B if the claim is about spatial
+   structure of damage.
+4. MT Site-2 last, as its own arm (V1 already feeds MT).
+
+---
+
+## 4. Related repo pointers
 
 | Item | Location |
 |------|----------|
@@ -345,9 +474,10 @@ Instrument **`D`** and **`N`** (report §4.8) in the same edit.
 
 ---
 
-## 4. Change log
+## 5. Change log
 
 | Date | Change |
 |------|--------|
 | 2026-08-28 | Step 0 locked; Step 1 API sketched |
-| 2026-08-28 | Step 1 harness implemented (`noisePars`, trial loop, smoke-test demo) |
+| 2026-08-28 | Step 2: Site-2 hook; Phase A first look, σ sweep, N=50 lock at σ=0.05 |
+| 2026-08-28 | Coherence × speed map; this file records tables |

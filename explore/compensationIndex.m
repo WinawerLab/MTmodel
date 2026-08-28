@@ -46,7 +46,7 @@ DOT_DENS    = 0.1;
 U = shModelUnits;
 SPEEDS_DEG = SPEEDS_PXF * U.degPerSecPerPixelPerFrame;
 
-outDir = fullfile(repoRoot, 'explore', '_figs');
+outDir = fullfile(repoRoot, 'explore', '_figs', 'compensationIndex_speedCoherence');
 if ~exist(outDir, 'dir'), mkdir(outDir); end
 
 fprintf('=== Compensation index: normalization vs. uniform RGC amplitude lesion ===\n');

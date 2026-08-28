@@ -34,17 +34,35 @@ if ~isfield(cfgNoise, 'noiseSeed')
 end
 
 nT = cfgNoise.nTrials;
+parsRun = pars;
+parsRun.noise = cfgNoise;
+if ~isfield(parsRun.noise, 'enabled') || ~parsRun.noise.enabled
+    parsRun.noise.enabled = false;
+    if isfield(parsRun.noise, 'site2')
+        parsRun.noise.site2.enabled = false;
+    end
+end
+
+shSite2LastND('clear');
 
 for tr = 1:nT
     rng(cfgNoise.noiseSeed + tr);
-    [popMt, indMt] = shModel(stim, pars, 'mtPattern');
+    [popMt, indMt] = shModel(stim, parsRun, 'mtPattern');
     if runV1
-        [popV1, indV1] = shModel(stim, pars, 'v1Complex');
+        [popV1, indV1] = shModel(stim, parsRun, 'v1Complex');
     else
         popV1 = [];
         indV1 = [];
     end
-    m = motionLetterTrialMetrics(popMt, indMt, popV1, indV1, pars, stimInfo);
+    m = motionLetterTrialMetrics(popMt, indMt, popV1, indV1, parsRun, stimInfo);
+    dgn = shSite2LastND();
+    if isempty(dgn)
+        m.Nmean = NaN;
+        m.Dmean = NaN;
+    else
+        m.Nmean = dgn.Nmean;
+        m.Dmean = dgn.Dmean;
+    end
     if tr == 1
         trials = repmat(m, nT, 1);
     else
@@ -53,7 +71,7 @@ for tr = 1:nT
     fprintf('  trial %d/%d  dMt = %+.3f\n', tr, nT, m.dMt);
 end
 
-R = motionLetterSummarizeTrials(trials, cfgMl, cfgNoise, pars, ...
+R = motionLetterSummarizeTrials(trials, cfgMl, cfgNoise, parsRun, ...
     'conditionLabel', label);
 
 end

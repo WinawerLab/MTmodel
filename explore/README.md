@@ -25,7 +25,11 @@ output, never a record.
 | `knockoutAndAlphaCalibration.m` | the Maunsell (1990) knockout check and the `alpha` bisection. Produces the table in the report §4.4. |
 | `measurePreferredTfSf.m` | measured preferred spatial and temporal frequency for both V1 populations — why the parasol-only fit loses the slow neurons. |
 | `measureMtSpeedTuning.m` | MT speed tuning for both presets. Found that the nominal 6 px/frame tier actually peaks near 3.1 (derivative) or 3.7 (lagged), while the 1 px/frame tier lands correctly. Report §4.3. |
-| `compensationIndex.m` | how much of a uniform amplitude lesion divisive normalization absorbs, against stimulus speed. Measures the gain headroom that noise would act on. Report §4.8. |
+| `runMotionLetterTrialsDemo.m` | Step 1 smoke test: small field, noise off, `std(d′)≈0`. |
+| `runMotionLetterDeterministicBaseline.m` | **Two** full-field MT forwards (healthy + 50% amplitude lesion), same movie. Run this before Site-2 noise. |
+| `runMotionLetterSite2PhaseA.m` | Locked Phase A: σ = 0.05, N = 50. Writes `explore/_figs/site2_phaseA_sigma005_n50/`. First look (σ = 0.03, N = 20) is in `site2_phaseA/`. |
+| `runMotionLetterSite2SigmaSweep.m` | Choose Site-2 σ (V1 only). Writes `explore/_figs/site2_sigmaSweep/`. |
+| `compensationIndex.m` | how much of a uniform amplitude lesion divisive normalization absorbs, against stimulus speed **and coherence**. Measures the gain headroom that noise would act on. Report §4.8. |
 | `compareLesionsToBaseline.m` | lesion and baseline on shared axes, **seeded**, with unambiguous gain labels. The template for any new lesion script. |
 | `makeLaggedPresetDocFigures.m` | regenerates the figures in `docs/figures/` for the front-end summary. |
 | `temporalTilingFromLags.m` | shows that lagged biphasic filters reconstruct SH's order 0–3 temporal basis — the justification for the lags. |

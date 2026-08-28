@@ -9,6 +9,7 @@
 | Motion-letter dot size, speed, letter, model preset? | **`motionLetterPars.m`** — edit the DEFAULTS block |
 | Trial noise defaults (Step 1: off)? | **`noisePars.m`** |
 | N-trial motion-letter loop? | `explore/motionLetterTrials.m` |
+| Site-2 Phase A (run on a fast machine)? | `explore/runMotionLetterSite2PhaseA.m` |
 | Lesion gains, delays, stochastic seeds/ranges? | **`lesionPars.m`** — edit the DEFAULTS block |
 | Apply a named lesion? | `lesionApply(pars, 'amplitude_uniform')` |
 | Lesion condition lists for scripts? | `lesionCatalog('motionLetterPhase2', ...)` |

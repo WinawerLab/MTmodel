@@ -1,12 +1,14 @@
 # Open work
 
-Rewritten 2026-08-25; reordered 2026-08-27. **This file holds only what is still
-open**, ordered by how much it bears on the driving question — but see the callout
-below: §1–§3 are one iterative investigation and their numbering is not a sequence.
+Rewritten 2026-08-25; reordered 2026-08-27; progress recorded 2026-08-28.
+**Done items stay here**, marked done, with what they showed. Still-open work
+follows in the same numbering.
 
-Finished work is not recorded here. What was built and what it showed is in
-[`MODEL_AND_LESIONS.md`](MODEL_AND_LESIONS.md); the design record for choices that
-were reversed is in `docs/_archive/`.
+What was built earlier (front-end, mtMix, Figs 9–14 lesions) is in
+[`MODEL_AND_LESIONS.md`](MODEL_AND_LESIONS.md). The noise contract, including
+locked Step 0 choices and the 2026-08-28 tables, is
+[`NOISE_TRIAL_DESIGN.md`](NOISE_TRIAL_DESIGN.md). Reversed designs are in
+`docs/_archive/`.
 
 > **The driving question.** Can damage at the level of retinal ganglion cells
 > explain the optic-neuritis pattern of **(a) a slower visual evoked potential**
@@ -41,11 +43,12 @@ px/frame = 5–50 deg/s.
 
 ## 1. Internal noise
 
-**Start here, by convenience rather than by dependency.** Nothing in this build
-order depends on §2, and the first two steps need no noise code at all, so it is
-the cheapest place to begin. The model is deterministic, and that is the single
-biggest thing standing between it and the clinical question. Read the callout
-above before treating any result from this section as final.
+**Start here, by convenience rather than by dependency.** The coherence × speed
+map and Site-2 Phase A are done (below). High-frequency failure, Phase B
+correlation, and Sites 1/3 / MT Site-2 remain. The model was fully deterministic
+until 2026-08-28; that was the single biggest thing standing between it and the
+clinical question. Read the callout above before treating any result from this
+section as final.
 
 **Full treatment: [`NOISE_AND_DEMYELINATION.md`](NOISE_AND_DEMYELINATION.md).**
 
@@ -58,36 +61,40 @@ demyelination degrades a signal — trial-to-trial jitter, stochastic conduction
 block, and failure at high firing rates — cannot be written down at all without
 it.
 
-Build order, from that document's §6. The first two steps need **no noise code**:
+Build order, from that document's §6:
 
-1. **Coherence × speed drive map, still deterministic.** Extend
-   `explore/compensationIndex.m` with a coherence axis and re-express the deficit
-   against unlesioned drive rather than speed. If the low-speed, high-speed and
-   low-coherence conditions collapse onto one curve, the operating-point account
-   wins outright.
-2. **High-frequency failure** as a change in filter shape.
-3. **Noise, one site at a time.** Site 2 first — added into `N` in
-   `shModelV1Normalization_Tuned`, before the division — since it carries the
-   mechanism. Site 1 goes into the class channels in `shClassV1Basis`; site 3 into
-   the read-out. Run them separately before combining; they have different
-   signatures, and combining first makes the result uninterpretable.
-4. **Temporal noise** — jitter per trial, and Bernoulli dropout.
+1. ~~**Coherence × speed drive map, still deterministic.**~~ **Done 2026-08-28.**
+   `explore/compensationIndex.m` now sweeps 7 speeds × 6 coherences. C vs
+   unlesioned MT drive collapses: **R² = 0.984** (lagged) / **0.966** (derivative).
+   Adding speed on top of drive does not help the lagged preset. High speed + low
+   coherence lands in the same high-C regime as low speed (lagged: mean C = 0.85,
+   R(0.5)/R(1) = 0.90). **JW's operating-point account holds for this
+   deterministic mean.** Figures:
+   `explore/_figs/compensationIndex_speedCoherence/`. Full table in
+   `NOISE_TRIAL_DESIGN.md` §3.2 and report §4.8.1.
+2. **High-frequency failure** as a change in filter shape. **Still open.**
+3. **Noise, one site at a time.**
+   - ~~**Site 2, Phase A (independent, V1 numerator).**~~ **Done 2026-08-28.**
+     Fixed σ, injected into `N` in `shModelV1Normalization_Tuned` before the
+     division. σ **0.05** locked after a 0.03 / 0.05 / 0.08 sweep. N = 50
+     benchmark: lesion+noise MT d′ **3.81 ± 0.083** vs healthy+noise
+     **4.39 ± 0.033** (SD ratio **2.5×**); noise-off lesion was only −0.09 d′.
+     Mean N/D scale as k² (0.115 vs 0.029). All four Step 0 checks passed.
+     See `NOISE_TRIAL_DESIGN.md` §3.4–3.5. **Phase B (spatial correlation) is
+     next.** MT Site-2, Site 1, and Site 3 are not started — run separately
+     before combining.
+4. **Temporal noise** — jitter per trial, and Bernoulli dropout. **Still open.**
 
-**Five decisions have to be made before any of the noise steps**, set out in full
-in `NOISE_AND_DEMYELINATION.md` §6. Do not start from this list alone:
+**Five decisions** (full text in `NOISE_AND_DEMYELINATION.md` §6). Status
+2026-08-28:
 
-- **Does the noise scale with the response, or have fixed variance?** This changes
-  the *sign* of several predictions. It is not a detail.
-- **How is it correlated across space?** Independent everywhere is the easy default
-  and it is wrong.
-- **Dropout is not Gaussian.** Stochastic conduction block is multiplicative,
-  all-or-none, and correlated in time.
-- **Which observables?** Motion-letter d′ is the natural one, but it must be
-  reported **alongside a measure of trial-to-trial variability** in the MT
-  response, because §4.2 of that document predicts the mean and the variability
-  move in opposite directions. Reporting only the mean reproduces the current blind
-  spot with extra steps.
-- **The observable for deficit (a) does not exist yet.** See §4 below.
+| Decision | Status |
+|----------|--------|
+| Fixed vs proportional variance | **Locked:** fixed at Site 2. Proportional reserved for Site 1. |
+| Spatial correlation | **Phase A done** (independent). **Phase B open** (gaussian, required before patchy claims). |
+| Dropout is not Gaussian | **Deferred** (Step 5). |
+| Observables: d′ + trial SD | **Locked and in use:** d′, SD(d′), SD(center opponent). |
+| Deficit (a) / VEP observable | **Still open** — see §4 below. |
 
 ## 2. Re-run the lesion matrix through the two-stream MT
 

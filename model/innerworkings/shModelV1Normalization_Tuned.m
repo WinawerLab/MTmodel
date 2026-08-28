@@ -25,6 +25,11 @@ deno = shGaussianBlur(pop, ind, xfilt, tfilt);
 % now get normalizing
 [pop, ind] = shTrim(pop, ind, trimmer);
 nume = pop * pars.scaleFactors.v1Complex;
+nume = shApplySite2Noise(nume, pars);
+if isfield(pars, 'noise') && isstruct(pars.noise) ...
+        && isfield(pars.noise, 'enabled') && pars.noise.enabled
+    shSite2LastND(nume, deno);
+end
 normwts = shModelV1Normalization_TunedWts(popdirs, popdirs)';
 normwts = normwts*pars.scaleFactors.v1NormalizationPopulationK;
 pop = nume./(normstrength.*deno*normwts + v1sigma.^2);

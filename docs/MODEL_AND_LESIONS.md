@@ -651,6 +651,57 @@ Caveats on this measurement:
 - The normalization pool was inferred, not measured. Instrumenting it is a one-line
   change to a copy of `shModelV1Normalization_Tuned`.
 
+### 4.8.1 Drive, not speed, organizes compensation (coherence × speed)
+
+Measured 2026-08-28 by extending `explore/compensationIndex.m` with a coherence
+axis (7 speeds × 6 coherences × 5 gains). Output:
+`explore/_figs/compensationIndex_speedCoherence/`. Still deterministic.
+
+If JW's operating-point account is right, C should collapse onto **unlesioned MT
+drive**, and low coherence at high speed should look like low speed. It does:
+
+| Preset | R²(C ~ log10 drive) | R²(+ log speed) | C (weak drive) | C (strong drive) |
+|--------|---------------------|-----------------|----------------|------------------|
+| derivative | 0.966 | 0.981 | 0.91 | 0.68 |
+| lagged + mtMix | **0.984** | 0.984 | 0.86 | 0.65 |
+
+Nine high-speed (≥5 deg/s), low-coherence (≤0.25) cells, lagged: mean drive
+0.23, mean C **0.85**, mean R(k=0.5)/R(k=1) **0.90**. The speed-only (coherence =
+1) slice is unchanged from the table above.
+
+**This is a result about the mean.** Trial-to-trial variability is §4.9.
+
+### 4.9 Site-2 noise makes the amplitude lesion show in d′ and in trial SD
+
+Measured 2026-08-28. Independent Gaussian noise, fixed σ, added to the V1
+normalization numerator before the division (`shApplySite2Noise`). Letter C,
+1 deg/s, lagged + mtMix, 128², seed 7. Contract:
+[`NOISE_TRIAL_DESIGN.md`](NOISE_TRIAL_DESIGN.md).
+
+Deterministic two-forward baseline (same movie): healthy MT d′ **+4.510**,
+lesion (gain 0.5) **+4.423** (delta −0.087). Center opponent 0.109 → 0.089.
+
+σ sweep (N = 15) chose **0.05** (SD ratio lesion/healthy peaked at 2.91; 0.03
+already worked; 0.08 was harsher than needed).
+
+Locked Phase A, σ = 0.05, N = 50
+(`explore/_figs/site2_phaseA_sigma005_n50/`):
+
+| Condition | Mean d′ | SD(d′) | Center opp mean | Center opp SD |
+|-----------|---------|--------|-----------------|---------------|
+| Healthy, noise off | 4.510 | 0 | 0.109 | 0 |
+| Lesion, noise off | 4.423 | 0 | 0.089 | 0 |
+| Healthy + noise | 4.388 | 0.033 | 0.093 | 0.0015 |
+| Lesion + noise | **3.814** | **0.083** | **0.052** | **0.0034** |
+
+Lesion+noise vs healthy+noise: mean d′ **−0.57** (noise-off lesion was only
+−0.09); SD(d′) **2.5×**. Mean N and D scale as k² (0.115 vs 0.029). That is the
+JW mechanism: the same σ is amplified more when the pool is smaller.
+
+Caveats: independent noise is Phase A only (Phase B still required before patchy
+claims); d′ remains high (~3.8) so this is a sign-of-effect result, not a
+clinical match; MT Site-2 is not on.
+
 ---
 
 ## 5. Validity ledger — what still holds
@@ -662,8 +713,10 @@ Caveats on this measurement:
 | MT's measured speed tuning | **current** (2026-08-25) |
 | two-stream MT reproduces Maunsell's knockouts | **current** (2026-08-14) |
 | midget dependence graded by speed | **current but confounded** — one fixed grating for all units (§4.5) |
-| motion-letter healthy baseline, d′ = 1.32 | **current** (2026-08-17) |
-| compensation index | **current** (2026-08-19) |
+| compensation index (speed) | **current** (2026-08-19) |
+| C vs drive, coherence × speed | **current** (2026-08-28) — lagged R² = 0.984 |
+| Site-2 Phase A (σ = 0.05, N = 50) | **current** (2026-08-28) — independent V1 noise only |
+| motion-letter healthy baseline, d′ = 1.32 | **current** (2026-08-17) at 0.3125 px/frame; the 1 deg/s seed-7 baseline is d′ = 4.51 (report §4.9) |
 | uniform versus non-uniform amplitude and delay lesions | **pre-mtMix** — the front-end conclusion probably survives, the MT numbers need re-measuring |
 | parasol-only and ON-only lesions | **invalid as biology** — measured on the midget-dominated MT |
 | the 114 campaign figures and metric CSVs | **gone** — `explore/_figs/` is gitignored and has been cleared. The scripts still exist. |
@@ -721,11 +774,12 @@ would enter, and what the model would then predict.
 
 Three points from it change how §4.7 above should be read.
 
-1. **§4.7.2's null result is normalization, and that is now measured** (§4.8). The
-   right reading of "a 50% gain cut barely moves direction tuning" is not
-   *amplitude lesions don't matter*. It is **normalization hid it, and once
-   cortical noise is present the hiding is itself the damage**: near-normal tuning
-   curves, degraded discriminability.
+1. **§4.7.2's null result is normalization, and that is now measured** (§4.8) **and
+   it shows in discriminability once Site-2 noise is on** (§4.9). The right reading
+   of "a 50% gain cut barely moves direction tuning" is not *amplitude lesions
+   don't matter*. It is **normalization hid it, and once cortical noise is present
+   the hiding is itself the damage**: a −0.09 d′ lesion becomes **−0.57** with
+   **2.5×** trial SD.
 2. **Three mechanisms of demyelination cannot currently be written down at all** —
    trial-to-trial spike jitter, stochastic conduction block, and failure at high
    firing rates. The first two need noise. The third needs a change in filter shape

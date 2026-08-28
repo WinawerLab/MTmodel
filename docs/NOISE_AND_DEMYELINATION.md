@@ -338,41 +338,40 @@ deficit:
 
 ## 6. What to build, in order
 
-1. ~~**Compensation index.**~~ **Done** — report §4.8.
-2. **A map of drive over coherence × speed, still deterministic.** Extend
-   `compensationIndex.m` with a coherence axis and re-express everything against
-   unlesioned drive rather than speed (§5.5). Tests JW's prediction directly, and
-   needs no noise code.
+1. ~~**Compensation index (speed only).**~~ **Done** — report §4.8.
+2. ~~**A map of drive over coherence × speed.**~~ **Done 2026-08-28** —
+   `compensationIndex.m`; C collapses onto unlesioned drive (lagged R² = 0.984).
+   Report §4.8.1 and `NOISE_TRIAL_DESIGN.md` §5.2. JW operating-point account
+   holds for the deterministic mean.
 3. **High-frequency failure** as a change in filter shape (§5.3). Also no noise.
-4. **Noise, one site at a time.** Site 2 first — added into `N` in
-   `shModelV1Normalization_Tuned`, before the division — since it carries the
-   mechanism. Site 1 goes into the class channels in `shClassV1Basis`; site 3 into
-   the read-out. Run them separately before combining. They have different
-   signatures, and combining first makes the result uninterpretable.
+4. **Noise, one site at a time.**
+   - ~~Site 2 Phase A (independent, V1 numerator, σ = 0.05, N = 50).~~ **Done
+     2026-08-28.** Lesion+noise d′ 3.81 ± 0.083 vs healthy+noise 4.39 ± 0.033.
+     `NOISE_TRIAL_DESIGN.md` §5.5.
+   - **Next:** Phase B spatial correlation, then MT Site-2 as its own arm.
+     Site 1 (`shClassV1Basis`) and Site 3 (read-out) later, separately.
 5. **Temporal noise** — jitter per trial and Bernoulli dropout (§4.4). These are
    the ones with no deterministic counterpart at all.
 
 ### Decisions that have to be made first
 
+Locked 2026-08-28 except as noted. Full contract: `NOISE_TRIAL_DESIGN.md` §1.
+
 - **Does the noise scale with the response, or have fixed variance?**
-  Poisson-like noise that scales with the response partly cancels a gain reduction.
+  **Locked: fixed at Site 2.** Proportional reserved for Site 1. Poisson-like
+  noise that scales with the response partly cancels a gain reduction.
   Fixed-variance noise does not. This changes the *sign* of several predictions
   above. It is not a detail.
-- **How is the noise correlated?** Independent at every location is the easy
-  default and it is wrong. Cortical noise is correlated across space, and it is
-  correlated noise along the read-out direction that actually limits
-  discriminability. At a minimum, check whether the conclusions survive spatially
-  correlated noise.
-- **Dropout is not Gaussian.** Stochastic conduction block is multiplicative,
-  all-or-none, and correlated in time — a block persists for a burst. Do not
-  approximate it as additive noise.
-- **Which observables?** Motion-letter d′ (report §4.6) is the natural one and
-  connects to deficit (b) directly. Report it **alongside a measure of
-  trial-to-trial variability** in the MT response, since §4.2 predicts that the
-  mean and the variability move in opposite directions. Reporting only the mean
-  would reproduce the current blind spot with extra steps.
-- **The observable for deficit (a) still does not exist.** A noisy analogue of VEP
-  latency has to be defined at all — see `TODO.md` §4.
+- **How is the noise correlated?**
+  **Phase A done (independent).** Phase B (gaussian, σ_corr ≈ pool width) is
+  **required** before uniform vs patchy amplitude claims. Independent at every
+  location is the easy default and it is wrong.
+- **Dropout is not Gaussian.** **Deferred.** Stochastic conduction block is
+  multiplicative, all-or-none, and correlated in time — a block persists for a
+  burst. Do not approximate it as additive noise.
+- **Which observables?** **Locked:** motion-letter d′ **and** SD(d′) **and**
+  SD(center opponent). Reporting only the mean reproduces the current blind spot.
+- **The observable for deficit (a) still does not exist.** See `TODO.md` §4.
 
 ---
 

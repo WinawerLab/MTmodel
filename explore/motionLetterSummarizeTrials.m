@@ -28,6 +28,13 @@ S.centerOppMt_mean = mean([trials.centerOppMt]);
 S.centerOppMt_std  = std([trials.centerOppMt], 0);
 S.centerOppV1_mean = mean([trials.centerOppV1]);
 S.centerOppV1_std  = std([trials.centerOppV1], 0);
+if isfield(trials, 'Nmean')
+    S.Nmean_mean = mean([trials.Nmean]);
+    S.Dmean_mean = mean([trials.Dmean]);
+end
+S.dMt_all = [trials.dMt];
+S.centerOppMt_all = [trials.centerOppMt];
+S.meanMtOpp = mean(cat(3, trials.mtOpp), 3);
 S.trials = trials;
 S.cfgMl = cfgMl;
 S.cfgNoise = cfgNoise;
@@ -49,7 +56,10 @@ if isfield(pars, 'rgc') && isfield(pars.rgc, 'mtMix') && ~isempty(pars.rgc.mtMix
 else
     snap.mtMixAlpha = NaN;
 end
-if isfield(pars, 'rgc') && isfield(pars.rgc, 'impairmentEnabled')
-    snap.impairmentEnabled = pars.rgc.impairmentEnabled;
+if isfield(pars, 'noise') && isstruct(pars.noise) && isfield(pars.noise, 'enabled')
+    snap.noiseEnabled = pars.noise.enabled;
+    if isfield(pars.noise, 'site2') && isfield(pars.noise.site2, 'sigma')
+        snap.site2Sigma = pars.noise.site2.sigma;
+    end
 end
 end
