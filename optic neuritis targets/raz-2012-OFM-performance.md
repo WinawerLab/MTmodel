@@ -1,6 +1,6 @@
 # Raz et al. (2012), Figure 1 — object-from-motion performance vs dot speed
 
-**Source.** Raz, Dotan, Benoliel, Chokron, Ben-Hur & Levin, *Demyelination affects
+**Source.** Raz, Dotan, Chokron, Ben-Hur & Levin, *Demyelination affects
 temporal aspects of perception: an optic neuritis study*, Annals of Neurology
 2012;71(4):531–538, [doi:10.1002/ana.22692](https://doi.org/10.1002/ana.22692).
 
@@ -14,13 +14,32 @@ off it, which is what the model is actually compared against.
 ## What the experiment measured
 
 Observers identified an object defined only by the relative motion of random dots
-(an object-from-motion, or OFM, task). Dot speed was varied over 0.05, 0.10, 0.25,
-0.50, 1 and 2 °/s. A static, luminance-defined object was tested as a control
-condition — the same identification task with no motion involved.
+(an object-from-motion, or OFM, task) — a variation of Regan's task, see
+[`regan-1991-MD-vs-CD-letters.md`](regan-1991-MD-vs-CD-letters.md). Dot speed was
+varied over 0.05, 0.10, 0.25, 0.50, 1 and 2 °/s. A static, luminance-defined object
+was tested as a control condition — the same identification task with no motion
+involved. Coherent moving noise, moving as a whole so that motion but no object is
+apparent, was presented as foils.
+
+**The dots inside the object move one way and the dots outside it the other**, so
+the relative velocity across the object boundary is **twice** the quoted dot
+velocity: the axis labelled 0.05 to 2 °/s spans relative speeds of 0.1 to 4 °/s.
+The paper quotes the dots' velocity; both are recorded here because the factor of 2
+matters for any comparison against the model's speed range.
+
+Stimuli were viewed at 50 cm, each preceded by a 980 ms fixation and shown until
+response or for at most 4 s, in blocks of 60 OFM stimuli (20 per velocity), 12
+moving-noise foils and 10 static objects.
 
 Performance of the optic-neuritis eye is expressed as a **percentage of the control
-subjects' mean**, so 100 means normal. Patients were tested at four time points:
-acute, 1 month, 4 months, and 12 months.
+subjects' mean in that phase**, so 100 means normal. Patients were tested at four
+time points: acute, 1 month, 4 months, and 12 months.
+
+**Only the lower three velocities — 0.05, 0.10 and 0.25 °/s — entered the paper's
+own analyses**, "due to their increased sensitivity in detecting the motion
+perception deficit following ON". Every OFM number in the paper's other figures is
+therefore an average over that band, not over the axis shown here. See
+[`raz-2012-VEP-and-dissociation.md`](raz-2012-VEP-and-dissociation.md).
 
 ## The numbers
 
@@ -51,16 +70,22 @@ Half-width of the error bars, in the same units:
 
 ### How much to trust these
 
-- **Digitized, so treat the means as ±2–3 and the error half-widths as ±4.** Use
-  them for the *shape* of the effect. Do not quote any single cell as a published
+- **Digitized, so treat the means as ±2–3 and the error half-widths as ±4.** The
+  table was re-read independently from the PDF on 2026-08-28 and every cell agreed
+  to within 1–2 units, so the stated precision is right. Use them for the *shape*
+  of the effect. Do not quote any single cell as a published
   value; if a number has to appear in a manuscript, get it from the authors or
   refit from the paper's own statistics.
 - **What the error bars represent is not stated in the figure caption.** They are
   probably standard deviations — at the acute time point the lower whisker runs
   below zero, which rules out a confidence interval on a bounded quantity. Do not
   assume, and do not compute a significance test from them.
-- **The number of patients per time point is not recoverable from the figure**, and
-  it may differ across time points through attrition.
+- **The number of patients per time point is 21, 20, 18 and 14** at the acute, 1-,
+  4- and 12-month phases. This is not in the Figure 1 caption — it is stated in the
+  Figure 2 caption, and it does confirm the suspicion that attrition thins the later
+  columns. The 12-month column rests on 14 subjects, two-thirds of the acute one.
+- The cohort is 21 patients with first-ever unilateral acute ON, aged 18–59
+  (mean 29 ± 9.5), against 21 controls matched for age, gender and dominant eye.
 
 ## What the model has to reproduce
 
@@ -103,6 +128,9 @@ anchor: the reasoning is in
 [`../docs/RGC_lagged_preset_summary.md`](../docs/RGC_lagged_preset_summary.md)
 §7.2. Closing the gap would mean lengthening the temporal filters and adding slow
 units to the V1 and MT populations.
+
+Note also that the relative speeds are twice the values in the x-axis column above,
+which shifts the whole table one row up this list without changing the conclusion.
 
 **Until then, do not compare model output to this table condition by condition.**
 Compare shapes: whether the model's motion read-out degrades with slowing speed
