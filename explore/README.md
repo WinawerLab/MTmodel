@@ -25,7 +25,7 @@ output, never a record.
 | `knockoutAndAlphaCalibration.m` | the Maunsell (1990) knockout check and the `alpha` bisection. Produces the table in the report §4.4. |
 | `measurePreferredTfSf.m` | measured preferred spatial and temporal frequency for both V1 populations — why the parasol-only fit loses the slow neurons. |
 | `measureMtSpeedTuning.m` | MT speed tuning for both presets. Found that the nominal 6 px/frame tier actually peaks near 3.1 (derivative) or 3.7 (lagged), while the 1 px/frame tier lands correctly. Report §4.3. |
-| `compensationIndex.m` | how much of a uniform amplitude lesion divisive normalization absorbs, against stimulus speed. Measures the gain headroom that noise would act on. Report §4.8. |
+| `compensationIndex.m` | how much of a uniform amplitude lesion divisive normalization absorbs, over stimulus speed **x dot coherence**. Re-expresses the deficit against unlesioned drive rather than speed, which is the discriminating test for the operating-point account (`../docs/NOISE_AND_DEMYELINATION.md` §5.5, `../docs/TODO.md` §1 step 1). Report §4.8 holds the speed-only results. The coherence axis has **not been run in MATLAB yet**. |
 | `compareLesionsToBaseline.m` | lesion and baseline on shared axes, **seeded**, with unambiguous gain labels. The template for any new lesion script. |
 | `makeLaggedPresetDocFigures.m` | regenerates the figures in `docs/figures/` for the front-end summary. |
 | `temporalTilingFromLags.m` | shows that lagged biphasic filters reconstruct SH's order 0–3 temporal basis — the justification for the lags. |
