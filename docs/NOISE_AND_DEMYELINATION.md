@@ -9,6 +9,13 @@ amplitude lesion divisive normalization absorbs — lives in
 [`MODEL_AND_LESIONS.md`](MODEL_AND_LESIONS.md) §4.8, and this document interprets
 it rather than repeating the numbers. The work-plan entry is `TODO.md` §1.
 
+**Noise is not a separate question from the lesion work.** How lesions affect the
+results and how noise affects the results are the same question asked from two
+sides, and they have to be worked iteratively: what noise shows changes which
+lesion conditions are worth running, and what the lesion matrix shows changes
+which noise model and which observables are worth building. See the callout above
+`TODO.md` §1, and §3 there for the recurring re-read.
+
 The framing in §4 and §5.5 below is JW's. The pathophysiology in §2 arrived as an
 AI-search summary — read the provenance warning there before relying on any of it.
 
@@ -196,7 +203,7 @@ A psychophysical one would not.
 
 If cortical gain control amplifies its *own* circuit noise, or loses stability at
 low drive, the effect would exceed the static account above. That needs
-normalization **dynamics** (ORGaNICs and relatives) — the same gap `TODO.md` §3
+normalization **dynamics** (ORGaNICs and relatives) — the same gap `TODO.md` §4
 flags for VEP latency, where static normalization is why latency effects arising in
 cortex are out of reach. The static analysis here is a **lower bound** on the
 mechanism, not the whole of it. If §5 finds the static version already sufficient,
@@ -365,7 +372,7 @@ deficit:
   mean and the variability move in opposite directions. Reporting only the mean
   would reproduce the current blind spot with extra steps.
 - **The observable for deficit (a) still does not exist.** A noisy analogue of VEP
-  latency has to be defined at all — see `TODO.md` §3.
+  latency has to be defined at all — see `TODO.md` §4.
 
 ---
 

@@ -116,7 +116,7 @@ The model this repo implements. Two points that are easy to miss:
   measurable. What is missing is the **dynamics of normalization** in cortex (see
   ORGaNICs, and delayed-normalization accounts of temporal dynamics in visual
   cortex). An earlier draft overstated this as "cannot predict latency at all",
-  which is wrong. See `docs/TODO.md` §3.
+  which is wrong. See `docs/TODO.md` §4.
 
 SH also note (p. 754) that parvocellular neurons make up about 90% of the LGN while
 the majority of MT afferents appear to be magnocellular, citing Tootell et al.
@@ -141,7 +141,7 @@ intended calibration target for the filter time courses, and it is now actionabl
 because the frame rate is anchored: at 50 fps the preset's midget filter peaks at
 about 80 ms and its parasol filter at about 20 ms, both of which now fall inside
 the measured ranges. What is still off is the tail — a 280 ms sign reversal and a
-480 ms filter length. `docs/TODO.md` §6.
+480 ms filter length. `docs/TODO.md` §7.
 
 ---
 

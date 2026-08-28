@@ -34,7 +34,7 @@
 % SPATIAL SCALE. At 10 px/deg a clinically sized letter (168 arcmin = 2.8 deg)
 % is 28 pixels, which is usable. LETTER_SIZE_PX below still sets the letter in
 % model pixels and the script reports the implied angular size; setting a real
-% angular size instead is open work (docs/TODO.md 5).
+% angular size instead is open work (docs/TODO.md 6).
 
 thisFile = mfilename('fullpath');
 repoRoot = fileparts(fileparts(thisFile));

@@ -29,7 +29,7 @@ deficit it constrains**, (a) or (b). A figure with no citation is not usable as 
 target.
 
 Also note what would count as reproducing it — the model-side observable, and the
-comparison. `docs/TODO.md` §3 flags that this is not yet settled for VEP latency.
+comparison. `docs/TODO.md` §4 flags that this is not yet settled for VEP latency.
 Is it the time to peak of the population response to a transient? The
 cross-correlation lag against the unlesioned response? Quoting a number in
 milliseconds before settling that would be premature.
@@ -50,7 +50,7 @@ Three standing caveats before any quantitative claim:
 - MT is tuned to {0, 1, 6} px/frame = {0, 5, 30} deg/s. The clinically interesting
   low-speed band now straddles MT's slowest moving unit rather than sitting wholly
   below it, but MT is still weakly driven at the bottom of that band
-  (`docs/TODO.md` §5).
+  (`docs/TODO.md` §6).
 - The **0.05 deg/sec** psychophysical speed threshold is out of the model's reach
   in any units (`docs/RGC_lagged_preset_summary.md` §7.2).
 

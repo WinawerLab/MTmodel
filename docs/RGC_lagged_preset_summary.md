@@ -192,7 +192,7 @@ population at 0.93–0.95. The four qualifications are set out in
   approximately a reweighting of the lag channels. A genuine test that the
   biological front-end says something SH cannot — one exploiting the ON/OFF
   rectification SH lacks — is still outstanding. See `MODEL_AND_LESIONS.md` §6.2
-  and `docs/TODO.md` §4.
+  and `docs/TODO.md` §5.
 - **The physical scale raises real plausibility questions**, set out next.
 
 ### 7.1 Physical units: pixels to degrees, frames to seconds

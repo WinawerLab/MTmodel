@@ -708,7 +708,7 @@ reweighting of the lag channels.
 What the biological preset buys is that the lesion is *stated in terms of cell
 types* — not that it could not be expressed otherwise. A genuine test of
 non-vacuousness, exploiting the ON/OFF rectification that SH lacks, is still
-outstanding (`docs/TODO.md` §4).
+outstanding (`docs/TODO.md` §5).
 
 ---
 

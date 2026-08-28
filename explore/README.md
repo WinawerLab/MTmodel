@@ -31,7 +31,7 @@ output, never a record.
 | `temporalTilingFromLags.m` | shows that lagged biphasic filters reconstruct SH's order 0–3 temporal basis — the justification for the lags. |
 | `compareTemporalKernels.m` | the SH derivative basis against the biological fast and slow filters, in time and as amplitude spectra. |
 | `demoDerivativePipeline.m` | end-to-end walkthrough of the derivative preset. |
-| `testONOFFAsymmetryNonvacuousness.m` | the open question of whether ON/OFF-asymmetric timing exploits the rectification SH lacks. Established that timing lesions are about 90% irreducible to an SH amplitude rescaling, but all three lesion types scored similarly, so it does not yet isolate a signature specific to rectification. See `../docs/TODO.md` §4. |
+| `testONOFFAsymmetryNonvacuousness.m` | the open question of whether ON/OFF-asymmetric timing exploits the rectification SH lacks. Established that timing lesions are about 90% irreducible to an SH amplitude rescaling, but all three lesion types scored similarly, so it does not yet isolate a signature specific to rectification. See `../docs/TODO.md` §5. |
 
 ## The SH Figs 9–14 campaign — still runs, but the results are superseded
 

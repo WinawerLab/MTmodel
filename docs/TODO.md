@@ -1,7 +1,8 @@
 # Open work
 
-Rewritten 2026-08-25. **This file holds only what is still open**, ordered by how
-much it bears on the driving question.
+Rewritten 2026-08-25; reordered 2026-08-27. **This file holds only what is still
+open**, ordered by how much it bears on the driving question — but see the callout
+below: §1–§3 are one iterative investigation and their numbering is not a sequence.
 
 Finished work is not recorded here. What was built and what it showed is in
 [`MODEL_AND_LESIONS.md`](MODEL_AND_LESIONS.md); the design record for choices that
@@ -21,11 +22,30 @@ px/frame = 5–50 deg/s.
 
 ---
 
+> **§1, §2 and §3 are one iterative investigation, not three independent tasks.**
+> How lesions affect the results and how noise affects the results are the same
+> question asked from two sides. A lesion result is hard to read without noise,
+> because normalization absorbs most of a deterministic amplitude cut and the
+> compensation only becomes a signature once there is noise for the raised gain to
+> act on. Noise is hard to read without the full lesion picture, because you need
+> the deterministic baseline across the whole matrix to know what noise has added.
+>
+> Neither blocks the other technically, so **where you start is a matter of
+> convenience — but expect to go back and forth.** What you learn from noise will
+> change which lesion conditions are worth running, and what the lesion matrix
+> shows will change which noise model and which observables are worth building.
+> Plan for several passes rather than one pass each. §3 is the recurring step that
+> makes the loop deliberate instead of accidental, and it is not a closing
+> ceremony: run it whenever either half moves, and treat neither half as finished
+> until the pair stops changing each other's reading.
+
 ## 1. Internal noise
 
-**Highest value, and it can start cold** — nothing in its build order depends on
-§2 below. The model is deterministic, and that is the single biggest thing
-standing between it and the clinical question.
+**Start here, by convenience rather than by dependency.** Nothing in this build
+order depends on §2, and the first two steps need no noise code at all, so it is
+the cheapest place to begin. The model is deterministic, and that is the single
+biggest thing standing between it and the clinical question. Read the callout
+above before treating any result from this section as final.
 
 **Full treatment: [`NOISE_AND_DEMYELINATION.md`](NOISE_AND_DEMYELINATION.md).**
 
@@ -67,11 +87,12 @@ in `NOISE_AND_DEMYELINATION.md` §6. Do not start from this list alone:
   response, because §4.2 of that document predicts the mean and the variability
   move in opposite directions. Reporting only the mean reproduces the current blind
   spot with extra steps.
-- **The observable for deficit (a) does not exist yet.** See §3 below.
+- **The observable for deficit (a) does not exist yet.** See §4 below.
 
 ## 2. Re-run the lesion matrix through the two-stream MT
 
-**Decides the standing low-speed tension.**
+**Decides the standing low-speed tension, and supplies the deterministic baseline
+§1 has to be read against.** Can be done before or after §1.
 
 Every lesion number on record was measured before `pars.rgc.mtMix` existed, so it
 came through the midget-dominated MT. The class-agnostic results probably survive.
@@ -106,7 +127,37 @@ tuning measures. `explore/compareLesionsToBaseline.m` is the template — it see
 and it plots against baseline on shared axes. `explore/validateSHFigs9to14_lesions.m`
 still does not seed and should not be extended as it stands.
 
-## 3. Decide what the model's version of VEP latency is
+## 3. Re-read §1 and §2 against each other, repeatedly
+
+**This is a recurring step, not a final one.** Run it every time either half
+moves, not once at the end, and do not fold it into whichever of §1 and §2
+happens to be in progress. Each half changes how the other reads:
+
+- **Re-read every lesion result with noise present.** The deterministic matrix
+  says how much of a lesion normalization absorbs. Only with noise does that
+  absorption become a prediction about discriminability rather than about mean
+  response. Results that looked like null results may not be.
+- **Re-read every noise result against the full lesion picture.** A noise effect is
+  only informative relative to the deterministic baseline for the same condition.
+  Without the whole matrix, you cannot tell which effects noise created and which
+  it merely revealed.
+- **Report the mean and the variability together**, throughout. This is the
+  decision from `NOISE_AND_DEMYELINATION.md` §6 that is easiest to lose, and it is
+  what this review pass exists to enforce.
+- **State plainly which conclusions survive the pairing and which do not.** The
+  validity ledger in `MODEL_AND_LESIONS.md` §5 is where that belongs.
+
+- **Feed the result back into what gets run next.** That is what makes this a loop
+  rather than a report. A noise result that changes the operating-point account
+  changes which lesion conditions are worth running; a lesion result that changes
+  the drive map changes which noise model and which observables are worth building.
+
+The standing low-speed tension (§2) is the specific thing to re-test on each pass:
+whether `delay_random` spares low speeds is a different question once the read-out
+is noisy. Stop iterating when the two halves no longer change each other's
+reading — not when each has been done once.
+
+## 4. Decide what the model's version of VEP latency is
 
 Deficit (a) is approachable now, with one scope limit stated up front: predicted
 latency reflects retinal and feedforward filtering only, not the dynamics of
@@ -132,7 +183,7 @@ exactly is the model-side observable? Time to peak of the population response to
 transient? Cross-correlation lag against the unlesioned response? Pin this down
 first.
 
-## 4. Does the biological front-end say anything SH cannot?
+## 5. Does the biological front-end say anything SH cannot?
 
 Still outstanding. `explore/testONOFFAsymmetryNonvacuousness.m` established that
 timing lesions are about 90% irreducible to an SH amplitude rescaling, but all
@@ -144,7 +195,7 @@ a conduction delay is *not* a lesion SH cannot express. What the biological pres
 buys is that a lesion can be stated in terms of cell types. A genuine test would
 have to exploit the ON/OFF rectification that SH lacks.
 
-## 5. What is left of the spatial-scale problem after the re-anchor
+## 6. What is left of the spatial-scale problem after the re-anchor
 
 The 2026-08-27 re-anchor to 10 px/deg and 50 fps closed most of this. A clinically
 sized letter (2.8 deg) is now 28 pixels rather than 6.5, and MT's tuning is
@@ -169,7 +220,7 @@ Three things are still open:
 
 `localOpponentPair` warns when the population does not sample the stimulus speed.
 
-## 6. Calibrate the RGC filter time courses against Kling (2020)
+## 7. Calibrate the RGC filter time courses against Kling (2020)
 
 At 50 fps the preset's midget filter peaks at about 80 ms and its parasol filter at
 about 20 ms. Real parasol cells peak at 20–40 ms and real midget cells at 50–80 ms,

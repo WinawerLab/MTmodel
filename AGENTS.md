@@ -18,20 +18,32 @@ question:
 > optic neuritis — (a) a slower visual evoked potential, and (b) worse recognition
 > of shapes defined only by motion, especially at slow speeds?
 
-## If you are picking this up cold, the next step is internal noise
+## If you are picking this up cold: internal noise and the lesion matrix, iteratively
 
-**[docs/TODO.md](docs/TODO.md) §1**, with the full plan in
-[docs/NOISE_AND_DEMYELINATION.md](docs/NOISE_AND_DEMYELINATION.md) §6. The model
-is deterministic, and that is the single biggest thing standing between it and the
-clinical question: normalization absorbs most of an amplitude lesion, and three of
-the mechanisms by which demyelination degrades a signal cannot be written down at
-all without noise.
+The open work is **[docs/TODO.md](docs/TODO.md) §1–§3**, and those three are one
+investigation rather than three tasks. How lesions affect the results and how noise
+affects the results are the same question asked from two sides:
 
-Two things worth knowing before you start. The first two steps of that build order
-need **no noise code** — they are deterministic drive maps. And **five decisions
-have to be settled first**, listed in `NOISE_AND_DEMYELINATION.md` §6; the one
-easiest to miss is that every observable must be reported alongside a measure of
-trial-to-trial variability, not as a mean alone.
+- **§1, internal noise.** The model is deterministic, which is the single biggest
+  thing standing between it and the clinical question. Normalization absorbs most
+  of an amplitude lesion, and three of the mechanisms by which demyelination
+  degrades a signal cannot be written down at all without noise. Full plan in
+  [docs/NOISE_AND_DEMYELINATION.md](docs/NOISE_AND_DEMYELINATION.md) §6.
+- **§2, the lesion matrix through the two-stream MT.** Supplies the deterministic
+  baseline that §1 has to be read against, and decides the standing low-speed
+  tension.
+- **§3, re-read the two against each other — repeatedly.** Not a closing step. What
+  noise shows changes which lesion conditions are worth running; what the matrix
+  shows changes which noise model and which observables are worth building.
+
+**Start with §1 for convenience, not because it comes first.** Neither blocks the
+other, and §1's first two steps need no noise code — they are deterministic drive
+maps. Expect several passes rather than one pass each, and treat neither half as
+finished until the pair stops changing each other's reading.
+
+**Five decisions have to be settled before any noise step**, listed in
+`NOISE_AND_DEMYELINATION.md` §6. The one easiest to miss: every observable must be
+reported alongside a measure of trial-to-trial variability, never as a mean alone.
 
 Read the report before writing anything. Everything below is context for doing
 that well.
@@ -154,7 +166,7 @@ Full account in [docs/MODEL_AND_LESIONS.md](docs/MODEL_AND_LESIONS.md) §2.
 | [docs/MODEL_AND_LESIONS.md](docs/MODEL_AND_LESIONS.md) | **The main report.** How the model is built and why, everything that has been measured, and how far each result can be trusted. Read before writing code or quoting a number. |
 | [docs/RGC_lagged_preset_summary.md](docs/RGC_lagged_preset_summary.md) | A closer look at the biological front-end, with figures. |
 | [docs/NOISE_AND_DEMYELINATION.md](docs/NOISE_AND_DEMYELINATION.md) | Why the model needs internal noise, and what it should predict once it has some. Mostly not built yet. |
-| [docs/TODO.md](docs/TODO.md) | What is open, in priority order. §1 is internal noise, and it is where to start. |
+| [docs/TODO.md](docs/TODO.md) | What is open, in priority order. §1–§3 are one iterative investigation; start at §1. |
 | [literature/NOTES.md](literature/NOTES.md) | The papers, and what each one constrains. |
 | [optic neuritis targets/NOTES.md](optic%20neuritis%20targets/NOTES.md) | The clinical figures the model should eventually match. |
 | [explore/README.md](explore/README.md) | Index of the exploratory scripts. |
