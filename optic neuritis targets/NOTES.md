@@ -1,7 +1,7 @@
 # Optic neuritis targets
 
-Figures from the clinical literature that the model is meant to **reproduce**. These
-are the empirical targets for the driving question:
+Quantitative targets from the clinical literature that the model is meant to
+**reproduce**. These are the empirical targets for the driving question:
 
 > Can damage at the level of retinal ganglion cells explain the optic-neuritis
 > pattern of **(a) a slower visual evoked potential** and **(b) worse recognition
@@ -11,26 +11,37 @@ This folder holds the *target data*. It is separate from `literature/`, which ho
 the papers describing the **model and its mechanisms** (Simoncelli & Heeger, Nassi
 & Callaway, Kling, Chariker, and so on).
 
-## Contents
+## What lives here, and what does not
 
-**The folder currently holds no figures — only this file.** Both rows below are
-citations waiting for their figure. Nothing here can be used as a numerical target
-until the underlying figure is actually pulled in.
+**The published figures are not committed.** They are copyrighted, and the repo
+does not need them. What is committed is a **table of numbers derived from each
+figure**, which is what the model is actually compared against. Keep the source
+figure locally if you like — `.pptx`, `.pdf` and image files in this folder are
+gitignored — but the table is the artifact.
 
 | file | source | what it targets |
 |---|---|---|
-| *(not yet in folder)* | Raz et al., *Demyelination affects temporal aspects of perception: an optic neuritis study*, Ann Neurol 2012;71(4):531–538, doi:10.1002/ana.22692 | deficit (a) — the timing aspects of perception after optic neuritis |
-| *(not yet in folder)* | Brusa, Jones & Plant, *Long-term remyelination after optic neuritis: a 2-year visual evoked potential and psychophysical serial study*, Brain 2001;124(3):468–479, [doi:10.1093/brain/124.3.468](https://doi.org/10.1093/brain/124.3.468) | deficit (a) — the **recovery trajectory**; see below |
+| [`raz-2012-OFM-performance.md`](raz-2012-OFM-performance.md) | Raz et al., *Demyelination affects temporal aspects of perception: an optic neuritis study*, Ann Neurol 2012;71(4):531–538, [doi:10.1002/ana.22692](https://doi.org/10.1002/ana.22692) | deficit (b) — object-from-motion performance across dot speeds 0.05–2 °/s, at four time points, with a static control |
+| *(no table yet)* | Brusa, Jones & Plant, *Long-term remyelination after optic neuritis: a 2-year visual evoked potential and psychophysical serial study*, Brain 2001;124(3):468–479, [doi:10.1093/brain/124.3.468](https://doi.org/10.1093/brain/124.3.468) | deficit (a) — the **recovery trajectory**; see below |
 
-## When you add a figure
+## When you add a target
 
-Record two things in the table above: the **full citation and DOI**, and **which
-deficit it constrains**, (a) or (b). A figure with no citation is not usable as a
-target.
+Write a table file like [`raz-2012-OFM-performance.md`](raz-2012-OFM-performance.md),
+and record in it:
 
-Also note what would count as reproducing it — the model-side observable, and the
-comparison. `docs/TODO.md` §4 flags that this is not yet settled for VEP latency.
-Is it the time to peak of the population response to a transient? The
+- the **full citation and DOI**, and **which deficit it constrains**, (a) or (b);
+- **how the numbers were obtained** — digitized by eye, read from a table in the
+  paper, or supplied by the authors — and the resulting uncertainty. A digitized
+  value is not a published value and must never be quoted as one;
+- **what the error bars mean**, or an explicit statement that the source does not
+  say;
+- **what would count as reproducing it** — the model-side observable, and the
+  comparison. Say plainly which features are testable now and which are not.
+
+Then add a row to the table above.
+
+`docs/TODO.md` §4 flags that the model-side observable is not yet settled for VEP
+latency. Is it the time to peak of the population response to a transient? The
 cross-correlation lag against the unlesioned response? Quoting a number in
 milliseconds before settling that would be premature.
 
@@ -75,6 +86,10 @@ window**, so the fellow eye is not a clean within-subject control.
 
 ## Copyright
 
-These are published figures kept for research reference, as with the PDFs in
-`literature/`. Do not redistribute them, and do not reproduce them in a manuscript
-without permission. Cite and redraw instead.
+Any published figure kept in this folder is held locally for research reference
+only, and is gitignored rather than committed. Do not redistribute one, and do not
+reproduce one in a manuscript without permission — cite and redraw instead.
+
+The derived tables are a different matter: measurements read off a figure are
+facts, not the figure, and committing them is fine. Always cite the source
+alongside them, which is why every table file carries the full citation and DOI.

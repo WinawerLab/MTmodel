@@ -6,3 +6,14 @@ explore/_figs/
 
 # Editor-local settings (machine-specific MATLAB paths)
 .vscode/
+
+# Copyrighted figures from the clinical literature, kept locally in
+# "optic neuritis targets/" as the source for the quantitative target tables.
+# The derived .md tables are committed; the figures themselves are not.
+optic neuritis targets/*.pptx
+optic neuritis targets/*.pdf
+optic neuritis targets/*.png
+optic neuritis targets/*.jpg
+optic neuritis targets/*.jpeg
+optic neuritis targets/*.tif
+optic neuritis targets/*.tiff
