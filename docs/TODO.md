@@ -44,11 +44,10 @@ px/frame = 5–50 deg/s.
 ## 1. Internal noise
 
 **Start here, by convenience rather than by dependency.** The coherence × speed
-map and Site-2 Phase A are done (below). High-frequency failure, Phase B
-correlation, and Sites 1/3 / MT Site-2 remain. The model was fully deterministic
-until 2026-08-28; that was the single biggest thing standing between it and the
-clinical question. Read the callout above before treating any result from this
-section as final.
+map and Site-2 Phases A and B are done (below). High-frequency failure, Sites 1/3,
+and MT Site-2 remain. The model was fully deterministic until 2026-08-28; that was
+the single biggest thing standing between it and the clinical question. Read the
+callout above before treating any result from this section as final.
 
 **Full treatment: [`NOISE_AND_DEMYELINATION.md`](NOISE_AND_DEMYELINATION.md).**
 
@@ -80,8 +79,15 @@ Build order, from that document's §6:
      benchmark: lesion+noise MT d′ **3.81 ± 0.083** vs healthy+noise
      **4.39 ± 0.033** (SD ratio **2.5×**); noise-off lesion was only −0.09 d′.
      Mean N/D scale as k² (0.115 vs 0.029). All four Step 0 checks passed.
-     See `NOISE_TRIAL_DESIGN.md` §3.4–3.5. **Phase B (spatial correlation) is
-     next.** MT Site-2, Site 1, and Site 3 are not started — run separately
+     See `NOISE_TRIAL_DESIGN.md` §3.4–3.5.
+   - ~~**Site 2, Phase B (gaussian spatial correlation).**~~ **Done 2026-08-28.**
+     Same σ = 0.05, σ_corr = 3 px (MT pooling), N = 20. Ranking **survived**:
+     lesion+noise d′ **1.01 ± 0.15** vs healthy+noise **2.86 ± 0.14** (independent
+     arm matched Phase A). Mean gap **−1.86** (vs −0.58 independent); SD ratio
+     collapsed to **1.08**. Correlation does not reverse the sign, but it is not
+     a small correction — first Site-2 condition near a hard letter. See
+     `NOISE_TRIAL_DESIGN.md` §3.6. **Next:** uniform vs patchy with gaussian
+     Site-2. MT Site-2, Site 1, and Site 3 are not started — run separately
      before combining.
 4. **Temporal noise** — jitter per trial, and Bernoulli dropout. **Still open.**
 
@@ -91,7 +97,7 @@ Build order, from that document's §6:
 | Decision | Status |
 |----------|--------|
 | Fixed vs proportional variance | **Locked:** fixed at Site 2. Proportional reserved for Site 1. |
-| Spatial correlation | **Phase A done** (independent). **Phase B open** (gaussian, required before patchy claims). |
+| Spatial correlation | **Phase B done** (gaussian, σ_corr = 3 px, ranking survived). Not swept. Use gaussian for patchy claims. |
 | Dropout is not Gaussian | **Deferred** (Step 5). |
 | Observables: d′ + trial SD | **Locked and in use:** d′, SD(d′), SD(center opponent). |
 | Deficit (a) / VEP observable | **Still open** — see §4 below. |

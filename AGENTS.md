@@ -37,18 +37,19 @@ affects the results are the same question asked from two sides:
   shows changes which noise model and which observables are worth building.
 
 **Start with §1 for convenience, not because it comes first.** Neither blocks the
-other. As of 2026-08-28 the coherence × speed map and Site-2 **Phase A** (σ = 0.05,
-N = 50) are done; see [`NOISE_TRIAL_DESIGN.md`](docs/NOISE_TRIAL_DESIGN.md) §3.
-**Next is Phase B (spatial correlation).** High-frequency failure and the lesion
-matrix through mtMix are still open. Expect several passes rather than one pass
-each, and treat neither half as finished until the pair stops changing each
+other. As of 2026-08-28 the coherence × speed map, Site-2 **Phase A** (σ = 0.05,
+N = 50), and **Phase B** (gaussian, σ_corr = 3 px, N = 20; ranking survived) are
+done; see [`NOISE_TRIAL_DESIGN.md`](docs/NOISE_TRIAL_DESIGN.md) §3. **Next is
+uniform vs patchy lesions with gaussian Site-2.** High-frequency failure and the
+lesion matrix through mtMix are still open. Expect several passes rather than one
+pass each, and treat neither half as finished until the pair stops changing each
 other's reading.
 
 **Five decisions have to be settled before any noise step**, listed in
 `NOISE_AND_DEMYELINATION.md` §6 and locked in
-[`NOISE_TRIAL_DESIGN.md`](docs/NOISE_TRIAL_DESIGN.md) §1 (except Phase B
-correlation and the VEP observable). Every observable must be reported alongside
-a measure of trial-to-trial variability, never as a mean alone.
+[`NOISE_TRIAL_DESIGN.md`](docs/NOISE_TRIAL_DESIGN.md) §1 (except the VEP observable).
+σ_corr = 3 px was used in Phase B and not swept. Every observable must be reported
+alongside a measure of trial-to-trial variability, never as a mean alone.
 
 Read the report before writing anything. Everything below is context for doing
 that well.
@@ -156,9 +157,9 @@ Full account in [docs/MODEL_AND_LESIONS.md](docs/MODEL_AND_LESIONS.md) §2.
 - One-off and exploratory scripts live in `explore/`. They locate themselves, run
   deterministically, and seed their random numbers. Retired ones move to
   `explore/_archive/`.
-- Generated figures go to `explore/_figs/`, which is **gitignored**. Treat it as
-  something you can always regenerate, never as a record. Anything that has to
-  survive belongs in a document.
+- Generated figures go to `explore/_figs/`. **PNG figures and `summary.txt` are
+  tracked** so a push keeps the record. Full `results.mat` trial dumps stay
+  gitignored (tens of MB; regenerate via the scripts).
 - Prefer real on-screen figures. On headless MATLAB, start a session with
   `set(0,'DefaultFigureVisible','on')`. This machine does that from a `startup.m`
   in `userpath`, which sits outside the repo and does not travel with it.
@@ -171,7 +172,7 @@ Full account in [docs/MODEL_AND_LESIONS.md](docs/MODEL_AND_LESIONS.md) §2.
 | [docs/MODEL_AND_LESIONS.md](docs/MODEL_AND_LESIONS.md) | **The main report.** How the model is built and why, everything that has been measured, and how far each result can be trusted. Read before writing code or quoting a number. |
 | [docs/RGC_lagged_preset_summary.md](docs/RGC_lagged_preset_summary.md) | A closer look at the biological front-end, with figures. |
 | [docs/NOISE_AND_DEMYELINATION.md](docs/NOISE_AND_DEMYELINATION.md) | Why the model needs internal noise, and what it should predict. |
-| [docs/NOISE_TRIAL_DESIGN.md](docs/NOISE_TRIAL_DESIGN.md) | **Noise contract:** locked Step 0 choices, trial API, and the 2026-08-28 tables (coherence map, σ sweep, N=50 Phase A). |
+| [docs/NOISE_TRIAL_DESIGN.md](docs/NOISE_TRIAL_DESIGN.md) | **Noise contract:** locked Step 0 choices, trial API, and the 2026-08-28 tables (coherence map, σ sweep, N=50 Phase A, Phase B). |
 | [docs/TODO.md](docs/TODO.md) | Open work and done items with what they showed. §1–§3 are one iterative investigation. |
 | [literature/NOTES.md](literature/NOTES.md) | The papers, and what each one constrains. |
 | [optic neuritis targets/NOTES.md](optic%20neuritis%20targets/NOTES.md) | The clinical figures the model should eventually match. |

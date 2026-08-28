@@ -1,9 +1,10 @@
 # Noise implementation — locked decisions, trial API, and results
 
 **Status:** Step 0 locked. Step 1 harness done. Step 2 **Phase A locked**
-(2026-08-28): V1 numerator, independent, **σ = 0.05**, N = 50. Coherence × speed
-drive map done. **Next:** Phase B (spatial correlation). MT Site-2 is its own
-later arm.
+(2026-08-28): V1 numerator, independent, **σ = 0.05**, N = 50. **Phase B done**
+(same day): gaussian spatial correlation, σ_corr = 3 px, N = 20; ranking
+survived. Coherence × speed drive map done. **Next:** uniform vs patchy lesions
+with gaussian Site-2. MT Site-2 is its own later arm.
 
 This document is the contract for the noise work described in
 [`NOISE_AND_DEMYELINATION.md`](NOISE_AND_DEMYELINATION.md) §6 and [`TODO.md`](TODO.md) §3.
@@ -56,15 +57,19 @@ vs proportional.
 **Why.** Independent noise is easy and **wrong** for cortex (NOISE §6), but Phase A
 only needs: *lesion + noise → d′ down, trial SD up, mean tuning still flat*.
 
-Phase B is **required** before interpreting **uniform vs patchy amplitude** (NOISE
+Phase B was **required** before interpreting **uniform vs patchy amplitude** (NOISE
 §5.1): those lesions should **diverge** only with Site-2 noise and spatial
-structure in the damage relative to pool width.
+structure in the damage relative to pool width. Ranking survived at σ_corr = 3 px
+(§3.6), so that comparison is now unblocked. Use **gaussian**, not independent.
 
-**σ_corr starting guess.** Order of V1/MT normalization blur (~few px; see
-`pars.v1Blur` / pool filters in `shPars.m`). Exact value tuned in Phase B.
+**σ_corr used.** 3 px (`mkGaussianFilter(3)`), the **MT spatial pooling** width.
+V1's own normalization pool is identity (`mkGaussianFilter(-1)`), so this is
+larger than V1's pool. Not swept.
 
 **Falsifier.** If Phase A works but Phase B reverses the lesion ordering, correlation
-length is doing real work — do not publish Phase A numbers as final.
+length is doing real work — do not publish Phase A numbers as final. **Did not
+fire** (2026-08-28, N = 20): ranking survived. Correlation still changes the
+*size* of the effect — gaussian is not a small correction on Phase A. See §3.6.
 
 ---
 
@@ -135,7 +140,7 @@ contribution; not the biological default.
 | Letter size in degrees / RF scale | `TODO.md` §5 — blocks quantitative clinical claims |
 | Jitter, Bernoulli dropout | Step 5 — not Gaussian approximations |
 | Site 1 + Site 3 noise combined | Step 4 — separate first (NOISE §6) |
-| Exact σ | **Locked: 0.05** (sweep 0.03 / 0.05 / 0.08). σ_corr still open (Phase B). |
+| Exact σ | **Locked: 0.05** (sweep 0.03 / 0.05 / 0.08). σ_corr **used 3 px** (not swept). |
 
 ---
 
@@ -199,8 +204,8 @@ cfg.enabled = false;
 cfg.site2.enabled = false;
 cfg.site2.mode = 'fixed';       % locked Step 0
 cfg.site2.sigma = 0.05;         % locked 2026-08-28 after σ sweep
-cfg.spatialCorrelation = 'none'; % 'none' | 'gaussian' (Phase B — not implemented)
-cfg.spatialCorrSigmaPx = 3;     % Phase B
+cfg.spatialCorrelation = 'none'; % 'none' | 'gaussian' (Phase B implemented)
+cfg.spatialCorrSigmaPx = 3;     % px; MT pooling width (V1 pool is identity)
 cfg.noiseSeed = 9000;
 cfg.nTrials = 50;
 ```
@@ -336,13 +341,17 @@ in `shModelV1Normalization_Tuned.m` **before** the division. Gated on
 existing tests are unchanged; `tests/runAllTests.m` still 12/12). MT
 normalization is **not** noised yet — that is a later, separate arm.
 
-`shSite2LastND` records mean `N` and `D` on noisy trials. Phase B spatial
-correlation still errors if requested.
+`spatialCorrelation = 'none'` is Phase A. `'gaussian'` blurs that same white
+field in Y and X (σ_corr = `spatialCorrSigmaPx`, default 3 px) and rescales so
+the marginal variance stays `sigma^2`.
+
+`shSite2LastND` records mean `N` and `D` on noisy trials.
 
 Scripts:
 
 - `explore/runMotionLetterSite2PhaseA.m` — locked σ = 0.05, N = 50
 - `explore/runMotionLetterSite2SigmaSweep.m` — already run (0.03 / 0.05 / 0.08)
+- `explore/runMotionLetterSite2PhaseB.m` — independent vs gaussian at σ = 0.05
 
 ---
 
@@ -449,15 +458,51 @@ C is visibly weaker under lesion+noise at this σ, unlike the milder 0.03 look).
 
 **What this does not mean:** d′ is still ~3.8 — the letter is still easy. Phase A
 asked for the **sign** of the JW interaction, not a clinical match. Independent
-noise is still wrong for cortex (Phase B).
+noise is still wrong for cortex; that is Phase B.
 
-### 3.6 Next (do not skip ahead)
+### 3.6 Site-2 Phase B (spatial correlation)
 
-1. Phase B: spatially correlated Site-2, same σ = 0.05; ranking must survive.
-2. N = 50 is already locked; do not re-run it for its own sake.
-3. More lesions with noise only after Phase B if the claim is about spatial
-   structure of damage.
-4. MT Site-2 last, as its own arm (V1 already feeds MT).
+`explore/runMotionLetterSite2PhaseB.m`. Same movie and σ = 0.05 as Phase A.
+Independent (`none`) vs gaussian (σ_corr = 3 px). White field drawn first, then
+optionally blurred, so the arms are paired. N = 20 first look (21.7 min). Output:
+`explore/_figs/site2_phaseB_sigma005/`.
+
+Noise off matches the deterministic baseline (healthy **+4.5104**, lesion
+**+4.4230**).
+
+| corr | Healthy d′ | Lesion d′ | Δ mean | SD ratio | ctr SD h / L | rank |
+|------|------------|-----------|--------|----------|--------------|------|
+| independent | 4.378 ± 0.027 | 3.794 ± 0.072 | −0.58 | **2.62** | 0.0015 / 0.0034 | PASS |
+| gaussian | 2.864 ± 0.142 | **1.008 ± 0.153** | **−1.86** | 1.08 | 0.0081 / 0.0119 | PASS |
+
+**SURVIVAL: YES** — lesion mean d′ stays below healthy, and lesion SD(d′) stays
+above healthy, under gaussian correlation. The Phase A sign is not an artifact of
+independent noise.
+
+Independent N = 20 matches the N = 50 lock closely enough (healthy 4.38 vs 4.39;
+lesion 3.79 vs 3.81; SD ratio 2.62 vs 2.5). Do not replace the Phase A table with
+these N = 20 independent numbers.
+
+**What else it showed.** Correlation is not a small correction:
+
+- Mean d′ falls a lot (healthy 4.38 → 2.86; lesion 3.79 → **1.01**). Lesion +
+  gaussian is the first Site-2 condition near a hard letter.
+- SD ratio collapses (2.62 → 1.08). Gaussian raises healthy trial SD more than
+  lesion (0.027 → 0.142 vs 0.072 → 0.153), so the JW “lesion is more variable”
+  signature is weaker; the deficit shows in the **mean**.
+- σ_corr = 3 px was the MT-pooling guess, not a sweep.
+
+PASS is mean-and-SD ranking only. The SD ranking under gaussian is thin (1.08).
+
+### 3.7 Next (do not skip ahead)
+
+1. Phase B ranking survived — do not re-run N = 50 for its own sake.
+2. Uniform vs patchy amplitude lesions **with gaussian Site-2** (the claim Phase B
+   was gating). Independent noise is the wrong model for that comparison.
+3. High-frequency failure (no noise required).
+4. Lesion matrix through mtMix (deterministic baseline for the rest of the
+   matrix).
+5. MT Site-2 last, as its own arm (V1 already feeds MT).
 
 ---
 

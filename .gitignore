@@ -1,8 +1,11 @@
 .DS_Store
 
-# Generated validation/analysis outputs (regenerate via explore/validateSHFigs9to14*.m
-# and explore/quantitativeAnalysisFigs9to14.m) - not source, don't track the binaries.
-explore/_figs/
+.DS_Store
+
+# PNG figures and summary.txt under explore/_figs/ are tracked (noise and
+# compensation runs). Full trial dumps are tens of MB and regenerable.
+explore/_figs/**/results.mat
+
 classifier/_figs/
 classifier/_cache/
 

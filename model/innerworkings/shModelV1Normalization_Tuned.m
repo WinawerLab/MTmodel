@@ -25,7 +25,7 @@ deno = shGaussianBlur(pop, ind, xfilt, tfilt);
 % now get normalizing
 [pop, ind] = shTrim(pop, ind, trimmer);
 nume = pop * pars.scaleFactors.v1Complex;
-nume = shApplySite2Noise(nume, pars);
+nume = shApplySite2Noise(nume, pars, ind);
 if isfield(pars, 'noise') && isstruct(pars.noise) ...
         && isfield(pars.noise, 'enabled') && pars.noise.enabled
     shSite2LastND(nume, deno);

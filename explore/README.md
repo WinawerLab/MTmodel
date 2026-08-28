@@ -12,8 +12,8 @@ Results, and how far each one can be trusted, are in
 **Three conventions.** Seed the random number generator — anything using dot
 stimuli is otherwise confounded with dot-sample noise. Set
 `pars.rgc.mode = 'custom'` whenever you build classes by hand, or they are
-discarded in silence. Figures go to `_figs/`, which is **gitignored**: regenerable
-output, never a record.
+discarded in silence. Figures go to `_figs/`. PNG figures and `summary.txt` are
+tracked; `results.mat` trial dumps are gitignored.
 
 ## Current scripts
 
@@ -28,6 +28,7 @@ output, never a record.
 | `runMotionLetterTrialsDemo.m` | Step 1 smoke test: small field, noise off, `std(d′)≈0`. |
 | `runMotionLetterDeterministicBaseline.m` | **Two** full-field MT forwards (healthy + 50% amplitude lesion), same movie. Run this before Site-2 noise. |
 | `runMotionLetterSite2PhaseA.m` | Locked Phase A: σ = 0.05, N = 50. Writes `explore/_figs/site2_phaseA_sigma005_n50/`. First look (σ = 0.03, N = 20) is in `site2_phaseA/`. |
+| `runMotionLetterSite2PhaseB.m` | Phase B done 2026-08-28: independent vs gaussian at σ = 0.05, σ_corr = 3 px, N = 20. Ranking survived. Writes `explore/_figs/site2_phaseB_sigma005/`. |
 | `runMotionLetterSite2SigmaSweep.m` | Choose Site-2 σ (V1 only). Writes `explore/_figs/site2_sigmaSweep/`. |
 | `compensationIndex.m` | how much of a uniform amplitude lesion divisive normalization absorbs, against stimulus speed **and coherence**. Measures the gain headroom that noise would act on. Report §4.8. |
 | `compareLesionsToBaseline.m` | lesion and baseline on shared axes, **seeded**, with unambiguous gain labels. The template for any new lesion script. |

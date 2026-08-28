@@ -698,9 +698,21 @@ Lesion+noise vs healthy+noise: mean d′ **−0.57** (noise-off lesion was only
 −0.09); SD(d′) **2.5×**. Mean N and D scale as k² (0.115 vs 0.029). That is the
 JW mechanism: the same σ is amplified more when the pool is smaller.
 
-Caveats: independent noise is Phase A only (Phase B still required before patchy
-claims); d′ remains high (~3.8) so this is a sign-of-effect result, not a
-clinical match; MT Site-2 is not on.
+Phase B (same movie and σ, N = 20, σ_corr = 3 px, gaussian blur of the same white
+field): ranking **survived**. Independent arm matched Phase A. Gaussian:
+
+| corr | Healthy d′ | Lesion d′ | Δ mean | SD ratio |
+|------|------------|-----------|--------|----------|
+| independent | 4.378 ± 0.027 | 3.794 ± 0.072 | −0.58 | 2.62 |
+| gaussian | 2.864 ± 0.142 | **1.008 ± 0.153** | **−1.86** | 1.08 |
+
+Correlation does not reverse the Phase A sign, but it is not a small correction:
+lesion + gaussian is the first Site-2 condition near a hard letter, and the SD
+ratio collapses because healthy trial SD rises. Use gaussian for patchy vs
+uniform. σ_corr was not swept. Full table: `NOISE_TRIAL_DESIGN.md` §3.6.
+
+Caveats: d′ under independent noise remains high (~3.8); gaussian brings lesion
+d′ to ~1.0 but N = 20 is a first look; MT Site-2 is not on.
 
 ---
 
@@ -716,10 +728,11 @@ clinical match; MT Site-2 is not on.
 | compensation index (speed) | **current** (2026-08-19) |
 | C vs drive, coherence × speed | **current** (2026-08-28) — lagged R² = 0.984 |
 | Site-2 Phase A (σ = 0.05, N = 50) | **current** (2026-08-28) — independent V1 noise only |
+| Site-2 Phase B (σ_corr = 3 px, N = 20) | **current** (2026-08-28) — ranking survived; gaussian changes the size of the effect |
 | motion-letter healthy baseline, d′ = 1.32 | **current** (2026-08-17) at 0.3125 px/frame; the 1 deg/s seed-7 baseline is d′ = 4.51 (report §4.9) |
 | uniform versus non-uniform amplitude and delay lesions | **pre-mtMix** — the front-end conclusion probably survives, the MT numbers need re-measuring |
 | parasol-only and ON-only lesions | **invalid as biology** — measured on the midget-dominated MT |
-| the 114 campaign figures and metric CSVs | **gone** — `explore/_figs/` is gitignored and has been cleared. The scripts still exist. |
+| the 114 campaign figures and metric CSVs | **gone** — those files were cleared; the scripts still exist. Current noise/compensation PNGs live in `explore/_figs/` and are tracked |
 
 One consolidated re-run would clear most of this: the §4.7 lesion matrix, with the
 missing uniform amplitude-plus-delay cell added and the low-pass neuron reported

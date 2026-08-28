@@ -1,0 +1,23 @@
+Site-2 Phase A  2026-08-28 16:06:59
+letter C  1.00 deg/s  out [128 128 120]  dotSeed 7  sigma 0.0500  N=50
+noise in: V1 numerator (shModelV1Normalization_Tuned)
+elapsed 25.6 min
+
+condition        dMt_mean    dMt_std  ctrOpp_mean   ctrOpp_std
+healthy_off        4.5104   0.000000       0.1090     0.000000
+lesion_off         4.4230   0.000000       0.0891     0.000000
+healthy_on         4.3884   0.033236       0.0925     0.001464
+lesion_on          3.8136   0.082754       0.0523     0.003421
+
+Delta d' (lesionOff - healthyOff) = -0.0874
+Delta d' (lesionOn  - healthyOn)  = -0.5748
+Delta d' (lesionOn  - lesionOff)  = -0.6094
+SD d' healthyOn / lesionOn = 0.0332 / 0.0828
+
+Step 0 checks:
+  healthyOff d' ≳ +1:  YES  (4.5104)
+  lesionOn d' < lesionOff:  YES
+  lesionOn SD(d') > healthyOff:  YES
+  lesionOn SD(ctr) > healthyOff:  YES
+  mean N (healthyOn / lesionOn) = 0.1154 / 0.02885
+  mean D (healthyOn / lesionOn) = 0.1166 / 0.02914

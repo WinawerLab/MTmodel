@@ -1,0 +1,12 @@
+Site-2 Phase B  2026-08-28 16:56:38
+letter C  1.00 deg/s  out [128 128 120]  dotSeed 7  sigma 0.0500  sigma_corr 3.0 px  N=20
+elapsed 21.7 min
+
+noise off:  healthy d'=+4.5104   lesion d'=+4.4230
+
+corr            h_dMean     h_dStd    L_dMean     L_dStd  dMean_L-h     SD_L/h    h_ctrSD    L_ctrSD  rank
+indep            4.3775     0.0273     3.7944     0.0715    -0.5831      2.615   0.001547   0.003371  PASS
+gauss            2.8637     0.1415     1.0075     0.1531    -1.8562      1.082   0.008093   0.011858  PASS
+
+SURVIVAL: YES — gaussian correlation does not reverse the Phase A ranking.
+PASS = lesion mean d' < healthy and lesion SD(d') > healthy, for that correlation.

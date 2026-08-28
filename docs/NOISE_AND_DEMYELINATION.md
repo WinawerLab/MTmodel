@@ -347,9 +347,12 @@ deficit:
 4. **Noise, one site at a time.**
    - ~~Site 2 Phase A (independent, V1 numerator, σ = 0.05, N = 50).~~ **Done
      2026-08-28.** Lesion+noise d′ 3.81 ± 0.083 vs healthy+noise 4.39 ± 0.033.
-     `NOISE_TRIAL_DESIGN.md` §5.5.
-   - **Next:** Phase B spatial correlation, then MT Site-2 as its own arm.
-     Site 1 (`shClassV1Basis`) and Site 3 (read-out) later, separately.
+     `NOISE_TRIAL_DESIGN.md` §3.5.
+   - ~~Site 2 Phase B (gaussian, σ_corr = 3 px, N = 20).~~ **Done 2026-08-28.**
+     Ranking survived. Lesion+noise d′ 1.01 ± 0.15 vs healthy+noise 2.86 ± 0.14.
+     Mean gap −1.86; SD ratio 1.08. `NOISE_TRIAL_DESIGN.md` §3.6.
+   - **Next:** uniform vs patchy with gaussian Site-2, then MT Site-2 as its own
+     arm. Site 1 (`shClassV1Basis`) and Site 3 (read-out) later, separately.
 5. **Temporal noise** — jitter per trial and Bernoulli dropout (§4.4). These are
    the ones with no deterministic counterpart at all.
 
@@ -363,8 +366,10 @@ Locked 2026-08-28 except as noted. Full contract: `NOISE_TRIAL_DESIGN.md` §1.
   Fixed-variance noise does not. This changes the *sign* of several predictions
   above. It is not a detail.
 - **How is the noise correlated?**
-  **Phase A done (independent).** Phase B (gaussian, σ_corr ≈ pool width) is
-  **required** before uniform vs patchy amplitude claims. Independent at every
+  **Phase B done (gaussian, σ_corr = 3 px).** Ranking survived (lesion d′ 1.01 vs
+  healthy 2.86). Correlation is not a small correction on Phase A: mean gap grew
+  to −1.86 and the SD ratio collapsed to 1.08. σ_corr was not swept. **Use
+  gaussian** for uniform vs patchy amplitude claims. Independent at every
   location is the easy default and it is wrong.
 - **Dropout is not Gaussian.** **Deferred.** Stochastic conduction block is
   multiplicative, all-or-none, and correlated in time — a block persists for a
