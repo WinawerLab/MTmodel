@@ -25,7 +25,7 @@
 % for every neuron so the columns are directly comparable; preferences are
 % therefore quantized to the grid.
 %
-% Units come from shModelUnits (docs/RGC_lagged_preset_summary.md 7.1):
+% Units come from shModelUnits (docs/UNITS_AND_SCALE.md):
 % 1 pixel = 0.1 deg, 1 frame = 20 ms (50 fps). That is the repo's anchor, not
 % Simoncelli & Heeger's Appendix I convention -- see shModelUnits.
 

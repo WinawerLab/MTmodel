@@ -2,7 +2,11 @@
 > direction-selectivity front-end (ON/OFF spatial offset + ON quadrature kernel)
 > that was **retired on 2026-07-12**; §14–16 record the pivot away from it and
 > correct the lesion-delta claim. The conclusions are carried forward in
-> `docs/MODEL_AND_LESIONS.md` §2. See `docs/_archive/README.md`.
+> `docs/MODEL_AND_LESIONS.md` §6. See `docs/_archive/README.md`.
+>
+> **Every angular and speed figure below predates the 2026-08-27 re-anchor of
+> physical units** and carries the old labels. See
+> `docs/UNITS_AND_SCALE.md`.
 
 ---
 

@@ -87,13 +87,13 @@ Three standing caveats before any quantitative claim:
 
 - The model's midget receptive field centre is still 2–4x larger than a real one
   (0.08 deg against 0.02–0.05), and no choice of units fixes it
-  (`docs/RGC_lagged_preset_summary.md` §7.1).
+  (`docs/UNITS_AND_SCALE.md` §5).
 - MT is tuned to {0, 1, 6} px/frame = {0, 5, 30} deg/s. The clinically interesting
   low-speed band now straddles MT's slowest moving unit rather than sitting wholly
   below it, but MT is still weakly driven at the bottom of that band
   (`docs/TODO.md` §6).
 - The **0.05 deg/sec** psychophysical speed threshold is out of the model's reach
-  in any units (`docs/RGC_lagged_preset_summary.md` §7.2). Note what this is and
+  in any units (`docs/UNITS_AND_SCALE.md` §6). Note what this is and
   is not: it is *not* a low-frequency cutoff — nothing in the lagged preset blocks
   DC, and V1 units there respond to a perfectly static stimulus. It is that
   direction selectivity is zero at zero speed by symmetry and grows only linearly

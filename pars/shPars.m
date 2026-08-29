@@ -25,10 +25,12 @@
 %   stream A  parasol-masked weights; the dominant, fast magnocellular drive.
 %   stream B  the mixed M+P weights, relayed via V2; the slow minority drive.
 %
-% Both are 28 x 160 matrices projecting from one basis -- the basis is NOT
-% doubled. This is on by default because MT is magnocellular by construction;
-% stream B alone is midget-dominated, which is backwards. To run single-stream
-% (e.g. to reproduce pre-2026-08-14 results), clear pars.rgc.mtMix.
+% Both are 28 x 160 matrices reading out the SAME 160-feature basis, so the
+% feature dimension is not doubled -- but the basis is recomputed once per
+% stream, so 'lagged' costs about twice a single-stream run. This is on by
+% default because MT is magnocellular by construction; stream B alone is
+% midget-dominated, which is backwards. To run single-stream (e.g. to reproduce
+% pre-2026-08-14 results), clear pars.rgc.mtMix.
 %
 % LESIONS AND CUSTOM SETTINGS start from a preset and edit it -- see
 % pars.rgc.impairmentAmplitudeMap / impairmentDelayMap, pars.rgc.classes(i).gain,
@@ -153,8 +155,16 @@ end
 function W = localLoadWeights(parsDir, fileName, fieldName)
     f = fullfile(parsDir, fileName);
     if ~exist(f, 'file')
+        % Each cache has its own fitting script. Stream B (the mixed M+P
+        % read-out) is fitted by explore/validateSHFigs9to14.m; stream A (the
+        % parasol-masked read-out) by explore/fitMagnoMtPopulation.m.
+        if strcmpi(fieldName, 'v1WeightsMagnoA')
+            refitWith = 'explore/fitMagnoMtPopulation.m';
+        else
+            refitWith = 'explore/validateSHFigs9to14.m';
+        end
         error('shPars:missingWeights', ...
-              'Cached weights not found: %s\nRefit with explore/validateSHFigs9to14.m.', f);
+              'Cached weights not found: %s\nRefit with %s.', f, refitWith);
     end
     c = load(f);
     if ~isfield(c, fieldName)

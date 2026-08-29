@@ -31,7 +31,7 @@ is trustworthy enough that a change caused by damage means something. Everything
 below serves one of those two needs.
 
 The physical scale is set in `pars/shModelUnits.m`. The derivation is in
-`docs/RGC_lagged_preset_summary.md` §7.1:
+[`UNITS_AND_SCALE.md`](UNITS_AND_SCALE.md):
 
 **1 pixel = 0.1 deg · 1 frame = 20 ms (50 frames/sec) · 1 pixel/frame = 5 deg/sec**
 
@@ -40,7 +40,7 @@ The physical scale is set in `pars/shModelUnits.m`. The derivation is in
 > deg/sec per pixel/frame. Every deg/s figure below is therefore **3.2x smaller**
 > than the same figure computed SH's way. Nothing the model computes changed —
 > only the labels. Full statement of the departure, and why, in
-> `RGC_lagged_preset_summary.md` §7.1.
+> `UNITS_AND_SCALE.md` §2–§3.
 
 Useful conversions for the clinical speed range:
 
@@ -465,7 +465,7 @@ The related tension has also eased: MT is tuned to {0, 1, 6} px/frame, which is
 low-speed band now straddles MT's slow moving unit instead of sitting entirely
 below it. What re-anchoring does *not* touch is the RGC size offset — the midget
 centre is still 2–4x too large — or the psychophysical 0.05 deg/s threshold, which
-is out of the model's reach in any units (`RGC_lagged_preset_summary.md` §7.2).
+is out of the model's reach in any units (`UNITS_AND_SCALE.md` §6).
 
 ### 4.7 Lesion results
 

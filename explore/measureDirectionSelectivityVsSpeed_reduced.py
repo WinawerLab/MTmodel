@@ -2,7 +2,7 @@
 
 Companion to measureDirectionSelectivityVsSpeed.m, which does the same
 measurement through the full MATLAB pipeline. This version exists so the
-numbers in docs/RGC_lagged_preset_summary.md 7.2 can be regenerated without
+numbers in docs/UNITS_AND_SCALE.md section 6 can be regenerated without
 MATLAB, and so the two can be cross-checked.
 
 THE REDUCTION. The stimulus is constant in y. localDoG is separable, so a

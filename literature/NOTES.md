@@ -109,7 +109,7 @@ The model this repo implements. Two points that are easy to miss:
   2026-08-27 `pars/shModelUnits.m` sets 0.1 deg/pixel and 20 ms/frame, i.e. 5
   deg/sec per pixel/frame, because SH's scale puts every stage of the model 3–15x
   too coarse. The model's responses are the same either way. Derivation and
-  consequences in `docs/RGC_lagged_preset_summary.md` §7.1.
+  consequences in `docs/UNITS_AND_SCALE.md`.
 - **Static normalization (p. 758).** SH flag as "one notable deficiency" that their
   outputs correspond to **steady-state firing rates**. Note the scope of that
   carefully. The feedforward temporal filtering *is* causal, so response latency is

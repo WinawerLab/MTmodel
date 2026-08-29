@@ -338,11 +338,16 @@ deficit:
 
 ## 6. What to build, in order
 
+**This section is the only home for the build order and the decisions below.**
+`TODO.md` §1 points here rather than summarising it, because a paraphrase of the
+decisions would change the sign of several predictions.
+
 1. ~~**Compensation index.**~~ **Done** — report §4.8.
 2. **A map of drive over coherence × speed, still deterministic.** Extend
-   `compensationIndex.m` with a coherence axis and re-express everything against
-   unlesioned drive rather than speed (§5.5). Tests JW's prediction directly, and
-   needs no noise code.
+   `explore/compensationIndex.m` with a coherence axis and re-express everything
+   against unlesioned drive rather than speed (§5.5). If the low-speed, high-speed
+   and low-coherence conditions collapse onto one curve, the operating-point
+   account wins outright. Tests JW's prediction directly, and needs no noise code.
 3. **High-frequency failure** as a change in filter shape (§5.3). Also no noise.
 4. **Noise, one site at a time.** Site 2 first — added into `N` in
    `shModelV1Normalization_Tuned`, before the division — since it carries the

@@ -35,10 +35,10 @@
 % little direction signal, but nothing like enough to segment an object whose
 % only cue is the direction difference across its boundary.
 %
-% Units come from shModelUnits (docs/RGC_lagged_preset_summary.md 7.1):
+% Units come from shModelUnits (docs/UNITS_AND_SCALE.md):
 % 1 pixel = 0.1 deg, 1 frame = 20 ms, so 1 px/frame = 5 deg/sec.
 %
-% SEE ALSO: docs/RGC_lagged_preset_summary.md 7.2, optic neuritis targets/NOTES.md
+% SEE ALSO: docs/UNITS_AND_SCALE.md section 6, optic neuritis targets/NOTES.md
 
 clear; clc;
 thisFile = mfilename('fullpath');

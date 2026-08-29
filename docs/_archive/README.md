@@ -7,6 +7,11 @@ numbers stay recoverable, and because the live documents cite it as the record o
 
 **Do not treat anything in here as current.** The live set is listed in `AGENTS.md`.
 
+**Everything here also predates the 2026-08-27 re-anchor of physical units**, so
+every figure in degrees, degrees/second or milliseconds carries the old labels and
+is 1.3–4.3x larger than the same quantity computed today. Nothing the model
+computes changed; only the labels did. See `docs/UNITS_AND_SCALE.md`.
+
 ---
 
 ## What is here, and why it was retired
