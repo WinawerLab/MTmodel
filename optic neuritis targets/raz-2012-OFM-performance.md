@@ -125,9 +125,9 @@ under-sampled by the model — it is outside it.
 
 Re-anchoring does not fix this, and the 0.05 °/s condition is unreachable at any
 anchor: the reasoning is in
-[`../docs/RGC_lagged_preset_summary.md`](../docs/RGC_lagged_preset_summary.md)
-§7.2. Closing the gap would mean lengthening the temporal filters and adding slow
-units to the V1 and MT populations.
+[`../docs/UNITS_AND_SCALE.md`](../docs/UNITS_AND_SCALE.md) §6. Closing the gap
+would mean lengthening the temporal filters and adding slow units to the V1 and MT
+populations.
 
 Note also that the relative speeds are twice the values in the x-axis column above,
 which shifts the whole table one row up this list without changing the conclusion.

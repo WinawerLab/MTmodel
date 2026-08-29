@@ -338,10 +338,13 @@ deficit:
 
 ## 6. What to build, in order
 
+**This section is the home for the build order and the decisions below.**
+`TODO.md` §1 records what has been measured; it must not replace the decisions.
+
 1. ~~**Compensation index (speed only).**~~ **Done** — report §4.8.
 2. ~~**A map of drive over coherence × speed.**~~ **Done 2026-08-28** —
    `compensationIndex.m`; C collapses onto unlesioned drive (lagged R² = 0.984).
-   Report §4.8.1 and `NOISE_TRIAL_DESIGN.md` §5.2. JW operating-point account
+   Report §4.8.1 and `NOISE_TRIAL_DESIGN.md` §3.2. JW operating-point account
    holds for the deterministic mean.
 3. **High-frequency failure** as a change in filter shape (§5.3). Also no noise.
 4. **Noise, one site at a time.**

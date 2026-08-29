@@ -15,7 +15,7 @@ locked Step 0 choices and the 2026-08-28 tables, is
 > and **(b) worse recognition of shapes defined only by motion, at slow speeds**?
 
 Conversions (`pars/shModelUnits.m`, re-anchored 2026-08-27 and **no longer SH's
-Appendix I convention** — see `RGC_lagged_preset_summary.md` §7.1): 1 pixel = 0.1
+Appendix I convention** — see `UNITS_AND_SCALE.md`): 1 pixel = 0.1
 deg, 1 frame = 20 ms (50 fps), 1 pixel/frame = 5 deg/sec. Every deg/s figure here
 is 3.2x smaller than it would be under SH's anchors; nothing the model computes
 changed. The Fig-10 **low-pass** neuron spans 0.0375–0.6 px/frame = 0.19–3 deg/s,
@@ -43,11 +43,11 @@ px/frame = 5–50 deg/s.
 
 ## 1. Internal noise
 
-**Start here, by convenience rather than by dependency.** The coherence × speed
-map and Site-2 Phases A and B are done (below). High-frequency failure, Sites 1/3,
-and MT Site-2 remain. The model was fully deterministic until 2026-08-28; that was
-the single biggest thing standing between it and the clinical question. Read the
-callout above before treating any result from this section as final.
+**Start here, by convenience rather than by dependency.** Nothing in this section
+depends on §2. The coherence × speed map and Site-2 Phases A and B are done
+(below). The model was fully deterministic until 2026-08-28; that was the single
+biggest thing standing between it and the clinical question. Read the callout
+above before treating any result from this section as final.
 
 **Full treatment: [`NOISE_AND_DEMYELINATION.md`](NOISE_AND_DEMYELINATION.md).**
 
@@ -60,7 +60,10 @@ demyelination degrades a signal — trial-to-trial jitter, stochastic conduction
 block, and failure at high firing rates — cannot be written down at all without
 it.
 
-Build order, from that document's §6:
+**The five decisions live in `NOISE_AND_DEMYELINATION.md` §6 and only there.**
+The list below is **status of what has been run**, not a paraphrase of those
+decisions. Always report trial-to-trial variability with the mean. Deficit (a)
+has no observable yet — see §4.
 
 1. ~~**Coherence × speed drive map, still deterministic.**~~ **Done 2026-08-28.**
    `explore/compensationIndex.m` now sweeps 7 speeds × 6 coherences. C vs
@@ -91,8 +94,7 @@ Build order, from that document's §6:
      before combining.
 4. **Temporal noise** — jitter per trial, and Bernoulli dropout. **Still open.**
 
-**Five decisions** (full text in `NOISE_AND_DEMYELINATION.md` §6). Status
-2026-08-28:
+**Status of the five decisions** (definitions in `NOISE_AND_DEMYELINATION.md` §6):
 
 | Decision | Status |
 |----------|--------|
@@ -221,14 +223,14 @@ Three things are still open:
   This is structural, not a units problem: the model's spatial ladder, from midget
   centre to MT receptive field, spans about 4.6x where real cortex spans 25–35x, so
   no single pixels-per-degree fixes both ends. The fix is a front-end that runs the
-  retina on a finer grid than V1. `RGC_lagged_preset_summary.md` §7.1 sets out what
-  that would take.
+  retina on a finer grid than V1. `UNITS_AND_SCALE.md` §5 sets out what that
+  would take.
 - **`explore/showMotionLetterModel.m` still sets the letter in model pixels** and
   reports the implied angular size. With 28 pixels available it can now set a real
   angular size instead. Not yet done.
 - **The psychophysical 0.05 deg/s speed threshold is out of the model's reach in
   any units.** Do not treat this as a calibration problem; the reasoning is in
-  `RGC_lagged_preset_summary.md` §7.2. For now, test lesion effects at speeds slow
+  `UNITS_AND_SCALE.md` §6. For now, test lesion effects at speeds slow
   *relative to MT's own tuning* and compare the shape of the effect.
 
 `localOpponentPair` warns when the population does not sample the stimulus speed.
@@ -251,9 +253,9 @@ what is missing is one run.
 
 ### What prompted it
 
-`RGC_lagged_preset_summary.md` §7.2 used to say the model's slow-speed limit was
+The units write-up used to say the model's slow-speed limit was
 that "a motion-energy filter cannot tell that from static". That was wrong twice,
-and §7.2 has been rewritten:
+and it has been rewritten as `UNITS_AND_SCALE.md` §6:
 
 1. **Wrong preset.** `shClassV1Basis` never touches `pars.v1TemporalFilters`. It
    uses `v1SpatialFilters` for the **spatial** read-out only; all temporal
@@ -283,17 +285,17 @@ Two scripts measure the same thing:
   execute cleanly on the first try.
 - `explore/measureDirectionSelectivityVsSpeed_reduced.py` — a reduced 1-D
   reimplementation of `shClassV1Basis`/`localClassChannel`. This produced the
-  numbers currently in §7.2. The reduction to one spatial dimension is exact, not
-  approximate: for a y-constant stimulus every `yorder >= 1` read-out is
-  identically zero, so only the four `yorder == 0` columns per class carry
-  anything.
+  numbers currently in `UNITS_AND_SCALE.md` §6. The reduction to one spatial
+  dimension is exact, not approximate: for a y-constant stimulus every
+  `yorder >= 1` read-out is identically zero, so only the four `yorder == 0`
+  columns per class carry anything.
 
 **Run the `.m`, compare against the `.py`, and reconcile.** The committed table is
 median |DSI| = 0.044 at 0.05 deg/s against 0.909 at 2 deg/s — about 5% of the
 achievable direction signal at the slowest clinical condition. If the two agree,
-drop the "not yet cross-checked" hedge in §7.2 and in
+drop the "not yet cross-checked" hedge in `UNITS_AND_SCALE.md` §6 and in
 `optic neuritis targets/NOTES.md`. If they disagree, the MATLAB result wins and
-§7.2's table must be corrected.
+`UNITS_AND_SCALE.md` §6's table must be corrected.
 
 Both scripts assert the zero-speed row is exactly 0. That catches sign and
 indexing errors but **not gain errors**, which is the failure mode a
@@ -307,7 +309,8 @@ directional-derivative read-out the response goes as f_x³(a_x + a_t·s)³, so f
 cancels out of the pref/null ratio entirely — only s·a_t/a_x survives. Broadband
 dot stimuli buy nothing. The only lever on slow-speed direction signal is units
 with a larger a_t/a_x: longer temporal filters and slower-tuned units. That is
-the same prescription §7.2 already reaches, now with a reason.
+the same prescription `UNITS_AND_SCALE.md` §6 already reaches, now with a
+reason.
 
 ---
 
@@ -316,8 +319,8 @@ the same prescription §7.2 already reaches, now with a reason.
 **Defects in live code only.** Caveats about *results* belong in
 `MODEL_AND_LESIONS.md` §5 (the validity ledger); limits of the front-end's
 parameters — the weak surround, the over-long lags, the spread in per-neuron
-fidelity — belong in `RGC_lagged_preset_summary.md` §7 and `MODEL_AND_LESIONS.md`
-§4.2. Do not restate them here.
+fidelity — belong in `RGC_lagged_preset_summary.md` §7, `UNITS_AND_SCALE.md` and
+`MODEL_AND_LESIONS.md` §4.2. Do not restate them here.
 
 - **`validateSHFigs9to14_lesions.m` does not seed the random number generator.**
   Consequences and the affected numbers: `MODEL_AND_LESIONS.md` §4.7.7.

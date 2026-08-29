@@ -52,7 +52,7 @@
 % the parasol centre (0.16 deg), the V1 preferred spatial frequency (2.15
 % cyc/deg), and the MT receptive field (~1.5 deg) all land in range, and MT's
 % slow unit sits at 5 deg/s inside the clinical band. The derivation and the
-% stage-by-stage table are in docs/RGC_lagged_preset_summary.md 7.1.
+% stage-by-stage table are in docs/UNITS_AND_SCALE.md.
 %
 % What re-anchoring does NOT fix, so that it is not rediscovered later:
 %
@@ -63,7 +63,7 @@
 %     finer grid than V1 would.
 %   * The 0.05 deg/s speed threshold measured psychophysically with
 %     motion-defined letters is out of the model's reach IN ANY UNITS. See
-%     docs/RGC_lagged_preset_summary.md 7.2.
+%     docs/UNITS_AND_SCALE.md section 6.
 %
 % Output fields:
 %   pixelsPerDegree, degPerPixel
@@ -73,7 +73,7 @@
 %   cyclesPerDegAtPeak          that peak in cycles/deg  (2.148)
 %   cyclesPerSecAtPeak          that peak in cycles/sec  (10.74)
 %
-% See also: mt2sin, shPars, docs/RGC_lagged_preset_summary.md
+% See also: mt2sin, shPars, docs/UNITS_AND_SCALE.md
 
 function units = shModelUnits()
 
