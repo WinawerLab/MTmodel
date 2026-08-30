@@ -1,108 +1,65 @@
-Below is the README provided for the original repository, written by Timothy Saint and Eero Simoncelli. 
+Below is the README provided for the original repository, written by Timothy Saint and Eero Simoncelli.
 
-THe model is decribed in this paper:
+The model is decribed in this paper:
 
     Simoncelli EP, Heeger DJ. A model of neuronal responses in visual area MT. Vision Res. 1998 Mar;38(5):743-61. doi: 10.1016/s0042-6989(97)00183-1. PMID: 9604103.
 
 The repository here uses the Simoncelli-Heeger model as a starting point, and adds an RGC front end for the purpose of studying the relationship between RGC lesions and behavioral deficits in optic neuritis. See AGENTS.md for an overview of this project. The Description below is untouched from the original, retrieved from the LCV webpage (https://www.cns.nyu.edu/~lcv/MTmodel/).
-___________________________________________________________________________
-DECRIPTION
 
-This package contains a MatLab implementation of a model for cortical
-neurons in visual area MT, as described in detail in the references
-given at the bottom of this document.  The model takes as input a
-discretized visual stimulus sequence (movie), and computes firing rate
-responses of two successive neural populations, corresponding to
-direction-selective complex cells in visual area V1, and
-"pattern-selective" neurons in area MT.  Further information, as well
-the most recent versions of the code, are available at
 
-    http://www.cns.nyu.edu/~lcv/MT-model.html
+
+# DESCRIPTION
+
+This package contains a MatLab implementation of a model for cortical neurons in visual area MT, as described in detail in the references given at the bottom of this document. The model takes as input a discretized visual stimulus sequence (movie), and computes firing rate responses of two successive neural populations, corresponding to direction-selective complex cells in visual area V1, and "pattern-selective" neurons in area MT. Further information, as well the most recent versions of the code, are available at
+
+http://www.cns.nyu.edu/~lcv/MT-model.html
 
 RGC front-end and project status:
 
-- This toolbox has been extended with a retinal ganglion cell (RGC) layer in
-  front of V1. It is on by default; set pars.rgc.enabled = 0 to recover the
-  original behaviour exactly. There are exactly two ways to run the model,
-  shPars and shPars('lagged'). For the design, the current status, and usage,
-  read AGENTS.md at the repository root and then the docs/ folder. The base
-  V1/MT model is described below and in the references.
-- The core 3D operations are now implemented natively in MATLAB, so no MEX
-  compilation is required for normal use. The legacy C/MEX sources remain in the
-  mex/ subfolder for reference.
+- This toolbox has been extended with a retinal ganglion cell (RGC) layer in front of V1. It is on by default; set pars.rgc.enabled = 0 to recover the original behaviour exactly. There are exactly two ways to run the model, shPars and shPars('lagged'). For the design, the current status, and usage, read AGENTS.md at the repository root and then the docs/ folder. The base V1/MT model is described below and in the references.
 
-Authors:  Timothy Saint and Eero P. Simoncelli
-___________________________________________________________________________
-INSTALLATION
+- The core 3D operations are now implemented natively in MATLAB, so no MEX compilation is required for normal use. The legacy C/MEX sources remain in the mex/ subfolder for reference.
 
-1) Download and unpack the folder containing the code.  You can put
-   the folder anywhere on your system, but we'll assume it's in a
-   folder/directory named "MTmodel".
+Authors: Timothy Saint and Eero P. Simoncelli
 
-2) No MEX compilation is required for normal use. The core model now runs
-   with native MATLAB implementations.
+# INSTALLATION
 
-   Optional: Legacy C/MEX sources are still included in the mex subfolder
-   for reference and experimentation. Core model internals call explicit
-   native helper functions, so default execution does not depend on MEX.
+1. Download and unpack the folder containing the code. You can put the folder anywhere on your system, but we'll assume it's in a folder/directory named "MTmodel".
 
-3) RGC front-end (on by default):
+2. No MEX compilation is required for normal use. The core model now runs with native MATLAB implementations.
+   
+   Optional: Legacy C/MEX sources are still included in the mex subfolder for reference and experimentation. Core model internals call explicit native helper functions, so default execution does not depend on MEX.
 
-   pars = shPars;            % the SH derivative front-end
-   pars = shPars('lagged');  % the biological midget/parasol front-end
+3. RGC front-end (on by default):
+   
+   pars = shPars; % the SH derivative front-end
+   pars = shPars('lagged'); % the biological midget/parasol front-end
+   
+   The stimulus passes through an RGC layer before it reaches V1. Set pars.rgc.enabled = 0 to recover the original no-RGC model exactly. For the class-based parameterization (pars.rgc.classes), lesioning, and calibration, see AGENTS.md and the docs/ folder.
 
-   The stimulus passes through an RGC layer before it reaches V1. Set
-   pars.rgc.enabled = 0 to recover the original no-RGC model exactly. For the
-   class-based parameterization (pars.rgc.classes), lesioning, and calibration,
-   see AGENTS.md and the docs/ folder.
+# USING THE SOFTWARE
 
-___________________________________________________________________________
-USING THE SOFTWARE
-
-0) Start matlab, and put the MTmodel folder in your path:
-
+1. Start matlab, and put the MTmodel folder in your path:
+   
    addpath(genpath('PATHNAME-OF-MTmodel'));
 
-1) Start by going through the shTutorial1.m file in the "help"
-   folder.  This will show you how to compute responses of various
-   stages of the model to any stimulus, and how to generate tuning
-   curves.
+2. Start by going through the shTutorial1.m file in the "help" folder. This will show you how to compute responses of various stages of the model to any stimulus, and how to generate tuning curves.
 
-2) Over time, we will be releasing extensions to the model, as well as 
-   addition demonstrations and tutorials.  Check back at
-        http://www.cns.nyu.edu/~lcv/MT-model.html
-   for current status.
+3. Over time, we will be releasing extensions to the model, as well as addition demonstrations and tutorials. Check back at http://www.cns.nyu.edu/~lcv/MT-model.html for current status.
 
-___________________________________________________________________________
-REFERENCES
+# REFERENCES
 
-E P Simoncelli and D J Heeger.  A Model of Neuronal Responses in
-  Visual Area MT.  Vision Research, 38(5):743-761, March 1998.     
-  [Full journal article, with model details]
-  http://www.cns.nyu.edu/~eero/ABSTRACTS/simoncelli96-abstract.html
+E P Simoncelli and D J Heeger. A Model of Neuronal Responses in Visual Area MT. Vision Research, 38(5):743-761, March 1998.
+[Full journal article, with model details] http://www.cns.nyu.edu/~eero/ABSTRACTS/simoncelli96-abstract.html
 
-E P Simoncelli, W D Bair, J R Cavanaugh, and J A Movshon. Testing and
-  Refining a Computational Model of Neural Responses in Area MT.
-  ARVO, 1996.
-  [Conference presentation and abstract on testing predictions of the 
-   model regarding bimodality of grating direction-tuning curves at
-   slow speeds.  Slides available online]
-  http://www.cns.nyu.edu/~eero/ABSTRACTS/ARVO-abstracts.html
+E P Simoncelli, W D Bair, J R Cavanaugh, and J A Movshon. Testing and Refining a Computational Model of Neural Responses in Area MT. ARVO, 1996.
+[Conference presentation and abstract on testing predictions of the model regarding bimodality of grating direction-tuning curves at slow speeds. Slides available online] http://www.cns.nyu.edu/~eero/ABSTRACTS/ARVO-abstracts.html
 
-D J Heeger, E P Simoncelli, and J A Movshon.
-   Computational Models of Cortical Visual Processing.
-   Proc. National Academy of Science. 93:623-627. January, 1996.
-   [Brief description of V1 and MT models]
-   http://www.cns.nyu.edu/~eero/ABSTRACTS/pnas95-abstract.html
+D J Heeger, E P Simoncelli, and J A Movshon. Computational Models of Cortical Visual Processing. Proc. National Academy of Science. 93:623-627. January, 1996.
+[Brief description of V1 and MT models] http://www.cns.nyu.edu/~eero/ABSTRACTS/pnas95-abstract.html
 
-E P Simoncelli and D J Heeger.
-   A velocity-representation model for MT cells. ARVO, 1994.
-   [Early conference presentation  and abstract.  Slides available online]
-   http://www.cns.nyu.edu/~eero/ABSTRACTS/ARVO-abstracts.html
+E P Simoncelli and D J Heeger. A velocity-representation model for MT cells. ARVO, 1994.
+[Early conference presentation and abstract. Slides available online] http://www.cns.nyu.edu/~eero/ABSTRACTS/ARVO-abstracts.html
 
-Eero P Simoncelli. Distributed Analysis and Representation of Visual Motion.
-   PhD thesis, Massachusetts Institute of Technology, Department of
-   Electrical Engineering and Computer Science, Cambridge MA, January 1993.
-   [Original version of the model, which did not include normalization 
-    of the MT stage]  
-   http://www.cis.upenn.edu/~eero/ABSTRACTS/simoncelli-phd-abstract.html
+Eero P Simoncelli. Distributed Analysis and Representation of Visual Motion. PhD thesis, Massachusetts Institute of Technology, Department of Electrical Engineering and Computer Science, Cambridge MA, January 1993.
+[Original version of the model, which did not include normalization of the MT stage] http://www.cis.upenn.edu/~eero/ABSTRACTS/simoncelli-phd-abstract.html
