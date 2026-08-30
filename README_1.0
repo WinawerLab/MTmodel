@@ -1,3 +1,10 @@
+Below is the README provided for the original repository, written by Timothy Saint and Eero Simoncelli. 
+
+THe model is decribed in this paper:
+
+    Simoncelli EP, Heeger DJ. A model of neuronal responses in visual area MT. Vision Res. 1998 Mar;38(5):743-61. doi: 10.1016/s0042-6989(97)00183-1. PMID: 9604103.
+
+The repository here uses the Simoncelli-Heeger model as a starting point, and adds an RGC front end for the purpose of studying the relationship between RGC lesions and behavioral deficits in optic neuritis. See AGENTS.md for an overview of this project. The Description below is untouched from the original, retrieved from the LCV webpage (https://www.cns.nyu.edu/~lcv/MTmodel/).
 ___________________________________________________________________________
 DECRIPTION
 
