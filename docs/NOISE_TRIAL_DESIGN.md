@@ -6,8 +6,9 @@
 patchy** (2026-08-29): **did not diverge** at V1 Site-2 **or** MT Site-2.
 HF-failure first look (same day): τ = 2 **raised** d′, did not cost MT.
 `delay_random` through mtMix (same day): **SPARES_LOW** — high-pass −77%,
-low-pass 0%. **Next:** report §4.5, or uniform amplitude+delay. Coherence ×
-speed drive map done.
+low-pass 0%. Midget vs speed (own curves): **GRADIENT YES** (−61% / −1%). Midget + V1
+Site-2: **NOISE_AMPLIFIES NO** (gap 0.21 off/on). **Next:** uniform
+amplitude+delay, or a stronger HF kernel. Coherence × speed drive map done.
 
 This document is the contract for the noise work described in
 [`NOISE_AND_DEMYELINATION.md`](NOISE_AND_DEMYELINATION.md) §6 and [`TODO.md`](TODO.md) §3.
@@ -591,18 +592,37 @@ Uniform and patchy still match. Pooling the V1 field, then adding noise on
 MT `N`, is not the §5.1 mixer. Do not drop §5.1, and do not quote this as
 having tested a spatial `D`.
 
-### 3.11 Next (do not skip ahead)
+### 3.12 Midget knockout + V1 gaussian Site-2
 
-1. Do not re-run Phase A/B, V1 or MT uniform-vs-patchy, or
-   `delayRandom_lowpass_mtMix` for their own sake. Do not mix V1 and MT Site-2.
-2. **Speed-graded midget dependence** (report §4.5) — the remaining candidate
-   for a slow-speed motion deficit, now that `delay_random` spares the
-   low-pass neuron.
-3. Missing matrix cell: uniform amplitude and uniform delay *together*.
-4. HF failure: only a new kernel (stronger τ or a real high-cut), not another
+`explore/runMotionLetterMidgetKoSite2.m`. Letter C, seed 7, lagged + mtMix,
+1 and 5 deg/s, midget gain 0, V1 gaussian σ = 0.05, σ_corr = 3 px, N = 20,
+MT Site-2 off (24.3 min). Output: `explore/_figs/midgetKo_site2_sigma005/`.
+
+| deg/s | noise | Healthy d′ | Midget d′ | gap (h−m) | SD ratio |
+|-------|-------|------------|-----------|-----------|----------|
+| 1 | off | 4.510 | 4.301 | 0.210 | — |
+| 1 | on | 2.864 ± 0.142 | **2.649 ± 0.140** | **0.215** | 0.99 |
+| 5 | off | 5.309 | 5.251 | 0.059 | — |
+| 5 | on | 5.267 ± 0.021 | 5.220 ± 0.023 | 0.047 | 1.10 |
+
+Healthy+gaussian at 1 deg/s matches Phase B (2.864). **NOISE_AMPLIFIES: NO.**
+The gap is the deterministic −0.21, unchanged. Both means fall; the lesion
+is not more variable. This is **not** the uniform-amplitude JW pattern
+(there the gap grew from −0.09 to −1.86 under gaussian). **SLOW_MORE: YES**
+(0.22 vs 0.05) — that is the off-noise gradient, not a noise effect. Do not
+quote SLOW_MORE as Site-2 creating a slow-speed deficit. Letter+noise d′
+stays easy (~2.65).
+
+### 3.13 Next (do not skip ahead)
+
+1. Do not re-run Phase A/B, V1 or MT uniform-vs-patchy, delay_random
+   low-pass, `midget_speed_mtMix`, or `midgetKo_site2_sigma005` for their
+   own sake. Do not mix V1 and MT Site-2.
+2. Missing matrix cell: uniform amplitude and uniform delay *together*.
+3. HF failure: only a new kernel (stronger τ or a real high-cut), not another
    copy of τ = 2.
-5. Site 1 (`shClassV1Basis`) and Site 3 (read-out), separately.
-6. §5.1 remains untested at a site where `D` mixes space. Do not implement a
+4. Site 1 (`shClassV1Basis`) and Site 3 (read-out), separately.
+5. §5.1 remains untested at a site where `D` mixes space. Do not implement a
    mixing `D` just to salvage the prediction without saying so.
 
 ---
@@ -627,4 +647,4 @@ having tested a spatial `D`.
 | 2026-08-28 | Step 0 locked; Step 1 API sketched |
 | 2026-08-28 | Step 2: Site-2 hook; Phase A first look, σ sweep, N=50 lock at σ=0.05 |
 | 2026-08-28 | Coherence × speed map; this file records tables |
-| 2026-08-29 | V1 uniform vs patchy: DIVERGE NO; HF τ = 2 raised d′; MT Site-2: DIVERGE NO (§3.10) |
+| 2026-08-29 | V1/MT uniform vs patchy: DIVERGE NO; HF τ = 2 raised d′; delay_random SPARES_LOW; midget vs speed GRADIENT YES; midget+Site-2 NOISE_AMPLIFIES NO |

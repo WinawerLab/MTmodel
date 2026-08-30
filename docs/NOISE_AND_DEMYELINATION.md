@@ -307,9 +307,10 @@ within-subject control** for the planned affected-versus-fellow design.
 ### 5.5 The low-speed deficit is probably about the operating point (JW)
 
 The tempting account is that the clinical low-speed deficit means the low-speed
-machinery was selectively damaged. The model even offers a candidate, since the
-effect of a midget knockout is graded 10 to 30 times from slow to fast preferred
-speed (report §4.5). **JW's account is different, and better.**
+machinery was selectively damaged. The model even offers a candidate: midget
+knockout still costs the slow MT tier ~60× more than the 6 px/frame tier
+when each neuron is measured on its own speed curve (report §4.5, 2026-08-29).
+**JW's account is different, and better as a complete story.**
 
 > Patients fail at letter recognition in motion-defined stimuli at very slow speeds
 > NOT because of exacerbated damage to neurons tuned to very low temporal
@@ -372,6 +373,8 @@ deficit:
      `NOISE_TRIAL_DESIGN.md` §3.8.
    - ~~Uniform vs patchy at MT Site-2 (V1 off).~~ **Done 2026-08-29. DIVERGE:
      NO.** Same σ barely moved MT d′. `NOISE_TRIAL_DESIGN.md` §3.10.
+   - ~~Midget knockout + V1 Site-2 (letter).~~ **Done 2026-08-29.
+     NOISE_AMPLIFIES: NO.** Gap 0.21 off/on. `NOISE_TRIAL_DESIGN.md` §3.12.
    - **Next:** Site 1 (`shClassV1Basis`) and Site 3 (read-out), separately.
 5. **Temporal noise** — jitter per trial and Bernoulli dropout (§4.4). These are
    the ones with no deterministic counterpart at all.

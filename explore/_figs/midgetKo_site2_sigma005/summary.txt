@@ -1,0 +1,18 @@
+Midget knockout + V1 Site-2  2026-08-29 21:12:22
+letter C  speeds [1 5] deg/s  out [128 128 120]  dotSeed 7
+V1 gaussian  sigma 0.0500  sigma_corr 3.0 px  N=20  MT Site-2 OFF
+elapsed 24.3 min
+
+deg/s  noise       h_dMean     h_dStd    m_dMean     m_dStd
+     1 off          4.5104     0.0000     4.3008     0.0000
+     1 on           2.8637     0.1415     2.6488     0.1399
+       drop (h−m)  off +0.210   on +0.215   SD ratio on 0.99
+     5 off          5.3092     0.0000     5.2506     0.0000
+     5 on           5.2670     0.0209     5.2204     0.0231
+       drop (h−m)  off +0.059   on +0.047   SD ratio on 1.10
+
+NOISE_AMPLIFIES: NO — 1 deg/s gap did not grow by >0.10 with noise on.
+SLOW_MORE: YES — noise-on gap larger at 1 deg/s than at 5.
+RANK_1: YES — midget+noise mean d′ < healthy+noise at 1 deg/s.
+NOISE_AMPLIFIES / SLOW_MORE use (healthy − midget) mean d′, not |Δ|.
+Deterministic 1 deg/s drop was −0.21 (report §4.5). Phase B healthy+gauss ~2.86.

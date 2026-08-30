@@ -1,0 +1,30 @@
+midget vs speed / mtMix  2026-08-29 20:41:22
+shPars('lagged')  alpha healthy = 0.10  probe [1 2 5 7 8 14 19]
+letter C  speeds [1 5] deg/s  elapsed 13.4 min
+
+Peak remaining vs healthy (same neuron, own speed curve):
+neuron nomPx       healthy    midget_ko   magno_only
+1      0            0.1701  0.06569 (-61%)   0.1075 (-37%)
+2      1            0.8183   0.6825 (-17%)    0.813 (-1%)
+5      1            0.8367   0.7056 (-16%)   0.8164 (-2%)
+7      1            0.7538   0.6291 (-17%)   0.7431 (-1%)
+8      6            0.7542    0.746 (-1%)   0.7454 (-1%)
+14     6            0.7554   0.7498 (-1%)   0.7316 (-3%)
+19     6            0.8136   0.7912 (-3%)   0.8095 (-1%)
+
+Median peak drop by nominal tier (midget_ko / magno_only):
+  nominal 0 px/fr (0 deg/s):  midget_ko -61%   magno_only -37%
+  nominal 1 px/fr (5 deg/s):  midget_ko -17%   magno_only -1%
+  nominal 6 px/fr (30 deg/s):  midget_ko -1%   magno_only -1%
+
+Letter MT d' (noise off):
+deg/s          healthy     midget_ko    magno_only
+       1        4.5104        4.3008        4.3054
+       5        5.3092        5.2506        5.2655
+letter Δd' midget_ko−healthy:  1 deg/s -0.210   5 deg/s -0.059
+
+GRADIENT: YES — slow-tier midget_ko drop > 3× the 6 px/fr tier.
+That is the unconfounded §4.5 prediction (own speed curves).
+GRADIENT uses peak drop on each neuron's own curve, median by nominal tier.
+SLOW_LETTER: YES — midget_ko costs the 1 deg/s letter more than 5.
+Old §4.5 (one grating): −45% at 0 px/fr vs −1.4% at 6, alpha=0.10.

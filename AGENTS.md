@@ -29,7 +29,9 @@ Progress (numbers in [`NOISE_TRIAL_DESIGN.md`](docs/NOISE_TRIAL_DESIGN.md) §3):
 coherence × speed map and Site-2 Phases A and B are done. Uniform vs patchy did
 **not** diverge at V1 or at MT Site-2 (2026-08-29). HF-failure τ = 2 raised d′.
 `delay_random` through mtMix spares the low-pass neuron (high-pass −77%).
-**Next:** report §4.5 (midget vs speed), or uniform amplitude+delay together.
+Midget vs speed (own curves) **GRADIENT YES** (−61% vs −1%). Midget + Site-2:
+gap **did not grow** (0.21 off/on at 1 deg/s). **Next:** uniform
+amplitude+delay together, or a stronger HF kernel.
 Always report trial-to-trial variability with the mean; the five noise
 decisions live only in [`NOISE_AND_DEMYELINATION.md`](docs/NOISE_AND_DEMYELINATION.md) §6.
 

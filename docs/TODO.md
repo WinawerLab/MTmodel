@@ -47,12 +47,14 @@ px/frame = 5–50 deg/s.
 depends on §2. The coherence × speed map and Site-2 Phases A and B are done
 (below). Uniform vs patchy did not diverge at V1 or at MT Site-2 (2026-08-29).
 HF-failure first look (τ = 2) raised d′. `delay_random` through mtMix
-**spares the low-pass neuron** (high-pass −77%). **Next:** speed-graded
-midget dependence (report §4.5), or the missing uniform amplitude+delay cell.
-Site 1/3 and a stronger HF kernel remain. The model was fully deterministic
-until 2026-08-28; that was the single biggest thing standing between it and
-the clinical question. Read the callout above before treating any result from
-this section as final.
+**spares the low-pass neuron** (high-pass −77%). Midget knockout on each
+neuron's own speed curve **survives** (§4.5): −61% at 0 px/fr vs −1% at 6.
+Letter −0.21 d′ at 1 deg/s (still easy). That lesion **plus Site-2 did not
+amplify** the gap (0.210 off / 0.215 on). **Next:** missing uniform
+amplitude+delay cell, or a stronger HF kernel. Site 1/3 remain. The model was
+fully deterministic until 2026-08-28; that was the single biggest thing standing
+between it and the clinical question. Read the callout above before treating any
+result from this section as final.
 
 **Full treatment: [`NOISE_AND_DEMYELINATION.md`](NOISE_AND_DEMYELINATION.md).**
 
@@ -109,7 +111,13 @@ has no observable yet — see §4.
      Site-2 off, gaussian σ = 0.05, N = 20. **DIVERGE: NO** — noise-on d′
      4.362 vs 4.328 (healthy 4.468 ± 0.026). Same σ barely moved MT. MT `D`
      is identity; this was pooling-then-noise. See `NOISE_TRIAL_DESIGN.md`
-     §3.10. Site 1 and Site 3 are not started — run separately before combining.
+     §3.10.
+   - ~~**Midget knockout + V1 Site-2 (letter, 1 vs 5 deg/s).**~~ **Done
+     2026-08-29.** Gaussian σ = 0.05, N = 20. **NOISE_AMPLIFIES: NO** —
+     1 deg/s gap 0.210 off / 0.215 on (healthy+noise 2.864 ± 0.142). SD
+     ratio 0.99. Not the uniform-amplitude JW pattern. See
+     `NOISE_TRIAL_DESIGN.md` §3.12. Site 1 and Site 3 are not started —
+     run separately before combining.
 4. **Temporal noise** — jitter per trial, and Bernoulli dropout. **Still open.**
 
 **Status of the five decisions** (definitions in `NOISE_AND_DEMYELINATION.md` §6):
@@ -146,14 +154,22 @@ Two cells of the matrix:
 coherence, while uniform delay does nothing. That looked like both clinical
 signs from one insult. **It does not:** the slow neuron is spared, and the
 slow letter got slightly easier. Desynchronised delay is not the mechanism
-for clinical (b) at low speed. The candidate left is speed-graded midget
-dependence (`MODEL_AND_LESIONS.md` §4.5).
+for clinical (b) at low speed. Speed-graded midget dependence (§4.5) **does**
+hit the slow end: −61% vs −1% on own speed curves. The letter cost is still
+small without noise (−0.21 d′ at 1 deg/s).
 
 **The rest of the matrix** still needs a consolidated pass: {amplitude, delay,
 both} × {uniform, non-uniform}, through the two-stream MT, **seeded**, with
 motion-letter d′ alongside Figs 9–14. `explore/validateSHFigs9to14_lesions.m`
 still does not seed and should not be extended as it stands. Do not re-run
-`explore/_figs/delayRandom_lowpass_mtMix/` without renaming.
+`explore/_figs/delayRandom_lowpass_mtMix/` or
+`explore/_figs/midget_speed_mtMix/` without renaming. Do not re-run
+`explore/_figs/midgetKo_site2_sigma005/` without renaming.
+
+~~**Next cell for the slow-speed story:** `explore/runMidgetSpeedTuningMtMix.m`~~
+**Done 2026-08-29.** GRADIENT YES. Site-2 on the letter: gap did **not**
+grow. **Next:** uniform amplitude and uniform delay *together*, or a
+stronger HF kernel.
 
 ## 3. Re-read §1 and §2 against each other, repeatedly
 

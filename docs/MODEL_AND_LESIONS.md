@@ -386,25 +386,42 @@ Scripts: `explore/fitMagnoMtPopulation.m` (the fit),
 
 ### 4.5 Midget damage costs slow speeds most — the first clue to the clinical picture
 
-Dependence on midget input concentrates sharply at **low** preferred speed. Median
-effect of a midget knockout, by the MT neuron's preferred speed (1 px/frame = 5
-deg/s):
+Dependence on midget input concentrates sharply at **low** preferred speed.
+`explore/runMidgetSpeedTuningMtMix.m` (2026-08-29, 13.4 min) measured that
+on each neuron's **own** dot speed curve, two-stream MT, seeded. Median peak
+drop vs healthy:
 
-| preferred speed | alpha=0.05 | alpha=0.10 |
+| nominal preferred speed | midget gain 0 | `alpha = 0` (magno only) |
 |---|---|---|
-| 0 px/frame | −25.0% | **−45.2%** |
-| 1 px/frame | −5.4 to −7.8% | −11.4 to −15.3% |
-| 6 px/frame | −0.7 to −0.9% | **−1.4 to −1.9%** |
+| 0 px/frame (1 neuron) | **−61%** | −37% |
+| 1 px/frame (5 deg/s) | −16 to −17% | −1 to −2% |
+| 6 px/frame (30 deg/s) | **−1 to −3%** | −1 to −3% |
 
-That is a gradient of 10 to 30 times from slowest to fastest. Damage to the midget
-pathway would cost low-speed motion first, and low speed is where the clinical
-deficit is.
+**GRADIENT: YES.** Slow-tier midget knockout is >3× the 6 px/frame tier
+(here ~60×). The one-grating confound does not create the gradient. Fast
+units are almost untouched; the static unit is hit hard. `alpha = 0` is
+**not** the same lesion: it costs the static unit −37% and does almost
+nothing at 1 and 6 px/frame. Midget gain 0 still hurts the slow unit more
+than turning stream B off.
 
-**Caveat, and it matters.** Every MT neuron here was probed with the *same*
-grating, chosen to be optimal for the slow test neuron. So the fast-preferring
-units were driven off their peak, and their small effects are partly confounded
-with that. This is suggestive, not settled. The proper test is per-neuron speed
-tuning with alpha on and off.
+Motion letter, noise off, seed 7: midget knockout **−0.21 d′ at 1 deg/s**
+(4.51 → 4.30) vs **−0.06 at 5 deg/s** (5.31 → 5.25). **SLOW_LETTER: YES**
+in sign. The mean cost is modest; d′ stays easy.
+
+Site-2 gaussian on that letter (`runMotionLetterMidgetKoSite2.m`, N = 20,
+24.3 min): **NOISE_AMPLIFIES: NO.** At 1 deg/s the healthy−midget gap stayed
+**0.210 off / 0.215 on**. Both means fell (4.51 → 2.86 healthy, matching
+Phase B; midget 4.30 → 2.65). SD ratio **0.99**. The JW gain-on-noise
+signature that turned a 50% amplitude cut into a ~1.9 d′ gaussian gap does
+**not** apply to midget knockout. **SLOW_MORE** is yes (0.22 vs 0.05) but
+that is the deterministic gradient, not a noise effect. Do not quote this
+as a clinical-sized deficit (b). Table: `NOISE_TRIAL_DESIGN.md` §3.12.
+Figures: `explore/_figs/midget_speed_mtMix/` and
+`explore/_figs/midgetKo_site2_sigma005/`.
+
+The older one-grating table (same stimulus for every unit, alpha 0.05 /
+0.10) had the same sign (−45% vs −1.4% at alpha = 0.10) and is superseded
+for magnitudes. Do not quote it as the measurement.
 
 ### 4.6 MT recovers a motion-defined letter; V1 barely does
 
@@ -731,6 +748,12 @@ d′ 4.362 vs 4.328 (healthy 4.468 ± 0.026). Same σ barely moved MT. MT `D` is
 also identity; this was pooling-then-noise, not a mixing `D`. Table:
 `NOISE_TRIAL_DESIGN.md` §3.10.
 
+Midget knockout + V1 gaussian Site-2 (same day, N = 20, 1 vs 5 deg/s):
+**gap did not grow.** 1 deg/s healthy−midget 0.210 off / **0.215** on
+(healthy+noise 2.864 ± 0.142, matching Phase B). SD ratio 0.99. Unlike
+uniform amplitude, this lesion is not a JW gain-compensation story on the
+letter. Table: `NOISE_TRIAL_DESIGN.md` §3.12.
+
 High-frequency failure first look (τ = 2 frames, no noise): the low-pass
 **raised** MT d′ at 1 deg/s (4.51 → 4.86). Matched amplitude (k = 0.82) did
 nothing. Do not quote the script's `HIT_MT: YES` — that used |Δd′|. τ = 2 is
@@ -750,7 +773,8 @@ d′. §5.1 is untested at a site where `D` mixes space.
 | lagged preset's healthy fidelity to SH V1 | **current**, with the 0.984 versus 0.93–0.95 discrepancy unresolved (§4.2) |
 | MT's measured speed tuning | **current** (2026-08-25) |
 | two-stream MT reproduces Maunsell's knockouts | **current** (2026-08-14) |
-| midget dependence graded by speed | **current but confounded** — one fixed grating for all units (§4.5) |
+| midget dependence graded by speed | **current** (2026-08-29) — own speed curves; midget KO −61% at 0 px/fr vs −1% at 6 |
+| midget KO + V1 Site-2 (letter) | **current** (2026-08-29) — gap 0.21 off/on at 1 deg/s; did not amplify |
 | compensation index (speed) | **current** (2026-08-19) |
 | C vs drive, coherence × speed | **current** (2026-08-28) — lagged R² = 0.984 |
 | Site-2 Phase A (σ = 0.05, N = 50) | **current** (2026-08-28) — independent V1 noise only |
