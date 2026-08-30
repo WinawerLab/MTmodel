@@ -38,7 +38,8 @@ mlFields = {'letter', 'speedDegS', 'seed', 'outSz', 'modelStage', 'rgcPreset', .
     'mtMix', 'dotSize', 'dotContrast', 'dotShape', 'fCovered', ...
     'drawBackgroundDots', 'fontName', 'letterSizeFraction', 'letterSizePx'};
 noiseFields = {'enabled', 'spatialCorrelation', 'spatialCorrSigmaPx', ...
-    'noiseSeed', 'nTrials', 'site2.enabled', 'site2.mode', 'site2.sigma'};
+    'noiseSeed', 'nTrials', 'site2.enabled', 'site2.mode', 'site2.sigma', ...
+    'mtSite2.enabled', 'mtSite2.mode', 'mtSite2.sigma'};
 
 mlArgs = {};
 noiseArgs = {};

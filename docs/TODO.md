@@ -45,9 +45,14 @@ px/frame = 5–50 deg/s.
 
 **Start here, by convenience rather than by dependency.** Nothing in this section
 depends on §2. The coherence × speed map and Site-2 Phases A and B are done
-(below). The model was fully deterministic until 2026-08-28; that was the single
-biggest thing standing between it and the clinical question. Read the callout
-above before treating any result from this section as final.
+(below). Uniform vs patchy did not diverge at V1 or at MT Site-2 (2026-08-29).
+HF-failure first look (τ = 2) raised d′. `delay_random` through mtMix
+**spares the low-pass neuron** (high-pass −77%). **Next:** speed-graded
+midget dependence (report §4.5), or the missing uniform amplitude+delay cell.
+Site 1/3 and a stronger HF kernel remain. The model was fully deterministic
+until 2026-08-28; that was the single biggest thing standing between it and
+the clinical question. Read the callout above before treating any result from
+this section as final.
 
 **Full treatment: [`NOISE_AND_DEMYELINATION.md`](NOISE_AND_DEMYELINATION.md).**
 
@@ -74,7 +79,13 @@ has no observable yet — see §4.
    deterministic mean.** Figures:
    `explore/_figs/compensationIndex_speedCoherence/`. Full table in
    `NOISE_TRIAL_DESIGN.md` §3.2 and report §4.8.1.
-2. **High-frequency failure** as a change in filter shape. **Still open.**
+2. **High-frequency failure** as a change in filter shape. **First look
+   2026-08-29; prediction not confirmed.** `explore/runMotionLetterHfFailure.m`,
+   τ = 2 frames, matched gain k = 0.82. hf_shape **raised** MT d′ at 1 deg/s
+   (**+0.35**, 4.51 → 4.86) and a little at 5 deg/s (+0.08). Amplitude did
+   nothing. The printed `HIT_MT: YES` used |Δd′| — **do not quote it**. τ = 2
+   is not failure; it helped the letter. Still open: stronger τ or a real
+   high-cut. See `NOISE_TRIAL_DESIGN.md` §3.9.
 3. **Noise, one site at a time.**
    - ~~**Site 2, Phase A (independent, V1 numerator).**~~ **Done 2026-08-28.**
      Fixed σ, injected into `N` in `shModelV1Normalization_Tuned` before the
@@ -89,9 +100,16 @@ has no observable yet — see §4.
      arm matched Phase A). Mean gap **−1.86** (vs −0.58 independent); SD ratio
      collapsed to **1.08**. Correlation does not reverse the sign, but it is not
      a small correction — first Site-2 condition near a hard letter. See
-     `NOISE_TRIAL_DESIGN.md` §3.6. **Next:** uniform vs patchy with gaussian
-     Site-2. MT Site-2, Site 1, and Site 3 are not started — run separately
-     before combining.
+     `NOISE_TRIAL_DESIGN.md` §3.6.
+   - ~~**Site 2, uniform vs patchy (gaussian, V1).**~~ **Done 2026-08-29.**
+     Matched-mean maps (gain 0.504), N = 20. **DIVERGE: NO** — noise-on d′
+     1.020 vs 1.015 (healthy 2.864). Gap smaller than noise-off. V1 pool is
+     identity. See `NOISE_TRIAL_DESIGN.md` §3.8.
+   - ~~**Site 2, MT arm (uniform vs patchy).**~~ **Done 2026-08-29.** V1
+     Site-2 off, gaussian σ = 0.05, N = 20. **DIVERGE: NO** — noise-on d′
+     4.362 vs 4.328 (healthy 4.468 ± 0.026). Same σ barely moved MT. MT `D`
+     is identity; this was pooling-then-noise. See `NOISE_TRIAL_DESIGN.md`
+     §3.10. Site 1 and Site 3 are not started — run separately before combining.
 4. **Temporal noise** — jitter per trial, and Bernoulli dropout. **Still open.**
 
 **Status of the five decisions** (definitions in `NOISE_AND_DEMYELINATION.md` §6):
@@ -114,33 +132,28 @@ came through the midget-dominated MT. The class-agnostic results probably surviv
 The cell-type-specific ones — parasol-only, ON-only — cannot be read as biology at
 all and must be redone. See `MODEL_AND_LESIONS.md` §5 for the full ledger.
 
-Two cells of the matrix have also never been run:
+Two cells of the matrix:
 
-- **uniform amplitude and uniform delay together.** There is no combined uniform
-  condition anywhere. The only combined condition, `coupled`, ties the two axes
-  together rather than varying them independently.
-- **the low-pass (0.0375–0.6 px/frame) neuron under `delay_random`.** This is the cell
-  that decides the tension below, and it was never reported.
+- **uniform amplitude and uniform delay together.** Still never run. There is
+  no combined uniform condition anywhere. The only combined condition,
+  `coupled`, ties the two axes together rather than varying them independently.
+- ~~**the low-pass neuron under `delay_random`.**~~ **Done 2026-08-29.**
+  `explore/runDelayRandomLowpassMtMix.m`, two-stream MT. High-pass peak
+  **−77%**; low-pass **0%**; bandpass −35%. Letter d′ at 1 deg/s **+0.37**.
+  `delay_uniform` matched healthy. See report §4.7.5.
 
-**The tension.** `delay_random` — delay drawn independently at every pixel —
-crushes coherence (−39% lagged) and **high-pass** speed tuning (−55%), while
-uniform delay does essentially nothing. (The `patchy` condition, which is
-correlated across space, also does essentially nothing. It is desynchronisation
-that bites, not heterogeneity as such.) That would give both clinical signs from a
-single insult: uniform slowing gives the VEP latency, desynchronised conduction
-gives the motion deficit. But the effect was largest on the **fast** neuron, and
-the clinical deficit is at **slow** speeds. The slow neuron was never measured
-under `delay_random`, so this is unknown rather than contradicted. If
-`delay_random` turns out to spare low speeds, the mechanism does not explain the
-clinical deficit and the hypothesis needs revising. The speed-graded midget
-dependence in `MODEL_AND_LESIONS.md` §4.5 is the candidate that would resolve it.
+**The tension.** `delay_random` crushes high-pass speed tuning and (pre-mtMix)
+coherence, while uniform delay does nothing. That looked like both clinical
+signs from one insult. **It does not:** the slow neuron is spared, and the
+slow letter got slightly easier. Desynchronised delay is not the mechanism
+for clinical (b) at low speed. The candidate left is speed-graded midget
+dependence (`MODEL_AND_LESIONS.md` §4.5).
 
-**One consolidated pass would clear most of this**: the full matrix
-{amplitude, delay, both} × {uniform, non-uniform}, through the two-stream MT,
-**seeded**, with motion-letter d′ as an extra read-out alongside the Figs 9–14
-tuning measures. `explore/compareLesionsToBaseline.m` is the template — it seeds,
-and it plots against baseline on shared axes. `explore/validateSHFigs9to14_lesions.m`
-still does not seed and should not be extended as it stands.
+**The rest of the matrix** still needs a consolidated pass: {amplitude, delay,
+both} × {uniform, non-uniform}, through the two-stream MT, **seeded**, with
+motion-letter d′ alongside Figs 9–14. `explore/validateSHFigs9to14_lesions.m`
+still does not seed and should not be extended as it stands. Do not re-run
+`explore/_figs/delayRandom_lowpass_mtMix/` without renaming.
 
 ## 3. Re-read §1 and §2 against each other, repeatedly
 

@@ -41,6 +41,9 @@ if ~isfield(parsRun.noise, 'enabled') || ~parsRun.noise.enabled
     if isfield(parsRun.noise, 'site2')
         parsRun.noise.site2.enabled = false;
     end
+    if isfield(parsRun.noise, 'mtSite2')
+        parsRun.noise.mtSite2.enabled = false;
+    end
 end
 
 shSite2LastND('clear');

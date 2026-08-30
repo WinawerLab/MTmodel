@@ -1,6 +1,6 @@
 # MTmodel — start here
 
-Last updated: 2026-08-28.
+Last updated: 2026-08-29.
 
 Read this first, then follow the reading list at the bottom.
 
@@ -26,9 +26,12 @@ one investigation, not three tasks, and TODO.md opens by saying why and where to
 start. Go read it — it is the plan, and this file does not repeat it.
 
 Progress (numbers in [`NOISE_TRIAL_DESIGN.md`](docs/NOISE_TRIAL_DESIGN.md) §3):
-coherence × speed map and Site-2 Phases A and B are done. Always report
-trial-to-trial variability with the mean; the five noise decisions live only in
-[`NOISE_AND_DEMYELINATION.md`](docs/NOISE_AND_DEMYELINATION.md) §6.
+coherence × speed map and Site-2 Phases A and B are done. Uniform vs patchy did
+**not** diverge at V1 or at MT Site-2 (2026-08-29). HF-failure τ = 2 raised d′.
+`delay_random` through mtMix spares the low-pass neuron (high-pass −77%).
+**Next:** report §4.5 (midget vs speed), or uniform amplitude+delay together.
+Always report trial-to-trial variability with the mean; the five noise
+decisions live only in [`NOISE_AND_DEMYELINATION.md`](docs/NOISE_AND_DEMYELINATION.md) §6.
 
 Read [docs/MODEL_AND_LESIONS.md](docs/MODEL_AND_LESIONS.md) before writing anything.
 Everything below is context for doing that well.
@@ -151,7 +154,7 @@ Full account in [docs/MODEL_AND_LESIONS.md](docs/MODEL_AND_LESIONS.md) §2.
 | [docs/RGC_lagged_preset_summary.md](docs/RGC_lagged_preset_summary.md) | A closer look at the biological front-end, with figures. |
 | [docs/UNITS_AND_SCALE.md](docs/UNITS_AND_SCALE.md) | What a pixel and a frame mean in degrees and seconds, why it departs from the published paper, and the two scale problems no anchor can fix. |
 | [docs/NOISE_AND_DEMYELINATION.md](docs/NOISE_AND_DEMYELINATION.md) | Why the model needs internal noise, and what it should predict. |
-| [docs/NOISE_TRIAL_DESIGN.md](docs/NOISE_TRIAL_DESIGN.md) | **Noise contract:** locked Step 0 choices, trial API, and the result tables. |
+| [docs/NOISE_TRIAL_DESIGN.md](docs/NOISE_TRIAL_DESIGN.md) | **Noise contract:** locked Step 0 choices, trial API, and the tables (through 2026-08-29: Phase A/B, V1 and MT uniform vs patchy, HF first look). |
 | [docs/TODO.md](docs/TODO.md) | Open work and done items with what they showed. §1–§3 are one iterative investigation. |
 | [literature/NOTES.md](literature/NOTES.md) | The papers, and what each one constrains. |
 | [optic neuritis targets/NOTES.md](optic%20neuritis%20targets/NOTES.md) | The clinical figures the model should eventually match. |

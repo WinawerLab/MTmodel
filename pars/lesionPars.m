@@ -22,6 +22,9 @@ cfg = struct( ...
     ... % --- Phase 2 cell-type selective ---
     'cellTypeGain',          0.3, ...   % remaining gain on affected classes (70% cut)
     'onDelayFrames',         1, ...     % ON half-wave classes only
+    ... % --- High-frequency failure (kernel shape; NOISE §3.1 / §5.3) ---
+    'hfTauFrames',           2, ...     % causal exponential low-pass, frames
+    'hfRenorm',              true, ...  % true: L1-match original (shape only)
     ... % --- Phase 2b stochastic (spatial maps) ---
     'stochasticAmpSeed',     42, ...
     'stochasticAmpRange',    [0.3 0.7], ...

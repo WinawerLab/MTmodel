@@ -40,8 +40,9 @@ end
 
 [pop, ind] = shTrim(pop, ind, trimmer);
 nume = pop;
+nume = shApplySite2Noise(nume, pars, ind, 'mt');
 normwts = ones(size(pop, 2), size(deno, 2))';
-pop = pars.scaleFactors.mtPattern.*pop./(normstrength.*deno*normwts' + mtsigma.^2);
+pop = pars.scaleFactors.mtPattern.*nume./(normstrength.*deno*normwts' + mtsigma.^2);
 
 varargout{1} = pop;
 varargout{2} = ind;

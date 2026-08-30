@@ -2,7 +2,7 @@ function cfg = noisePars(varargin)
 % noisePars  Defaults for trial-to-trial noise (Step 1: disabled; Step 2: Site 2).
 %
 % Edit the DEFAULTS block for benchmark runs. Step 2 hooks rng(noiseSeed + tr)
-% into shModelV1Normalization_Tuned when cfg.enabled and cfg.site2.enabled.
+% into V1 (site2) or MT (mtSite2) normalization. Do not enable both.
 %
 % Usage:
 %   cfg = noisePars();
@@ -18,6 +18,11 @@ cfg = struct( ...
         'mode',             'fixed', ... % locked Step 0
         'sigma',            0.05 ...    % locked after σ sweep 2026-08-28
     ), ...
+    'mtSite2', struct( ...
+        'enabled',          false, ...  % own arm; do not combine with site2
+        'mode',             'fixed', ...
+        'sigma',            0.05 ...    % first look; not swept
+    ), ...
     'spatialCorrelation',   'none', ...   % 'none' | 'gaussian' (Phase B implemented)
     'spatialCorrSigmaPx',   3, ...        % ~ MT pooling sigma; used when gaussian
     'noiseSeed',            9000, ...     % independent of dot seed
@@ -29,6 +34,9 @@ cfg = localApplyOverrides(cfg, varargin);
 
 if ~isstruct(cfg.site2)
     error('noisePars:badSite2', 'cfg.site2 must be a struct.');
+end
+if ~isstruct(cfg.mtSite2)
+    error('noisePars:badMtSite2', 'cfg.mtSite2 must be a struct.');
 end
 
 end

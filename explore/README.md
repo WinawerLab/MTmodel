@@ -29,6 +29,10 @@ tracked; `results.mat` trial dumps are gitignored.
 | `runMotionLetterDeterministicBaseline.m` | **Two** full-field MT forwards (healthy + 50% amplitude lesion), same movie. Run this before Site-2 noise. |
 | `runMotionLetterSite2PhaseA.m` | Locked Phase A: σ = 0.05, N = 50. Writes `explore/_figs/site2_phaseA_sigma005_n50/`. First look (σ = 0.03, N = 20) is in `site2_phaseA/`. |
 | `runMotionLetterSite2PhaseB.m` | Phase B done 2026-08-28: independent vs gaussian at σ = 0.05, σ_corr = 3 px, N = 20. Ranking survived. Writes `explore/_figs/site2_phaseB_sigma005/`. |
+| `runMotionLetterSite2UniformVsPatchy.m` | Done 2026-08-29: uniform vs patchy with gaussian Site-2. **No diverge.** Writes `explore/_figs/site2_uniformVsPatchy_sigma005/`. |
+| `runMotionLetterMtSite2UniformVsPatchy.m` | Done 2026-08-29: MT Site-2 only (V1 off), same maps. **No diverge.** Same σ barely moved d′. Writes `explore/_figs/mtSite2_uniformVsPatchy_sigma005/`. |
+| `runMotionLetterHfFailure.m` | HF first look 2026-08-29: τ = 2 raised d′. Writes `explore/_figs/hf_failure/`. |
+| `runDelayRandomLowpassMtMix.m` | Done 2026-08-29: `delay_random` through mtMix. High-pass −77%, **low-pass spared**, letter d′ rose at 1 deg/s. Writes `explore/_figs/delayRandom_lowpass_mtMix/`. |
 | `runMotionLetterSite2SigmaSweep.m` | Choose Site-2 σ (V1 only). Writes `explore/_figs/site2_sigmaSweep/`. |
 | `compensationIndex.m` | how much of a uniform amplitude lesion divisive normalization absorbs, against stimulus speed **and coherence**. Measures the gain headroom that noise would act on. Report §4.8. |
 | `compareLesionsToBaseline.m` | lesion and baseline on shared axes, **seeded**, with unambiguous gain labels. The template for any new lesion script. |

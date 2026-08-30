@@ -2,9 +2,12 @@
 
 **Status:** Step 0 locked. Step 1 harness done. Step 2 **Phase A locked**
 (2026-08-28): V1 numerator, independent, **σ = 0.05**, N = 50. **Phase B done**
-(same day): gaussian spatial correlation, σ_corr = 3 px, N = 20; ranking
-survived. Coherence × speed drive map done. **Next:** uniform vs patchy lesions
-with gaussian Site-2. MT Site-2 is its own later arm.
+(same day): gaussian, σ_corr = 3 px, N = 20; ranking survived. **Uniform vs
+patchy** (2026-08-29): **did not diverge** at V1 Site-2 **or** MT Site-2.
+HF-failure first look (same day): τ = 2 **raised** d′, did not cost MT.
+`delay_random` through mtMix (same day): **SPARES_LOW** — high-pass −77%,
+low-pass 0%. **Next:** report §4.5, or uniform amplitude+delay. Coherence ×
+speed drive map done.
 
 This document is the contract for the noise work described in
 [`NOISE_AND_DEMYELINATION.md`](NOISE_AND_DEMYELINATION.md) §6 and [`TODO.md`](TODO.md) §3.
@@ -58,9 +61,11 @@ vs proportional.
 only needs: *lesion + noise → d′ down, trial SD up, mean tuning still flat*.
 
 Phase B was **required** before interpreting **uniform vs patchy amplitude** (NOISE
-§5.1): those lesions should **diverge** only with Site-2 noise and spatial
-structure in the damage relative to pool width. Ranking survived at σ_corr = 3 px
-(§3.6), so that comparison is now unblocked. Use **gaussian**, not independent.
+§5.1). Ranking survived at σ_corr = 3 px (§3.6). The comparison was run at V1
+(2026-08-29, §3.8) and at MT (§3.10): they **did not diverge** at either site.
+Both normalization `D`s are identity. Pooling-then-noise at MT was not the §5.1
+mixer. Do not drop the claim, and do not treat it as tested at a mixing `D`.
+Use **gaussian**, not independent.
 
 **σ_corr used.** 3 px (`mkGaussianFilter(3)`), the **MT spatial pooling** width.
 V1's own normalization pool is identity (`mkGaussianFilter(-1)`), so this is
@@ -204,6 +209,9 @@ cfg.enabled = false;
 cfg.site2.enabled = false;
 cfg.site2.mode = 'fixed';       % locked Step 0
 cfg.site2.sigma = 0.05;         % locked 2026-08-28 after σ sweep
+cfg.mtSite2.enabled = false;    % own arm; do not combine with site2
+cfg.mtSite2.mode = 'fixed';
+cfg.mtSite2.sigma = 0.05;       % first look; not swept
 cfg.spatialCorrelation = 'none'; % 'none' | 'gaussian' (Phase B implemented)
 cfg.spatialCorrSigmaPx = 3;     % px; MT pooling width (V1 pool is identity)
 cfg.noiseSeed = 9000;
@@ -333,13 +341,21 @@ Step 2 to hook `rng(noiseSeed+tr)` into Site-2 draw without changing explore scr
 
 ---
 
-### 2.5 Step 2 hook — implemented (V1 only)
+### 2.5 Step 2 hook — V1 and MT, separate gates
 
-`shApplySite2Noise` adds `sigma * randn(size(N))` to the V1 numerator (`nume`)
-in `shModelV1Normalization_Tuned.m` **before** the division. Gated on
-`pars.noise.enabled` and `pars.noise.site2.enabled` (both false by default, so
-existing tests are unchanged; `tests/runAllTests.m` still 12/12). MT
-normalization is **not** noised yet — that is a later, separate arm.
+`shApplySite2Noise` adds `sigma * randn` (or the Phase B blur) to the
+normalization numerator **before** the division.
+
+- V1: `shModelV1Normalization_Tuned`, `pars.noise.site2.enabled`
+- MT: `shModelMtNormalization_Tuned`, `pars.noise.mtSite2.enabled`
+
+Do **not** enable both. Both default false, so `tests/runAllTests.m` stays
+12/12 with noise off.
+
+MT's **normalization** spatial filter is identity (`mkGaussianFilter(-1)`). The
+3 px filter is `mtSpatialPoolingFilter` (V1→MT pooling), which runs *before*
+this hook. Uniform vs patchy with V1 Site-2 off is **done** (2026-08-29, §3.10):
+**DIVERGE: NO.** Same σ barely moved MT d′.
 
 `spatialCorrelation = 'none'` is Phase A. `'gaussian'` blurs that same white
 field in Y and X (σ_corr = `spatialCorrSigmaPx`, default 3 px) and rescales so
@@ -352,6 +368,7 @@ Scripts:
 - `explore/runMotionLetterSite2PhaseA.m` — locked σ = 0.05, N = 50
 - `explore/runMotionLetterSite2SigmaSweep.m` — already run (0.03 / 0.05 / 0.08)
 - `explore/runMotionLetterSite2PhaseB.m` — independent vs gaussian at σ = 0.05
+- `explore/runMotionLetterMtSite2UniformVsPatchy.m` — MT arm, V1 off
 
 ---
 
@@ -494,15 +511,99 @@ these N = 20 independent numbers.
 
 PASS is mean-and-SD ranking only. The SD ranking under gaussian is thin (1.08).
 
-### 3.7 Next (do not skip ahead)
+### 3.8 Uniform vs patchy with gaussian Site-2
 
-1. Phase B ranking survived — do not re-run N = 50 for its own sake.
-2. Uniform vs patchy amplitude lesions **with gaussian Site-2** (the claim Phase B
-   was gating). Independent noise is the wrong model for that comparison.
-3. High-frequency failure (no noise required).
-4. Lesion matrix through mtMix (deterministic baseline for the rest of the
-   matrix).
-5. MT Site-2 last, as its own arm (V1 already feeds MT).
+`explore/runMotionLetterSite2UniformVsPatchy.m`. Same movie and gaussian Site-2
+as Phase B (σ = 0.05, σ_corr = 3 px, N = 20, 18.0 min). Both lesions are
+**spatial maps** with matched mean gain **0.5036** (`amplitude_uniform_map` vs
+`amplitude_patchy`, `patchySigma` = 3 px). Not the Phase A/B class-gain cut.
+Output: `explore/_figs/site2_uniformVsPatchy_sigma005/`.
+
+| condition | Mean d′ | SD(d′) | Center opp mean | Center opp SD |
+|-----------|---------|--------|-----------------|---------------|
+| Healthy off | 4.510 | 0 | 0.109 | 0 |
+| Uniform off | 4.425 | 0 | 0.089 | 0 |
+| Patchy off | 4.387 | 0 | 0.089 | 0 |
+| Healthy + noise | 2.864 ± 0.142 | 0.142 | 0.033 | 0.0081 |
+| Uniform + noise | **1.020 ± 0.153** | 0.153 | −0.027 | 0.0118 |
+| Patchy + noise | **1.015 ± 0.152** | 0.152 | −0.027 | 0.0119 |
+
+|d′ uniform − patchy| **off = 0.037**, **on = 0.006**. SD gap on = 0.001.
+**DIVERGE: NO.**
+
+Healthy/uniform + gaussian match Phase B (2.86 / 1.01). Both lesions still tank
+together; spatial structure did no extra work. That is what §5.1 predicted would
+happen if the **normalization pool does not mix space**. V1's pool is
+`mkGaussianFilter(-1)` (identity). Do not drop §5.1. The MT arm is §3.10: still
+no diverge; MT `D` is also identity, and pooling-then-noise was not enough.
+
+### 3.9 High-frequency failure (first look)
+
+`explore/runMotionLetterHfFailure.m`. Deterministic, no noise. τ = 2 frames,
+matched L1 gain **k = 0.817**. Letter C, seed 7, 1 and 5 deg/s, MT + V1
+(3.0 min). Output: `explore/_figs/hf_failure/`.
+
+| deg/s | healthy MT | amp_matched | hf_shape | hf_raw |
+|-------|------------|-------------|----------|--------|
+| 1 | 4.510 | 4.497 (−0.014) | **4.864 (+0.353)** | 4.855 (+0.344) |
+| 5 | 5.309 | 5.311 (+0.002) | 5.392 (+0.082) | 5.412 (+0.103) |
+
+V1 d′ stayed ~0.08–0.09 throughout. Center opponent at 1 deg/s rose under
+hf_shape (0.109 → 0.174).
+
+The printed `HIT_MT: YES` used **|Δd′|**, so an *increase* counted as a hit. **Do
+not quote that YES.** The §5.3 prediction was a **cost** to MT, larger than a
+matched amplitude cut. At τ = 2 the low-pass **raised** MT d′, more at 1 deg/s
+than at 5 (`HIGH_SPEED: NO`). Amplitude at k = 0.82 did almost nothing
+(normalization). Shape-only and raw agreed, so this is not just L1 renorm.
+
+**Reading:** τ = 2 is not high-frequency *failure*. It is a mild low-pass that
+helped the letter. The lesion is implemented; the parameter is wrong or the
+prediction needs a stronger high-cut. Still open: larger τ, or a high-cut that
+does not boost the slow letter.
+
+### 3.10 Uniform vs patchy with gaussian MT Site-2
+
+`explore/runMotionLetterMtSite2UniformVsPatchy.m`. Same movie and matched-mean
+maps as §3.8 (gain **0.5036**, gaussian σ_corr = 3 px, N = 20, 16.5 min).
+**V1 Site-2 off.** Noise on the MT numerator only, σ = 0.05 (V1 lock; not
+swept at MT). Output: `explore/_figs/mtSite2_uniformVsPatchy_sigma005/`.
+
+This is pooling-then-noise, not `D` mixing space at MT. MT's own
+`mtNormalizationSpatialFilter` is identity. `mtSpatialPoolingFilter(3)` runs
+*before* the hook.
+
+| condition | Mean d′ | SD(d′) | Center opp mean | Center opp SD |
+|-----------|---------|--------|-----------------|---------------|
+| Healthy off | 4.510 | 0 | 0.109 | 0 |
+| Uniform off | 4.425 | 0 | 0.089 | 0 |
+| Patchy off | 4.387 | 0 | 0.089 | 0 |
+| Healthy + noise | 4.468 ± 0.026 | 0.026 | 0.109 | 0.0016 |
+| Uniform + noise | **4.362 ± 0.030** | 0.030 | 0.090 | 0.0016 |
+| Patchy + noise | **4.328 ± 0.030** | 0.030 | 0.089 | 0.0016 |
+
+|d′ uniform − patchy| **off = 0.037**, **on = 0.035**. SD gap on = 0.0003.
+**DIVERGE: NO** (needed on > off + 0.10).
+
+Vs healthy + noise: uniform **−0.106**, patchy **−0.141**. Same σ that
+collapsed V1 gaussian d′ to ~1.0 barely moved MT (healthy 4.51 → 4.47).
+Uniform and patchy still match. Pooling the V1 field, then adding noise on
+MT `N`, is not the §5.1 mixer. Do not drop §5.1, and do not quote this as
+having tested a spatial `D`.
+
+### 3.11 Next (do not skip ahead)
+
+1. Do not re-run Phase A/B, V1 or MT uniform-vs-patchy, or
+   `delayRandom_lowpass_mtMix` for their own sake. Do not mix V1 and MT Site-2.
+2. **Speed-graded midget dependence** (report §4.5) — the remaining candidate
+   for a slow-speed motion deficit, now that `delay_random` spares the
+   low-pass neuron.
+3. Missing matrix cell: uniform amplitude and uniform delay *together*.
+4. HF failure: only a new kernel (stronger τ or a real high-cut), not another
+   copy of τ = 2.
+5. Site 1 (`shClassV1Basis`) and Site 3 (read-out), separately.
+6. §5.1 remains untested at a site where `D` mixes space. Do not implement a
+   mixing `D` just to salvage the prediction without saying so.
 
 ---
 
@@ -526,3 +627,4 @@ PASS is mean-and-SD ranking only. The SD ranking under gaussian is thin (1.08).
 | 2026-08-28 | Step 0 locked; Step 1 API sketched |
 | 2026-08-28 | Step 2: Site-2 hook; Phase A first look, σ sweep, N=50 lock at σ=0.05 |
 | 2026-08-28 | Coherence × speed map; this file records tables |
+| 2026-08-29 | V1 uniform vs patchy: DIVERGE NO; HF τ = 2 raised d′; MT Site-2: DIVERGE NO (§3.10) |

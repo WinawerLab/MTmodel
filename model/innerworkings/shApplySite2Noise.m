@@ -1,23 +1,32 @@
-function N = shApplySite2Noise(N, pars, ind)
+function N = shApplySite2Noise(N, pars, ind, stage)
 % shApplySite2Noise  Additive Site-2 noise on the normalization numerator.
 %
-% Called from shModelV1Normalization_Tuned after rectified N (nume) is formed
-% and before the division. No-op unless pars.noise.enabled and
-% pars.noise.site2.enabled. Noise off must not change any existing result.
+%   N = shApplySite2Noise(N, pars, ind)           % V1 (site2)
+%   N = shApplySite2Noise(N, pars, ind, 'mt')     % MT (mtSite2)
 %
-% Phase A: spatialCorrelation = 'none' — independent at each voxel.
-% Phase B: spatialCorrelation = 'gaussian' — blur the same white field in Y
-% and X (not T) with σ = pars.noise.spatialCorrSigmaPx, then rescale so the
-% marginal variance stays sigma^2. IND is required for Phase B (packed
-% Y×X×T layout).
+% V1: shModelV1Normalization_Tuned, gated on pars.noise.site2.enabled.
+% MT: shModelMtNormalization_Tuned, gated on pars.noise.mtSite2.enabled.
+% Do not enable both. Noise off must not change any existing result.
+%
+% spatialCorrelation = 'none' | 'gaussian' (same draw-then-blur as Phase B).
 %
 % See also: noisePars, docs/NOISE_TRIAL_DESIGN.md.
 
-if ~localActive(pars)
+if nargin < 4 || isempty(stage)
+    stage = 'v1';
+end
+
+if ~localActive(pars, stage)
     return
 end
 
-site2 = pars.noise.site2;
+localAssertOneSite(pars);
+
+if strcmp(stage, 'mt')
+    site2 = pars.noise.mtSite2;
+else
+    site2 = pars.noise.site2;
+end
 if ~isfield(site2, 'mode') || ~strcmp(site2.mode, 'fixed')
     error('shApplySite2Noise:mode', ...
         'Only site2.mode = ''fixed'' is implemented (Step 0).');
@@ -58,7 +67,7 @@ N = N + site2.sigma * draw;
 
 end
 
-function tf = localActive(pars)
+function tf = localActive(pars, stage)
 tf = false;
 if ~isstruct(pars) || ~isfield(pars, 'noise') || ~isstruct(pars.noise)
     return
@@ -67,13 +76,29 @@ n = pars.noise;
 if ~isfield(n, 'enabled') || ~n.enabled
     return
 end
-if ~isfield(n, 'site2') || ~isstruct(n.site2)
+if strcmp(stage, 'mt')
+    fld = 'mtSite2';
+else
+    fld = 'site2';
+end
+if ~isfield(n, fld) || ~isstruct(n.(fld))
     return
 end
-if ~isfield(n.site2, 'enabled') || ~n.site2.enabled
+if ~isfield(n.(fld), 'enabled') || ~n.(fld).enabled
     return
 end
 tf = true;
+end
+
+function localAssertOneSite(pars)
+v1on = isfield(pars.noise, 'site2') && isstruct(pars.noise.site2) ...
+    && isfield(pars.noise.site2, 'enabled') && pars.noise.site2.enabled;
+mton = isfield(pars.noise, 'mtSite2') && isstruct(pars.noise.mtSite2) ...
+    && isfield(pars.noise.mtSite2, 'enabled') && pars.noise.mtSite2.enabled;
+if v1on && mton
+    error('shApplySite2Noise:mixedSites', ...
+        'Do not enable site2 and mtSite2 together. Run MT as its own arm.');
+end
 end
 
 function draw = localBlurSpatialUnitVar(draw, ind, sigmaPx)

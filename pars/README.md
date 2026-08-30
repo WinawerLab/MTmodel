@@ -66,6 +66,9 @@ Uniform amplitude has two mechanisms:
 
 - **`amplitude_uniform`** — scales `classes(i).gain` (Phase 2 explore scripts)
 - **`amplitude_uniform_map`** — sets `impairmentAmplitudeMap` (`compensationIndex.m`)
+- **`hf_lowpass`** — causal exponential on every `temporalKernel` (NOISE §3.1).
+  `hfRenorm` true (default) keeps L1 so it is shape only. See
+  `explore/runMotionLetterHfFailure.m`.
 
 ## What is not in this folder
 

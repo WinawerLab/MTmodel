@@ -255,8 +255,14 @@ Report §4.7.4 currently finds uniform and patchy amplitude lesions
 interchangeable, around a 9–18% coherence drop either way. **With site-2 noise
 present they should diverge**, and the divergence should scale with the spatial
 correlation length of the damage relative to the width of the normalization pool.
-This is a clean test of whether the gain-compensation account does real work, and
-it uses lesions that already exist.
+
+**Tests (2026-08-29), gaussian, matched mean:** they did **not** diverge at V1
+Site-2 (`NOISE_TRIAL_DESIGN.md` §3.8) or at MT Site-2 (§3.10). Both
+normalization `D`s are identity. The MT arm is pooling-then-noise
+(`mtSpatialPoolingFilter` before the hook), not `D` mixing damaged and intact
+locations. Pooling alone was not enough. Do not drop this section, and do not
+treat either run as having tested the mixing argument above. A spatial `D` at
+V1 or MT would be a different experiment.
 
 ### 5.2 Trial jitter should outrank every deterministic lesion
 
@@ -270,7 +276,13 @@ Expect motion-letter d′ to fall further under jitter than under a frozen
 Per §3.1. A low-pass lesion of the RGC filters removes parasol drive
 preferentially, and parasol drive is nearly all of MT's input under the two-stream
 architecture. So it should cost MT far more than a class-agnostic amplitude lesion
-of matched average size. Needs no noise. Runnable now.
+of matched average size. Needs no noise.
+
+**First look (2026-08-29), τ = 2 frames:** the low-pass **raised** MT d′
+(+0.35 at 1 deg/s). Matched amplitude (k = 0.82) did nothing. That is not the
+predicted cost. τ = 2 is too mild — or L1-preserving low-pass is the wrong
+shape. See `NOISE_TRIAL_DESIGN.md` §3.9. Do not quote the script's `HIT_MT: YES`
+(|Δd′|).
 
 ### 5.4 Recovery should separate latency from discriminability
 
@@ -346,7 +358,9 @@ deficit:
    `compensationIndex.m`; C collapses onto unlesioned drive (lagged R² = 0.984).
    Report §4.8.1 and `NOISE_TRIAL_DESIGN.md` §3.2. JW operating-point account
    holds for the deterministic mean.
-3. **High-frequency failure** as a change in filter shape (§5.3). Also no noise.
+3. **High-frequency failure** as a change in filter shape (§5.3). Also no
+   noise. ~~First look τ = 2.~~ **2026-08-29:** raised MT d′ (+0.35 at 1 deg/s),
+   not a deficit. Stronger kernel still open. `NOISE_TRIAL_DESIGN.md` §3.9.
 4. **Noise, one site at a time.**
    - ~~Site 2 Phase A (independent, V1 numerator, σ = 0.05, N = 50).~~ **Done
      2026-08-28.** Lesion+noise d′ 3.81 ± 0.083 vs healthy+noise 4.39 ± 0.033.
@@ -354,8 +368,11 @@ deficit:
    - ~~Site 2 Phase B (gaussian, σ_corr = 3 px, N = 20).~~ **Done 2026-08-28.**
      Ranking survived. Lesion+noise d′ 1.01 ± 0.15 vs healthy+noise 2.86 ± 0.14.
      Mean gap −1.86; SD ratio 1.08. `NOISE_TRIAL_DESIGN.md` §3.6.
-   - **Next:** uniform vs patchy with gaussian Site-2, then MT Site-2 as its own
-     arm. Site 1 (`shClassV1Basis`) and Site 3 (read-out) later, separately.
+   - ~~Uniform vs patchy at V1 Site-2.~~ **Done 2026-08-29. DIVERGE: NO.**
+     `NOISE_TRIAL_DESIGN.md` §3.8.
+   - ~~Uniform vs patchy at MT Site-2 (V1 off).~~ **Done 2026-08-29. DIVERGE:
+     NO.** Same σ barely moved MT d′. `NOISE_TRIAL_DESIGN.md` §3.10.
+   - **Next:** Site 1 (`shClassV1Basis`) and Site 3 (read-out), separately.
 5. **Temporal noise** — jitter per trial and Bernoulli dropout (§4.4). These are
    the ones with no deterministic counterpart at all.
 
@@ -372,8 +389,10 @@ Locked 2026-08-28 except as noted. Full contract: `NOISE_TRIAL_DESIGN.md` §1.
   **Phase B done (gaussian, σ_corr = 3 px).** Ranking survived (lesion d′ 1.01 vs
   healthy 2.86). Correlation is not a small correction on Phase A: mean gap grew
   to −1.86 and the SD ratio collapsed to 1.08. σ_corr was not swept. **Use
-  gaussian** for uniform vs patchy amplitude claims. Independent at every
-  location is the easy default and it is wrong.
+  gaussian** for spatial amplitude claims. Uniform vs patchy did **not** diverge
+  at V1 or at MT Site-2 (2026-08-29). Both `D`s are identity; pooling-then-noise
+  at MT was not the mixer. Independent at every location is the easy default and
+  it is wrong.
 - **Dropout is not Gaussian.** **Deferred.** Stochastic conduction block is
   multiplicative, all-or-none, and correlated in time — a block persists for a
   burst. Do not approximate it as additive noise.

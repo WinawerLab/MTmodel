@@ -2,6 +2,7 @@ function pars = lesionApply(parsBase, lesionName, varargin)
 % lesionApply  Apply a named lesion to a pars struct (fixed weights, no refit).
 %
 %   pars = lesionApply(parsBase, 'amplitude_uniform');
+%   pars = lesionApply(parsBase, 'hf_lowpass');   % kernel-shape HF failure
 %   pars = lesionApply(parsBase, 'delay_random', 'fieldSize', 128);
 %   pars = lesionApply(parsBase, 'amplitude_uniform_map', 'stimSize', [Y X]);
 %
@@ -33,6 +34,9 @@ switch lower(strrep(lesionName, '-', '_'))
 
     case {'delay_on_only', 'delay_ononly'}
         pars = localClassDelayRectify(parsBase, 'on', cfg.onDelayFrames);
+
+    case {'hf_lowpass', 'high_frequency_failure'}
+        pars = localHfLowpass(parsBase, cfg);
 
     case 'amplitude_uniform_map'
         stimSz = localGetStimSize(extra);
@@ -138,6 +142,35 @@ for i = 1:numel(pars.rgc.classes)
     k = pars.rgc.classes(i).temporalKernel;
     pars.rgc.classes(i).temporalKernel = [zeros(delayFrames, 1); k(:)];
 end
+end
+
+function pars = localHfLowpass(parsBase, cfg)
+% Causal exponential low-pass on every class kernel. Not a gain and not a
+% whole-frame shift. hfRenorm = true keeps L1(k) so the lesion is shape only.
+if ~isscalar(cfg.hfTauFrames) || ~(cfg.hfTauFrames > 0) || ~isfinite(cfg.hfTauFrames)
+    error('lesionApply:hfTau', 'hfTauFrames must be a positive scalar.');
+end
+tau = cfg.hfTauFrames;
+L = max(8, 2 * ceil(6 * tau) + 1);
+t = (0:L-1)';
+h = exp(-t / tau);
+h = h / sum(h);
+
+pars = parsBase;
+for i = 1:numel(pars.rgc.classes)
+    k0 = pars.rgc.classes(i).temporalKernel(:);
+    k1 = conv(k0, h);
+    if cfg.hfRenorm
+        s0 = sum(abs(k0));
+        s1 = sum(abs(k1));
+        if s1 > 0
+            k1 = k1 * (s0 / s1);
+        end
+    end
+    pars.rgc.classes(i).temporalKernel = k1;
+end
+pars.rgc.mode = 'custom';
+pars.rgc.classesMode = 'custom';
 end
 
 function pars = localClassDelayRectify(parsBase, token, delayFrames)

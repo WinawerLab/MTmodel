@@ -1,0 +1,25 @@
+High-frequency failure  2026-08-29 19:23:04
+letter C  seed 7  tau 2.0 frames  matched gain 0.8174
+elapsed 3.0 min
+
+deg/s    condition           dMt        dV1        ctrMt        ctrV1
+1.00     healthy          4.5104     0.0813       0.1090      -0.0453
+1.00     amp_matched      4.4967     0.0817       0.1049      -0.0449
+1.00     hf_shape         4.8638     0.0902       0.1741      -0.0337
+1.00     hf_raw           4.8546     0.0838       0.1625      -0.0412
+5.00     healthy          5.3092     0.0917       0.6839      -0.1052
+5.00     amp_matched      5.3109     0.0917       0.6776      -0.1044
+5.00     hf_shape         5.3916     0.0926       0.6222      -0.0632
+5.00     hf_raw           5.4117     0.0929       0.6636      -0.0688
+
+1 deg/s  Delta d' MT  amp -0.014  hf_shape +0.353  hf_raw +0.344
+         HIT_MT ( |hf_shape| > |amp| ):  YES
+         SELECTIVE (MT drop > V1 drop, hf_shape):  YES
+5 deg/s  Delta d' MT  amp +0.002  hf_shape +0.082  hf_raw +0.103
+         HIT_MT ( |hf_shape| > |amp| ):  YES
+         SELECTIVE (MT drop > V1 drop, hf_shape):  YES
+HIGH_SPEED (hf_shape drop larger at 5 than 1 deg/s):  NO
+
+HIT_MT is the §5.3 prediction. HIGH_SPEED is the §3.1 caution
+(wrong clinical end). Shape-only vs amp_matched is the fair test;
+hf_raw is the same energy drop plus the shape change.

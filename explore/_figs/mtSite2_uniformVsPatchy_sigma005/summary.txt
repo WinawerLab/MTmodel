@@ -1,0 +1,21 @@
+MT Site-2 uniform vs patchy  2026-08-29 19:45:58
+letter C  1.00 deg/s  out [128 128 120]  dotSeed 7  V1 Site-2 OFF
+MT sigma 0.0500  sigma_corr 3.0 px  gaussian  N=20  mean gain 0.5036
+elapsed 16.5 min
+
+condition      dMt_mean    dMt_std  ctrOpp_mean   ctrOpp_std
+healthyOff       4.5104   0.000000       0.1090     0.000000
+uniformOff       4.4246   0.000000       0.0894     0.000000
+patchyOff        4.3874   0.000000       0.0888     0.000000
+healthyOn        4.4682   0.025837       0.1091     0.001598
+uniformOn        4.3624   0.030023       0.0895     0.001615
+patchyOn         4.3275   0.030288       0.0889     0.001616
+
+|d' uniform - patchy|  off = 0.0371   on = 0.0348
+|SD  uniform - patchy|  off = 0.0000   on = 0.0003
+d' vs healthy (on): uniform -0.1058   patchy -0.1406
+
+DIVERGE: NO — still match with noise on the MT numerator.
+MT normalization D is also identity. Pooling alone may not
+be the §5.1 mixer. Do not drop the claim without stating that.
+DIVERGE = |d′_uniform - d′_patchy| on > off + 0.10.

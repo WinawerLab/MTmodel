@@ -541,17 +541,27 @@ Gaussian-smoothed, σ = 3, correlated across space — and that condition does
 pixel. Do not use "patchy" as a loose word for "spatially heterogeneous" here; the
 two conditions give opposite answers.
 
-This is the sharpest thing the model has said. It suggests a single insult
-producing both clinical signs: *uniform* slowing gives the VEP latency,
-*desynchronised* conduction across the field gives the motion deficit.
+This is the sharpest thing the model has said about delay. It is still true
+that *desynchronisation* bites and a uniform delay does not. What it does
+**not** give is the clinical slow-speed motion deficit (below).
 
-**But there is a standing tension.** The heterogeneous-delay effect was largest on
-the **high-pass** neuron (1–10 px/frame = 5–50 deg/s). The clinical deficit is at
-**low** speeds. The low-pass neuron (0.0375–0.6 px/frame = 0.19–3 deg/s), which is
-squarely the clinically interesting band, was **not reported** under
-`delay_random`. So this is currently unknown rather than contradicted. It is the
-highest-value lesion experiment (`docs/TODO.md` §2), and the speed-graded midget
-dependence of §4.5 is the candidate mechanism that would resolve it.
+**The tension is now measured, and it does not resolve in the clinical
+direction.** `explore/runDelayRandomLowpassMtMix.m` (2026-08-29, two-stream
+MT, seeded, 5.3 min). Preferred-direction peaks vs healthy:
+
+| neuron | `delay_uniform` | `delay_random` |
+|--------|-----------------|----------------|
+| bandpass (1.6–25 deg/s) | 0% | **−35%** |
+| **low-pass (0.19–3 deg/s)** | 0% | **0%** |
+| high-pass (5–50 deg/s) | 0% | **−77%** |
+
+High-pass is still crushed (more than the pre-mtMix −55%). Low-pass is
+spared. Motion-letter d′ at 1 deg/s **rose** under `delay_random` (4.51 →
+4.88); at 5 deg/s it was −0.07. `delay_uniform` matched healthy. Table:
+`explore/_figs/delayRandom_lowpass_mtMix/`. **Desynchronised delay does not
+produce a slow-speed motion deficit.** Uniform slowing can still be the VEP
+story; it is not paired with clinical (b) via this lesion. The candidate
+left is speed-graded midget dependence (§4.5).
 
 #### 4.7.6 Class-selective lesions — do not use these
 
@@ -711,8 +721,24 @@ lesion + gaussian is the first Site-2 condition near a hard letter, and the SD
 ratio collapses because healthy trial SD rises. Use gaussian for patchy vs
 uniform. σ_corr was not swept. Full table: `NOISE_TRIAL_DESIGN.md` §3.6.
 
-Caveats: d′ under independent noise remains high (~3.8); gaussian brings lesion
-d′ to ~1.0 but N = 20 is a first look; MT Site-2 is not on.
+Uniform vs patchy (2026-08-29, same gaussian Site-2, matched mean gain 0.504,
+N = 20): **did not diverge**. Noise-on d′ 1.020 vs 1.015 (healthy 2.864).
+Noise-off they already matched (4.425 vs 4.387). V1's normalization pool is
+identity, so §5.1 cannot fire here. Table: `NOISE_TRIAL_DESIGN.md` §3.8.
+
+MT Site-2 (same day, V1 off, same maps, N = 20): **still no diverge**. Noise-on
+d′ 4.362 vs 4.328 (healthy 4.468 ± 0.026). Same σ barely moved MT. MT `D` is
+also identity; this was pooling-then-noise, not a mixing `D`. Table:
+`NOISE_TRIAL_DESIGN.md` §3.10.
+
+High-frequency failure first look (τ = 2 frames, no noise): the low-pass
+**raised** MT d′ at 1 deg/s (4.51 → 4.86). Matched amplitude (k = 0.82) did
+nothing. Do not quote the script's `HIT_MT: YES` — that used |Δd′|. τ = 2 is
+not failure. `NOISE_TRIAL_DESIGN.md` §3.9.
+
+Caveats: d′ under independent noise remains high (~3.8); gaussian at V1 brings
+lesion d′ to ~1.0 but N = 20 is a first look; the same σ at MT barely moves
+d′. §5.1 is untested at a site where `D` mixes space.
 
 ---
 
@@ -729,15 +755,19 @@ d′ to ~1.0 but N = 20 is a first look; MT Site-2 is not on.
 | C vs drive, coherence × speed | **current** (2026-08-28) — lagged R² = 0.984 |
 | Site-2 Phase A (σ = 0.05, N = 50) | **current** (2026-08-28) — independent V1 noise only |
 | Site-2 Phase B (σ_corr = 3 px, N = 20) | **current** (2026-08-28) — ranking survived; gaussian changes the size of the effect |
+| Site-2 uniform vs patchy (V1, gaussian) | **current** (2026-08-29) — no diverge; V1 pool is identity |
+| Site-2 uniform vs patchy (MT, gaussian) | **current** (2026-08-29) — no diverge; MT `D` identity; same σ barely moved d′ |
+| delay_random Fig-10 through mtMix | **current** (2026-08-29) — high-pass −77%, low-pass spared; letter d′ rose at 1 deg/s |
+| HF failure τ = 2 | **first look** (2026-08-29) — raised d′; not a deficit |
 | motion-letter healthy baseline, d′ = 1.32 | **current** (2026-08-17) at 0.3125 px/frame; the 1 deg/s seed-7 baseline is d′ = 4.51 (report §4.9) |
 | uniform versus non-uniform amplitude and delay lesions | **pre-mtMix** — the front-end conclusion probably survives, the MT numbers need re-measuring |
 | parasol-only and ON-only lesions | **invalid as biology** — measured on the midget-dominated MT |
 | the 114 campaign figures and metric CSVs | **gone** — those files were cleared; the scripts still exist. Current noise/compensation PNGs live in `explore/_figs/` and are tracked |
 
-One consolidated re-run would clear most of this: the §4.7 lesion matrix, with the
-missing uniform amplitude-plus-delay cell added and the low-pass neuron reported
-under `delay_random`, through the two-stream MT, seeded, with the motion-defined
-letter as an extra read-out alongside the SH Figs 9–14 tuning measures.
+One consolidated re-run would still clear most of the rest: the §4.7 lesion
+matrix, with the missing uniform amplitude-plus-delay cell added, through the
+two-stream MT, seeded. The low-pass neuron under `delay_random` is **done**
+(§4.7.5): it was spared.
 
 ---
 
