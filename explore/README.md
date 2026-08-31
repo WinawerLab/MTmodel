@@ -31,10 +31,13 @@ tracked; `results.mat` trial dumps are gitignored.
 | `runMotionLetterSite2PhaseB.m` | Phase B done 2026-08-28: independent vs gaussian at σ = 0.05, σ_corr = 3 px, N = 20. Ranking survived. Writes `explore/_figs/site2_phaseB_sigma005/`. |
 | `runMotionLetterSite2UniformVsPatchy.m` | Done 2026-08-29: uniform vs patchy with gaussian Site-2. **No diverge.** Writes `explore/_figs/site2_uniformVsPatchy_sigma005/`. |
 | `runMotionLetterMtSite2UniformVsPatchy.m` | Done 2026-08-29: MT Site-2 only (V1 off), same maps. **No diverge.** Same σ barely moved d′. Writes `explore/_figs/mtSite2_uniformVsPatchy_sigma005/`. |
-| `runMotionLetterHfFailure.m` | HF first look 2026-08-29: τ = 2 raised d′. Writes `explore/_figs/hf_failure/`. |
+| `runMotionLetterHfFailure.m` | HF first look 2026-08-29: τ = 2 raised d′. Writes `explore/_figs/hf_failure/`. Do not re-run. |
+| `runMotionLetterHfFailureStronger.m` | Done 2026-08-31: τ = 8 still raised d′ (**STILL_HELPS YES**, HIT_MT NO). Writes `explore/_figs/hf_failure_tau8/`. Do not re-run. |
+| `runMotionLetterHfHighcut.m` | Done 2026-08-31: +0.44 at 1 deg/s, −0.29 at 5. **HIGH_SPEED YES** (real cost). Writes `explore/_figs/hf_highcut/`. Do not re-run. |
 | `runDelayRandomLowpassMtMix.m` | Done 2026-08-29: `delay_random` through mtMix. High-pass −77%, **low-pass spared**, letter d′ rose at 1 deg/s. Writes `explore/_figs/delayRandom_lowpass_mtMix/`. |
 | `runMidgetSpeedTuningMtMix.m` | Done 2026-08-29: unconfound §4.5. **GRADIENT YES** (−61% vs −1%). Letter −0.21 d′ at 1 deg/s. Writes `explore/_figs/midget_speed_mtMix/`. |
 | `runMotionLetterMidgetKoSite2.m` | Done 2026-08-29: midget KO + V1 Site-2. **NOISE_AMPLIFIES NO** (gap 0.21 off/on). Writes `explore/_figs/midgetKo_site2_sigma005/`. |
+| `runUniformAmpDelayMtMix.m` | Done 2026-08-31: independent uniform gain 0.5 **and** +2-frame delay (not `coupled`). **BOTH_IS_AMP YES.** Writes `explore/_figs/uniformAmpDelay_mtMix/`. |
 | `runMotionLetterSite2SigmaSweep.m` | Choose Site-2 σ (V1 only). Writes `explore/_figs/site2_sigmaSweep/`. |
 | `compensationIndex.m` | how much of a uniform amplitude lesion divisive normalization absorbs, against stimulus speed **and coherence**. Measures the gain headroom that noise would act on. Report §4.8. |
 | `compareLesionsToBaseline.m` | lesion and baseline on shared axes, **seeded**, with unambiguous gain labels. The template for any new lesion script. |

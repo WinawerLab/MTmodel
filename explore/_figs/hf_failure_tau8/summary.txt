@@ -1,0 +1,25 @@
+High-frequency failure STRONGER  2026-08-31 09:35:03
+letter C  seed 7  tau 8.0 frames  matched gain 0.5801
+elapsed 2.6 min  (not tau=2; HIT_MT is a signed drop)
+
+deg/s    condition           dMt        dV1        ctrMt        ctrV1
+1.00     healthy          4.5104     0.0813       0.1090      -0.0453
+1.00     amp_matched      4.4528     0.0827       0.0948      -0.0438
+1.00     hf_shape         4.8039     0.1239       0.1808      -0.0067
+1.00     hf_raw           4.7463     0.1021       0.1587      -0.0183
+5.00     healthy          5.3092     0.0917       0.6839      -0.1052
+5.00     amp_matched      5.3155     0.0918       0.6598      -0.1022
+5.00     hf_shape         5.4146     0.0859       0.4828      -0.0456
+5.00     hf_raw           5.3948     0.0930       0.4660      -0.0303
+
+1 deg/s  Delta d' MT  amp -0.058  hf_shape +0.294  hf_raw +0.236
+         HIT_MT (hf_shape drop >0.10 and > amp drop):  NO
+         SELECTIVE (MT cost > V1 cost, hf_shape):  NO
+5 deg/s  Delta d' MT  amp +0.006  hf_shape +0.105  hf_raw +0.086
+         HIT_MT (hf_shape drop >0.10 and > amp drop):  NO
+         SELECTIVE (MT cost > V1 cost, hf_shape):  NO
+STILL_HELPS: YES — tau=8 still raised d' at 1 deg/s by >0.10.
+HIGH_SPEED (signed MT cost larger at 5 than 1):  YES
+
+HIT_MT is a signed cost vs amp_matched (not |d'|).
+Do not overwrite explore/_figs/hf_failure/ (tau=2).

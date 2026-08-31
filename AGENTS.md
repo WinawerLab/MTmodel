@@ -1,6 +1,6 @@
 # MTmodel — start here
 
-Last updated: 2026-08-29.
+Last updated: 2026-08-31.
 
 Read this first, then follow the reading list at the bottom.
 
@@ -30,8 +30,11 @@ coherence × speed map and Site-2 Phases A and B are done. Uniform vs patchy did
 **not** diverge at V1 or at MT Site-2 (2026-08-29). HF-failure τ = 2 raised d′.
 `delay_random` through mtMix spares the low-pass neuron (high-pass −77%).
 Midget vs speed (own curves) **GRADIENT YES** (−61% vs −1%). Midget + Site-2:
-gap **did not grow** (0.21 off/on at 1 deg/s). **Next:** uniform
-amplitude+delay together, or a stronger HF kernel.
+gap **did not grow** (0.21 off/on at 1 deg/s). Uniform amp+delay together
+**BOTH_IS_AMP YES** (letter at 1 deg/s: amp −0.087, both −0.061). HF τ = 8
+**STILL_HELPS YES** (hf_shape +0.29 at 1 deg/s; HIT_MT NO). HF high-cut
+(fc = 0.05): **helps at 1 deg/s (+0.44), costs at 5 (−0.29).** Wrong
+clinical end. **Next:** Site 1 and Site 3, separately.
 Always report trial-to-trial variability with the mean; the five noise
 decisions live only in [`NOISE_AND_DEMYELINATION.md`](docs/NOISE_AND_DEMYELINATION.md) §6.
 
@@ -156,7 +159,7 @@ Full account in [docs/MODEL_AND_LESIONS.md](docs/MODEL_AND_LESIONS.md) §2.
 | [docs/RGC_lagged_preset_summary.md](docs/RGC_lagged_preset_summary.md) | A closer look at the biological front-end, with figures. |
 | [docs/UNITS_AND_SCALE.md](docs/UNITS_AND_SCALE.md) | What a pixel and a frame mean in degrees and seconds, why it departs from the published paper, and the two scale problems no anchor can fix. |
 | [docs/NOISE_AND_DEMYELINATION.md](docs/NOISE_AND_DEMYELINATION.md) | Why the model needs internal noise, and what it should predict. |
-| [docs/NOISE_TRIAL_DESIGN.md](docs/NOISE_TRIAL_DESIGN.md) | **Noise contract:** locked Step 0 choices, trial API, and the tables (through 2026-08-29: Phase A/B, V1 and MT uniform vs patchy, HF first look). |
+| [docs/NOISE_TRIAL_DESIGN.md](docs/NOISE_TRIAL_DESIGN.md) | **Noise contract:** locked Step 0 choices, trial API, and the tables (through 2026-08-31: Phase A/B through §3.15 HF high-cut). |
 | [docs/TODO.md](docs/TODO.md) | Open work and done items with what they showed. §1–§3 are one iterative investigation. |
 | [literature/NOTES.md](literature/NOTES.md) | The papers, and what each one constrains. |
 | [optic neuritis targets/NOTES.md](optic%20neuritis%20targets/NOTES.md) | The clinical figures the model should eventually match. |

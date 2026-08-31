@@ -1,0 +1,15 @@
+Uniform amp + delay (independent)  2026-08-31 09:16:48
+gain 0.50  +2 frames  letter C  speeds [1 5] deg/s  dotSeed 7
+elapsed 1.7 min  (not coupled)
+
+deg/s        healthy         amp       delay        both
+       1      4.5104      4.4230      4.5358      4.4489
+       5      5.3092      5.3184      5.3096      5.3185
+Δ vs healthy at 1:  amp -0.087   delay +0.025   both -0.061
+Δ vs healthy at 5:  amp +0.009   delay +0.000   both +0.009
+both − amp at 1: +0.026   (delay added on top of gain 0.5)
+
+DELAY_NULL: YES — uniform delay still invisible to letter d′.
+BOTH_IS_AMP: YES — adding uniform delay does not change the gain-0.5 letter.
+SUPERADDITIVE: NO — both is not worse than the sum of the two singles.
+This is the independent-uniform cell. Do not call it coupled.

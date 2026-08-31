@@ -1,28 +1,17 @@
-% runMotionLetterHfFailure  High-frequency failure as a change in filter shape.
+% runMotionLetterHfFailureStronger  HF failure at τ = 8 (not another τ = 2).
 %
-% Deterministic. No Site-2 noise. A causal exponential low-pass is applied to
-% every RGC temporalKernel (lesionApply 'hf_lowpass'). That is not a gain and
-% not a whole-frame shift (NOISE §3.1 / §5.3).
+% Same lesion as runMotionLetterHfFailure.m (`hf_lowpass` on every class
+% kernel), four times slower. τ = 2 raised letter d′; this asks whether a
+% stronger low-pass is actually a cost (NOISE §3.1 / §5.3).
 %
-% Conditions, same movie per speed:
-%   healthy
-%   amp_matched   — class-agnostic gain = mean L1 remaining after low-pass
-%                   without renormalization ("same average size")
-%   hf_shape      — low-pass, L1-renormalized (shape only)
-%   hf_raw        — low-pass, no renorm (shape + energy drop)
+% HIT_MT here is a signed drop, not |Δd′|. Do not overwrite
+% explore/_figs/hf_failure/ (τ = 2). Output: explore/_figs/hf_failure_tau8/.
 %
-% Speeds: 1 deg/s (Phase A geometry) and 5 deg/s (1 px/frame). The prediction
-% is that HF hits MT harder than the matched amplitude cut, and more at the
-% high speed (the wrong clinical end). Also run v1Complex: §5.3 says the
-% lesion should be selective for MT.
+%   run explore/runMotionLetterHfFailureStronger.m
 %
-%   run explore/runMotionLetterHfFailure.m
-%
-% First look done 2026-08-29 (τ = 2): raised d′, not a deficit. See
-% docs/NOISE_TRIAL_DESIGN.md §3.9. Printed HIT_MT used |Δd′| — do not quote it.
-% Do not overwrite explore/_figs/hf_failure/ without renaming.
-% Stronger kernel (τ = 8) done 2026-08-31: still raised d′. See
-% explore/runMotionLetterHfFailureStronger.m. Do not overwrite hf_failure_tau8/.
+% Done 2026-08-31: STILL_HELPS YES (+0.29 at 1 deg/s), HIT_MT NO.
+% Do not quote HIGH_SPEED YES (both speeds still raised d′).
+% Do not overwrite explore/_figs/hf_failure/ or hf_failure_tau8/.
 
 thisFile = mfilename('fullpath');
 repoRoot = fileparts(fileparts(thisFile));
@@ -33,13 +22,16 @@ LETTER       = 'C';
 SPEEDS_DEG_S = [1, 5];
 OUT_SZ       = [128 128 120];
 DOT_SEED     = 7;
-HF_TAU       = 2;            % frames; first look, not locked
+HF_TAU       = 8;            % frames; 4× the first look (τ = 2)
 %% ========================================================================
 
 warnState = warning('off', 'motionLetterMetrics:speedMismatch');
 warnCleanup = onCleanup(@() warning(warnState)); %#ok<NASGU>
+oldVis = get(0, 'DefaultFigureVisible');
+set(0, 'DefaultFigureVisible', 'off');
+visCleanup = onCleanup(@() set(0, 'DefaultFigureVisible', oldVis)); %#ok<NASGU>
 
-outDir = fullfile(repoRoot, 'explore', '_figs', 'hf_failure');
+outDir = fullfile(repoRoot, 'explore', '_figs', 'hf_failure_tau8');
 if ~exist(outDir, 'dir'), mkdir(outDir); end
 
 [~, parsH0] = motionLetterPars( ...
@@ -58,12 +50,11 @@ end
 kMatch = mean(ratios);
 parsAmp = lesionApply(parsH0, 'amplitude_uniform', 'uniformGain', kMatch);
 
-fprintf('=== High-frequency failure (filter shape) ===\n');
-fprintf('tau = %.1f frames  matched gain k = %.4f  (mean L1 remaining, no renorm)\n', ...
-    HF_TAU, kMatch);
+fprintf('=== High-frequency failure (stronger kernel, tau = %.0f) ===\n', HF_TAU);
+fprintf('matched gain k = %.4f  (mean L1 remaining, no renorm)\n', kMatch);
 fprintf('L1 remaining min/max across classes: %.3f / %.3f\n', min(ratios), max(ratios));
 fprintf('speeds %s deg/s  letter %s  seed %d\n', mat2str(SPEEDS_DEG_S), LETTER, DOT_SEED);
-fprintf('forwards = %d  (4 conditions x %d speeds x MT+V1)\n\n', ...
+fprintf('forwards = %d  (4 conditions x %d speeds x MT+V1). Not tau=2.\n\n', ...
     4 * numel(SPEEDS_DEG_S) * 2, numel(SPEEDS_DEG_S));
 
 localWriteKernelFig(outDir, parsH0, parsShape, HF_TAU);
@@ -112,10 +103,11 @@ fprintf('\nSaved %s  (%.1f min). Paste summary.txt into chat.\n', outDir, elapse
 
 function localWriteSummary(outDir, R, meta)
 lines = {};
-lines{end+1} = sprintf('High-frequency failure  %s', datestr(now, 31));
+lines{end+1} = sprintf('High-frequency failure STRONGER  %s', datestr(now, 31));
 lines{end+1} = sprintf('letter %s  seed %d  tau %.1f frames  matched gain %.4f', ...
     meta.letter, meta.dotSeed, meta.hfTauFrames, meta.kMatch);
-lines{end+1} = sprintf('elapsed %.1f min', meta.elapsedSec / 60);
+lines{end+1} = sprintf('elapsed %.1f min  (not tau=2; HIT_MT is a signed drop)', ...
+    meta.elapsedSec / 60);
 lines{end+1} = '';
 lines{end+1} = sprintf('%-8s %-12s %10s %10s %12s %12s', ...
     'deg/s', 'condition', 'dMt', 'dV1', 'ctrMt', 'ctrV1');
@@ -134,24 +126,34 @@ for iS = 1:numel(meta.speedsDegS)
     dAmp = a.dMt - h.dMt;
     dSh  = s.dMt - h.dMt;
     dRaw = raw.dMt - h.dMt;
-    hit = abs(dSh) > abs(dAmp);
-    sel = abs(s.dMt - h.dMt) > abs(s.dV1 - h.dV1);
+    dropMt = h.dMt - s.dMt;
+    dropAmp = h.dMt - a.dMt;
+    dropV1 = h.dV1 - s.dV1;
+    hit = (dropMt > 0.10) && (dropMt > max(dropAmp, 0) + 0.05);
+    sel = dropMt > dropV1 + 0.05;
     lines{end+1} = sprintf('%.0f deg/s  Delta d'' MT  amp %+.3f  hf_shape %+.3f  hf_raw %+.3f', ...
         spd, dAmp, dSh, dRaw); %#ok<AGROW>
-    lines{end+1} = sprintf('         HIT_MT ( |hf_shape| > |amp| ):  %s', localYn(hit)); %#ok<AGROW>
-    lines{end+1} = sprintf('         SELECTIVE (MT drop > V1 drop, hf_shape):  %s', localYn(sel)); %#ok<AGROW>
+    lines{end+1} = sprintf('         HIT_MT (hf_shape drop >0.10 and > amp drop):  %s', ...
+        localYn(hit)); %#ok<AGROW>
+    lines{end+1} = sprintf('         SELECTIVE (MT cost > V1 cost, hf_shape):  %s', ...
+        localYn(sel)); %#ok<AGROW>
 end
 h1 = localPick(R, meta.speedsDegS(1), 'healthy');
 s1 = localPick(R, meta.speedsDegS(1), 'hf_shape');
 h2 = localPick(R, meta.speedsDegS(end), 'healthy');
 s2 = localPick(R, meta.speedsDegS(end), 'hf_shape');
-highEnd = abs(s2.dMt - h2.dMt) > abs(s1.dMt - h1.dMt);
-lines{end+1} = sprintf('HIGH_SPEED (hf_shape drop larger at %.0f than %.0f deg/s):  %s', ...
-    meta.speedsDegS(end), meta.speedsDegS(1), localYn(highEnd));
+drop1 = h1.dMt - s1.dMt;
+drop5 = h2.dMt - s2.dMt;
+if (s1.dMt - h1.dMt) > 0.10
+    lines{end+1} = 'STILL_HELPS: YES — tau=8 still raised d'' at 1 deg/s by >0.10.';
+else
+    lines{end+1} = 'STILL_HELPS: NO — tau=8 did not raise the slow letter by >0.10.';
+end
+lines{end+1} = sprintf('HIGH_SPEED (signed MT cost larger at %.0f than %.0f):  %s', ...
+    meta.speedsDegS(end), meta.speedsDegS(1), localYn(drop5 > drop1 + 0.05));
 lines{end+1} = '';
-lines{end+1} = 'HIT_MT is the §5.3 prediction. HIGH_SPEED is the §3.1 caution';
-lines{end+1} = '(wrong clinical end). Shape-only vs amp_matched is the fair test;';
-lines{end+1} = 'hf_raw is the same energy drop plus the shape change.';
+lines{end+1} = 'HIT_MT is a signed cost vs amp_matched (not |d''|).';
+lines{end+1} = 'Do not overwrite explore/_figs/hf_failure/ (tau=2).';
 txt = strjoin(lines, newline);
 fid = fopen(fullfile(outDir, 'summary.txt'), 'w');
 fprintf(fid, '%s\n', txt);
@@ -217,7 +219,7 @@ for iS = 1:numel(meta.speedsDegS)
     bar([dMt; dV1]');
     set(gca, 'XTick', 1:4, 'XTickLabel', conds);
     ylabel('d''');
-    title(sprintf('%.0f deg/s', spd));
+    title(sprintf('%.0f deg/s  \\tau=%.0f', spd, meta.hfTauFrames));
     legend({'MT', 'V1'}, 'Location', 'best');
     grid on;
 end

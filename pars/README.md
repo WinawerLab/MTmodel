@@ -65,10 +65,16 @@ pars = lesions(i).applyFn(parsBase);
 Uniform amplitude has two mechanisms:
 
 - **`amplitude_uniform`** — scales `classes(i).gain` (Phase 2 explore scripts)
+- **`amplitude_delay_uniform`** — gain 0.5 **and** +2-frame delay on every class
+  (independent; not `coupled`). `explore/runUniformAmpDelayMtMix.m`
 - **`amplitude_uniform_map`** — sets `impairmentAmplitudeMap` (`compensationIndex.m`)
 - **`hf_lowpass`** — causal exponential on every `temporalKernel` (NOISE §3.1).
   `hfRenorm` true (default) keeps L1 so it is shape only. See
-  `explore/runMotionLetterHfFailure.m`.
+  `explore/runMotionLetterHfFailure.m`. Default `hfTauFrames` stays 2 (the
+  first look). Override in the script for a stronger kernel
+  (`explore/runMotionLetterHfFailureStronger.m`, τ = 8).
+- **`hf_highcut`** — frequency-domain Butterworth, H(0)=1, no L1. fc = 0.05
+  cyc/frame. `explore/runMotionLetterHfHighcut.m`. Not `hf_lowpass`.
 
 ## What is not in this folder
 

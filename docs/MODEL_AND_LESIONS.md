@@ -497,11 +497,11 @@ class-selective rows cannot be read as biology.
 |---|---|---|
 | **amplitude** | gain 0.5, all classes ✓ | random U(0.3,0.7) ✓ · patchy σ=3 ✓ |
 | **delay** | 2 frames, all classes ✓ | random {0,1,2,3} ✓ · patchy ✓ |
-| **both** | **✗ never run** | coupled amplitude↔delay ✓ (tied together) |
+| **both** | **✓ letter d′ 2026-08-31** (gain 0.5 **and** +2 frames; not `coupled`) | coupled amplitude↔delay ✓ (tied together) |
 
-Two gaps, both worth closing. There is **no uniform amplitude plus uniform delay
-condition at all**. And the only combined condition, `coupled`, ties the two axes
-together by construction rather than varying them independently.
+The independent-uniform cell is `lesionApply(..., 'amplitude_delay_uniform')`.
+That is **not** `coupled`, which still ties spatial maps. Letter: **BOTH_IS_AMP
+YES** — see §4.7.8.
 
 #### 4.7.2 Uniform amplitude loss — hits the gain, spares the shape of the tuning
 
@@ -600,6 +600,25 @@ up with dot-sample differences — about 5 percentage points on the parasol cohe
 effect. `explore/compareLesionsToBaseline.m` seeds and is the template for any new
 lesion script. `validateSHFigs9to14_lesions.m` still does not seed
 (`docs/TODO.md`, known problems).
+
+#### 4.7.8 Independent uniform amplitude plus delay — still amplitude only
+
+`explore/runUniformAmpDelayMtMix.m` (2026-08-31, two-stream MT, noise off,
+letter C, seed 7, 1.7 min). Gain 0.5 on every class **and** +2 frames on every
+kernel, independently — not the spatial `coupled` map.
+
+| deg/s | Healthy | Amp 0.5 | Delay +2 | Both |
+|-------|---------|---------|----------|------|
+| 1 | 4.510 | 4.423 (−0.087) | 4.536 (+0.025) | 4.449 (−0.061) |
+| 5 | 5.309 | 5.318 | 5.310 | 5.318 |
+
+**DELAY_NULL YES. BOTH_IS_AMP YES. SUPERADDITIVE NO.** Uniform delay remains
+invisible to letter d′. Stacking it on the 50% gain cut does not add a
+deficit (both − amp at 1 deg/s = +0.026). The combined-uniform cell is the
+same story as §4.7.2: normalization absorbs the gain cut; a common delay
+does not reorganise the letter. Table:
+`explore/_figs/uniformAmpDelay_mtMix/`. Do not quote this as `coupled`, and
+do not re-run that folder without renaming.
 
 ### 4.8 Divisive normalization hides amplitude damage
 
@@ -783,15 +802,18 @@ d′. §5.1 is untested at a site where `D` mixes space.
 | Site-2 uniform vs patchy (MT, gaussian) | **current** (2026-08-29) — no diverge; MT `D` identity; same σ barely moved d′ |
 | delay_random Fig-10 through mtMix | **current** (2026-08-29) — high-pass −77%, low-pass spared; letter d′ rose at 1 deg/s |
 | HF failure τ = 2 | **first look** (2026-08-29) — raised d′; not a deficit |
+| HF failure τ = 8 | **current** (2026-08-31) — STILL_HELPS YES (+0.29 at 1 deg/s); HIT_MT NO |
+| HF high-cut (H(0)=1, fc = 0.05) | **current** (2026-08-31) — +0.44 at 1 deg/s, −0.29 at 5; wrong clinical end |
+| uniform amp + delay (independent, mtMix letter) | **current** (2026-08-31) — BOTH_IS_AMP YES; amp −0.087 / both −0.061 at 1 deg/s |
 | motion-letter healthy baseline, d′ = 1.32 | **current** (2026-08-17) at 0.3125 px/frame; the 1 deg/s seed-7 baseline is d′ = 4.51 (report §4.9) |
 | uniform versus non-uniform amplitude and delay lesions | **pre-mtMix** — the front-end conclusion probably survives, the MT numbers need re-measuring |
 | parasol-only and ON-only lesions | **invalid as biology** — measured on the midget-dominated MT |
 | the 114 campaign figures and metric CSVs | **gone** — those files were cleared; the scripts still exist. Current noise/compensation PNGs live in `explore/_figs/` and are tracked |
 
 One consolidated re-run would still clear most of the rest: the §4.7 lesion
-matrix, with the missing uniform amplitude-plus-delay cell added, through the
-two-stream MT, seeded. The low-pass neuron under `delay_random` is **done**
-(§4.7.5): it was spared.
+matrix through the two-stream MT, seeded (Figs 9–14). The independent uniform
+amplitude-plus-delay letter cell is **done** (§4.7.8): it is amplitude only.
+The low-pass neuron under `delay_random` is **done** (§4.7.5): it was spared.
 
 ---
 

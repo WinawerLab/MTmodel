@@ -1,0 +1,23 @@
+High-frequency failure HIGHCUT  2026-08-31 09:43:39
+letter C  seed 7  fc 0.050 cyc/fr  order 4  matched gain 0.6842
+elapsed 2.0 min  (not hf_lowpass; H(0)=1, no L1)
+
+deg/s    condition           dMt        dV1        ctrMt        ctrV1
+1.00     healthy          4.5104     0.0813       0.1090      -0.0453
+1.00     amp_matched      4.4778     0.0822       0.1002      -0.0444
+1.00     hf_cut           4.9465     0.0716       0.2090      -0.0245
+5.00     healthy          5.3092     0.0917       0.6839      -0.1052
+5.00     amp_matched      5.3129     0.0917       0.6697      -0.1034
+5.00     hf_cut           5.0153     0.0764       0.1874      -0.0143
+
+1 deg/s  Delta d' MT  amp -0.033  hf_cut +0.436
+         HIT_MT (hf_cut drop >0.10 and > amp drop):  NO
+         SELECTIVE (MT cost > V1 cost, hf_cut):  NO
+5 deg/s  Delta d' MT  amp +0.004  hf_cut -0.294
+         HIT_MT (hf_cut drop >0.10 and > amp drop):  YES
+         SELECTIVE (MT cost > V1 cost, hf_cut):  YES
+STILL_HELPS: YES — high-cut still raised d' at 1 deg/s by >0.10.
+HIGH_SPEED (positive cost at 5 larger than at 1):  YES
+
+HIT_MT is a signed cost vs amp_matched. Not exponential hf_lowpass.
+Do not overwrite explore/_figs/hf_failure/ or hf_failure_tau8/.

@@ -50,8 +50,11 @@ HF-failure first look (τ = 2) raised d′. `delay_random` through mtMix
 **spares the low-pass neuron** (high-pass −77%). Midget knockout on each
 neuron's own speed curve **survives** (§4.5): −61% at 0 px/fr vs −1% at 6.
 Letter −0.21 d′ at 1 deg/s (still easy). That lesion **plus Site-2 did not
-amplify** the gap (0.210 off / 0.215 on). **Next:** missing uniform
-amplitude+delay cell, or a stronger HF kernel. Site 1/3 remain. The model was
+amplify** the gap (0.210 off / 0.215 on). Uniform amp+delay together
+**BOTH_IS_AMP YES** (amp −0.087 / both −0.061 at 1 deg/s). HF τ = 8
+**STILL_HELPS YES** (+0.29 at 1 deg/s). HF high-cut **helps at 1
+(+0.44), costs at 5 (−0.29)** — wrong clinical end. **Next:** Site 1
+and Site 3, separately. The model was
 fully deterministic until 2026-08-28; that was the single biggest thing standing
 between it and the clinical question. Read the callout above before treating any
 result from this section as final.
@@ -81,13 +84,17 @@ has no observable yet — see §4.
    deterministic mean.** Figures:
    `explore/_figs/compensationIndex_speedCoherence/`. Full table in
    `NOISE_TRIAL_DESIGN.md` §3.2 and report §4.8.1.
-2. **High-frequency failure** as a change in filter shape. **First look
-   2026-08-29; prediction not confirmed.** `explore/runMotionLetterHfFailure.m`,
-   τ = 2 frames, matched gain k = 0.82. hf_shape **raised** MT d′ at 1 deg/s
-   (**+0.35**, 4.51 → 4.86) and a little at 5 deg/s (+0.08). Amplitude did
-   nothing. The printed `HIT_MT: YES` used |Δd′| — **do not quote it**. τ = 2
-   is not failure; it helped the letter. Still open: stronger τ or a real
-   high-cut. See `NOISE_TRIAL_DESIGN.md` §3.9.
+2. **High-frequency failure** as a change in filter shape. **Done as a
+   kernel family; not the slow-speed deficit.** Exponential τ = 2 and τ = 8
+   both *raised* d′ at 1 deg/s (+0.35 / +0.29). Passband-unity high-cut
+   2026-08-31 (`explore/runMotionLetterHfHighcut.m`, fc = 0.05, order 4,
+   k = 0.68): **+0.44 at 1 deg/s** (4.51 → 4.95) and **−0.29 at 5**
+   (5.31 → 5.02). HIT_MT YES only at 5. **STILL_HELPS YES. HIGH_SPEED YES**
+   (this time a real cost at 5). Center opponent at 5 collapsed (0.68 →
+   0.19). Amplitude did nothing. This is the §3.1 caution: HF failure
+   hits the **fast** letter. It is not clinical (b). Do not re-run
+   `hf_failure`, `hf_failure_tau8`, or `hf_highcut`. See
+   `NOISE_TRIAL_DESIGN.md` §3.9, §3.14, §3.15.
 3. **Noise, one site at a time.**
    - ~~**Site 2, Phase A (independent, V1 numerator).**~~ **Done 2026-08-28.**
      Fixed σ, injected into `N` in `shModelV1Normalization_Tuned` before the
@@ -140,11 +147,14 @@ came through the midget-dominated MT. The class-agnostic results probably surviv
 The cell-type-specific ones — parasol-only, ON-only — cannot be read as biology at
 all and must be redone. See `MODEL_AND_LESIONS.md` §5 for the full ledger.
 
-Two cells of the matrix:
+Two named cells of the matrix are now closed:
 
-- **uniform amplitude and uniform delay together.** Still never run. There is
-  no combined uniform condition anywhere. The only combined condition,
-  `coupled`, ties the two axes together rather than varying them independently.
+- ~~**uniform amplitude and uniform delay together.**~~ **Done 2026-08-31.**
+  `explore/runUniformAmpDelayMtMix.m`, two-stream MT, noise off.
+  **DELAY_NULL YES**, **BOTH_IS_AMP YES**, **SUPERADDITIVE NO.** Letter at
+  1 deg/s: healthy 4.510, amp 4.423 (−0.087), delay 4.536 (+0.025), both
+  4.449 (−0.061). Adding a uniform delay does not create a new letter
+  deficit. Not `coupled`. See report §4.7.8.
 - ~~**the low-pass neuron under `delay_random`.**~~ **Done 2026-08-29.**
   `explore/runDelayRandomLowpassMtMix.m`, two-stream MT. High-pass peak
   **−77%**; low-pass **0%**; bandpass −35%. Letter d′ at 1 deg/s **+0.37**.
@@ -162,14 +172,16 @@ small without noise (−0.21 d′ at 1 deg/s).
 both} × {uniform, non-uniform}, through the two-stream MT, **seeded**, with
 motion-letter d′ alongside Figs 9–14. `explore/validateSHFigs9to14_lesions.m`
 still does not seed and should not be extended as it stands. Do not re-run
-`explore/_figs/delayRandom_lowpass_mtMix/` or
-`explore/_figs/midget_speed_mtMix/` without renaming. Do not re-run
-`explore/_figs/midgetKo_site2_sigma005/` without renaming.
+`explore/_figs/delayRandom_lowpass_mtMix/`,
+`explore/_figs/midget_speed_mtMix/`,
+`explore/_figs/midgetKo_site2_sigma005/`, or
+`explore/_figs/uniformAmpDelay_mtMix/` without renaming.
 
 ~~**Next cell for the slow-speed story:** `explore/runMidgetSpeedTuningMtMix.m`~~
 **Done 2026-08-29.** GRADIENT YES. Site-2 on the letter: gap did **not**
-grow. **Next:** uniform amplitude and uniform delay *together*, or a
-stronger HF kernel.
+grow. Uniform amp+delay together: **BOTH_IS_AMP YES.** HF τ = 8:
+**STILL_HELPS YES.** HF high-cut: helps at 1, costs at 5. **Next:**
+Site 1 and Site 3, separately.
 
 ## 3. Re-read §1 and §2 against each other, repeatedly
 

@@ -132,7 +132,8 @@ Two cautions. First, this is a statement about which *model channels* carry high
 temporal frequencies. It is not a claim that large magnocellular axons are
 preferentially demyelinated in real patients; that is a separate empirical question
 and it has not been checked. Second, it pushes the deficit toward **high** speeds,
-which is the wrong end of the clinical axis (§5.5).
+which is the wrong end of the clinical axis (§5.5). **Measured 2026-08-31**
+(`hf_highcut`, §3.15): +0.44 d′ at 1 deg/s, −0.29 at 5. The caution holds.
 
 ---
 
@@ -279,10 +280,18 @@ architecture. So it should cost MT far more than a class-agnostic amplitude lesi
 of matched average size. Needs no noise.
 
 **First look (2026-08-29), τ = 2 frames:** the low-pass **raised** MT d′
-(+0.35 at 1 deg/s). Matched amplitude (k = 0.82) did nothing. That is not the
-predicted cost. τ = 2 is too mild — or L1-preserving low-pass is the wrong
-shape. See `NOISE_TRIAL_DESIGN.md` §3.9. Do not quote the script's `HIT_MT: YES`
-(|Δd′|).
+(+0.35 at 1 deg/s). Matched amplitude (k = 0.82) did nothing.
+
+**Stronger kernel (2026-08-31), τ = 8 frames:** still raised MT d′ (+0.29
+at 1 deg/s; k = 0.58). **HIT_MT NO. STILL_HELPS YES.** Do not quote the
+script's `HIGH_SPEED: YES` (both speeds still helped). Exponential
+**Passband-unity high-cut (2026-08-31), fc = 0.05 cyc/frame, order 4:**
+costs MT at 5 deg/s (−0.29 d′) and **raises** d′ at 1 (+0.44). Matched
+amplitude (k = 0.68) did nothing. HIT_MT is YES only at 5. This is
+parasol-selective in the sense §3.1 meant, and it hits the **wrong
+clinical end**. Exponential `hf_lowpass` never cost MT at all. See
+`NOISE_TRIAL_DESIGN.md` §3.15. Do not quote the τ = 2 `HIT_MT: YES`
+(|Δd′|) or the τ = 8 `HIGH_SPEED: YES`.
 
 ### 5.4 Recovery should separate latency from discriminability
 
@@ -361,7 +370,9 @@ deficit:
    holds for the deterministic mean.
 3. **High-frequency failure** as a change in filter shape (§5.3). Also no
    noise. ~~First look τ = 2.~~ **2026-08-29:** raised MT d′ (+0.35 at 1 deg/s),
-   not a deficit. Stronger kernel still open. `NOISE_TRIAL_DESIGN.md` §3.9.
+   not a deficit. ~~τ = 8.~~ **2026-08-31:** still raised d′ (+0.29 at 1
+   deg/s). HIT_MT NO. ~~High-cut.~~ **2026-08-31:** +0.44 at 1 deg/s,
+   −0.29 at 5. Wrong clinical end. `NOISE_TRIAL_DESIGN.md` §3.15.
 4. **Noise, one site at a time.**
    - ~~Site 2 Phase A (independent, V1 numerator, σ = 0.05, N = 50).~~ **Done
      2026-08-28.** Lesion+noise d′ 3.81 ± 0.083 vs healthy+noise 4.39 ± 0.033.
@@ -375,7 +386,11 @@ deficit:
      NO.** Same σ barely moved MT d′. `NOISE_TRIAL_DESIGN.md` §3.10.
    - ~~Midget knockout + V1 Site-2 (letter).~~ **Done 2026-08-29.
      NOISE_AMPLIFIES: NO.** Gap 0.21 off/on. `NOISE_TRIAL_DESIGN.md` §3.12.
-   - **Next:** Site 1 (`shClassV1Basis`) and Site 3 (read-out), separately.
+   - **Next (noise sites):** Site 1 (`shClassV1Basis`) and Site 3 (read-out),
+     separately. Independent uniform amp+delay letter is **done**
+     (`NOISE_TRIAL_DESIGN.md` §3.13): BOTH_IS_AMP YES. HF τ = 8 is **done**
+     (§3.14): STILL_HELPS YES. HF high-cut is **done** (§3.15): cost at 5,
+     boost at 1. **Next (noise sites):** Site 1 and Site 3, separately.
 5. **Temporal noise** — jitter per trial and Bernoulli dropout (§4.4). These are
    the ones with no deterministic counterpart at all.
 

@@ -2,7 +2,9 @@ function pars = lesionApply(parsBase, lesionName, varargin)
 % lesionApply  Apply a named lesion to a pars struct (fixed weights, no refit).
 %
 %   pars = lesionApply(parsBase, 'amplitude_uniform');
-%   pars = lesionApply(parsBase, 'hf_lowpass');   % kernel-shape HF failure
+%   pars = lesionApply(parsBase, 'amplitude_delay_uniform');  % gain AND delay, independent
+%   pars = lesionApply(parsBase, 'hf_lowpass');   % exponential (τ = 2 default)
+%   pars = lesionApply(parsBase, 'hf_highcut');   % passband-unity Butterworth
 %   pars = lesionApply(parsBase, 'delay_random', 'fieldSize', 128);
 %   pars = lesionApply(parsBase, 'amplitude_uniform_map', 'stimSize', [Y X]);
 %
@@ -26,6 +28,13 @@ switch lower(strrep(lesionName, '-', '_'))
     case 'delay_uniform'
         pars = localClassDelayAll(parsBase, cfg.uniformDelayFrames);
 
+    case {'amplitude_delay_uniform', 'uniform_amp_delay'}
+        % Independent uniform axes, not `coupled` (which ties maps).
+        pars = localClassGainAll(parsBase, cfg.uniformGain);
+        pars = localClassDelayAll(pars, cfg.uniformDelayFrames);
+        pars.rgc.mode = 'custom';
+        pars.rgc.classesMode = 'custom';
+
     case 'amplitude_parasol'
         pars = localClassGainName(parsBase, 'parasol', cfg.cellTypeGain);
 
@@ -37,6 +46,9 @@ switch lower(strrep(lesionName, '-', '_'))
 
     case {'hf_lowpass', 'high_frequency_failure'}
         pars = localHfLowpass(parsBase, cfg);
+
+    case {'hf_highcut', 'hf_passband'}
+        pars = localHfHighcut(parsBase, cfg);
 
     case 'amplitude_uniform_map'
         stimSz = localGetStimSize(extra);
@@ -168,6 +180,36 @@ for i = 1:numel(pars.rgc.classes)
         end
     end
     pars.rgc.classes(i).temporalKernel = k1;
+end
+pars.rgc.mode = 'custom';
+pars.rgc.classesMode = 'custom';
+end
+
+function pars = localHfHighcut(parsBase, cfg)
+% Frequency-domain low-pass on every class kernel: H(0) = 1, no L1 renorm.
+% Not the causal exponential (`hf_lowpass`). Butterworth |H(f)|^2 prototype,
+% real even H so the kernel stays real. Cuts above hfCutCycPerFrame.
+fc = cfg.hfCutCycPerFrame;
+ord = cfg.hfCutOrder;
+if ~isscalar(fc) || ~(fc > 0) || ~(fc < 0.5) || ~isfinite(fc)
+    error('lesionApply:hfCut', 'hfCutCycPerFrame must be in (0, 0.5) cyc/frame.');
+end
+if ~isscalar(ord) || ~(ord >= 1) || ~isfinite(ord)
+    error('lesionApply:hfCutOrder', 'hfCutOrder must be a positive scalar.');
+end
+
+pars = parsBase;
+for i = 1:numel(pars.rgc.classes)
+    k0 = pars.rgc.classes(i).temporalKernel(:);
+    n = numel(k0);
+    nfft = 2^nextpow2(max(256, 8 * n));
+    K = fft(k0, nfft);
+    f = (0:nfft-1)' / nfft;
+    fNy = min(f, 1 - f);
+    H = 1 ./ (1 + (fNy / fc).^(2 * ord));
+    H(1) = 1;
+    kPad = real(ifft(K .* H));
+    pars.rgc.classes(i).temporalKernel = kPad(1:n);
 end
 pars.rgc.mode = 'custom';
 pars.rgc.classesMode = 'custom';

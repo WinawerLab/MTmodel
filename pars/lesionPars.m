@@ -3,6 +3,7 @@ function cfg = lesionPars(varargin)
 %
 % Edit the DEFAULTS block below. Apply lesions with:
 %   pars = lesionApply(parsBase, 'amplitude_uniform');
+%   pars = lesionApply(parsBase, 'hf_highcut');              % H(0)=1 Butterworth
 %   pars = lesionApply(parsBase, 'delay_random', 'fieldSize', 128);
 %
 % Build a condition list for a script:
@@ -25,6 +26,8 @@ cfg = struct( ...
     ... % --- High-frequency failure (kernel shape; NOISE §3.1 / §5.3) ---
     'hfTauFrames',           2, ...     % causal exponential low-pass, frames
     'hfRenorm',              true, ...  % true: L1-match original (shape only)
+    'hfCutCycPerFrame',      0.05, ...  % Butterworth cutoff; parasol peak ~0.10
+    'hfCutOrder',            4, ...     % 4th-order; H(0)=1, no L1
     ... % --- Phase 2b stochastic (spatial maps) ---
     'stochasticAmpSeed',     42, ...
     'stochasticAmpRange',    [0.3 0.7], ...

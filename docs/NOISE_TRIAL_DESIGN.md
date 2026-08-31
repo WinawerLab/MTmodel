@@ -7,8 +7,11 @@ patchy** (2026-08-29): **did not diverge** at V1 Site-2 **or** MT Site-2.
 HF-failure first look (same day): τ = 2 **raised** d′, did not cost MT.
 `delay_random` through mtMix (same day): **SPARES_LOW** — high-pass −77%,
 low-pass 0%. Midget vs speed (own curves): **GRADIENT YES** (−61% / −1%). Midget + V1
-Site-2: **NOISE_AMPLIFIES NO** (gap 0.21 off/on). **Next:** uniform
-amplitude+delay, or a stronger HF kernel. Coherence × speed drive map done.
+Site-2: **NOISE_AMPLIFIES NO** (gap 0.21 off/on). Uniform amp+delay
+(independent): **BOTH_IS_AMP YES** (amp −0.087 / both −0.061 at 1 deg/s).
+HF τ = 8: **STILL_HELPS YES** (hf_shape +0.29 at 1 deg/s; HIT_MT NO).
+HF high-cut: **+0.44 at 1 deg/s, −0.29 at 5** (wrong clinical end).
+**Next:** Site 1 and Site 3, separately. Coherence × speed drive map done.
 
 This document is the contract for the noise work described in
 [`NOISE_AND_DEMYELINATION.md`](NOISE_AND_DEMYELINATION.md) §6 and [`TODO.md`](TODO.md) §3.
@@ -559,9 +562,9 @@ than at 5 (`HIGH_SPEED: NO`). Amplitude at k = 0.82 did almost nothing
 (normalization). Shape-only and raw agreed, so this is not just L1 renorm.
 
 **Reading:** τ = 2 is not high-frequency *failure*. It is a mild low-pass that
-helped the letter. The lesion is implemented; the parameter is wrong or the
-prediction needs a stronger high-cut. Still open: larger τ, or a high-cut that
-does not boost the slow letter.
+helped the letter. The lesion is implemented; a longer exponential is not
+failure either (§3.14). Next is a high-cut with passband gain 1. Do not
+overwrite this folder.
 
 ### 3.10 Uniform vs patchy with gaussian MT Site-2
 
@@ -613,16 +616,78 @@ is not more variable. This is **not** the uniform-amplitude JW pattern
 quote SLOW_MORE as Site-2 creating a slow-speed deficit. Letter+noise d′
 stays easy (~2.65).
 
-### 3.13 Next (do not skip ahead)
+### 3.13 Uniform amplitude + uniform delay (independent)
+
+`explore/runUniformAmpDelayMtMix.m`. Letter C, seed 7, lagged + mtMix, 1 and
+5 deg/s, noise off. Four conditions on the **same** movie per speed: healthy,
+`amplitude_uniform` (gain 0.5), `delay_uniform` (+2 frames), both via
+`lesionApply(..., 'amplitude_delay_uniform')`. **Not** `coupled`. 1.7 min.
+Output: `explore/_figs/uniformAmpDelay_mtMix/`.
+
+| deg/s | Healthy | Amp 0.5 | Delay +2 | Both |
+|-------|---------|---------|----------|------|
+| 1 | 4.510 | 4.423 | 4.536 | 4.449 |
+| 5 | 5.309 | 5.318 | 5.310 | 5.318 |
+
+Δ vs healthy at 1: amp **−0.087**, delay **+0.025**, both **−0.061**.
+**DELAY_NULL: YES.** **BOTH_IS_AMP: YES** (both − amp at 1 = +0.026).
+**SUPERADDITIVE: NO.** Combining a uniform delay with a 50% gain cut does
+not create a letter deficit the singles lack. This is still the
+normalization-absorbed amplitude story (§4.7.2 / §4.8), not a new mechanism.
+Do not call it `coupled`.
+
+### 3.14 High-frequency failure, stronger kernel (τ = 8)
+
+`explore/runMotionLetterHfFailureStronger.m`. Same geometry as §3.9, **τ =
+8 frames**, matched L1 gain **k = 0.580**, 2.6 min. Output:
+`explore/_figs/hf_failure_tau8/`. Do not overwrite `_figs/hf_failure/`.
+
+| deg/s | healthy MT | amp_matched | hf_shape | hf_raw |
+|-------|------------|-------------|----------|--------|
+| 1 | 4.510 | 4.453 (−0.058) | **4.804 (+0.294)** | 4.746 (+0.236) |
+| 5 | 5.309 | 5.316 (+0.006) | 5.415 (+0.105) | 5.395 (+0.086) |
+
+**HIT_MT: NO** (signed drop). **STILL_HELPS: YES.** Center opponent at 1
+deg/s rose (0.109 → 0.181), as at τ = 2. Amplitude at k = 0.58 still did
+almost nothing. Making the exponential four times slower did not turn a
+boost into a cost; it only slightly reduced the boost (+0.35 → +0.29).
+
+Printed `HIGH_SPEED: YES` because signed cost at 5 (−0.11) is “larger”
+than at 1 (−0.29). Both are still *raises*. **Do not quote HIGH_SPEED
+YES.** Exponential `hf_lowpass` (with or without L1 renorm) is not the
+§5.3 lesion. Passband-unity cut is **done** (§3.15): cost at 5, boost at 1.
+
+### 3.15 Passband-unity high-cut
+
+`explore/runMotionLetterHfHighcut.m`. Same letter geometry as §3.9. Lesion
+`hf_highcut`: 4th-order Butterworth, **H(0) = 1**, **no L1**, fc = 0.05
+cyc/frame, matched L1 gain **k = 0.684**, 2.0 min. Output:
+`explore/_figs/hf_highcut/`. Do not overwrite `hf_failure/` or
+`hf_failure_tau8/`.
+
+| deg/s | healthy MT | amp_matched | hf_cut |
+|-------|------------|-------------|--------|
+| 1 | 4.510 | 4.478 (−0.033) | **4.947 (+0.436)** |
+| 5 | 5.309 | 5.313 (+0.004) | **5.015 (−0.294)** |
+
+**HIT_MT: NO at 1, YES at 5.** **STILL_HELPS: YES.** **HIGH_SPEED: YES**
+(this time a real cost at 5; do not confuse with the τ = 8 flag). Center
+opponent at 1 rose (0.109 → 0.209); at 5 it **collapsed** (0.684 → 0.187).
+V1 d′ stayed ~0.07–0.09. Amplitude did nothing.
+
+This is the first HF kernel that costs MT, and it costs the **fast**
+letter. That is the §3.1 / §5.3 caution, not clinical (b). Cutting parasol
+TF makes the slow letter *easier*. Do not quote a single HIT_MT for this
+run. Do not try another exponential τ.
+
+### 3.16 Next (do not skip ahead)
 
 1. Do not re-run Phase A/B, V1 or MT uniform-vs-patchy, delay_random
-   low-pass, `midget_speed_mtMix`, or `midgetKo_site2_sigma005` for their
-   own sake. Do not mix V1 and MT Site-2.
-2. Missing matrix cell: uniform amplitude and uniform delay *together*.
-3. HF failure: only a new kernel (stronger τ or a real high-cut), not another
-   copy of τ = 2.
-4. Site 1 (`shClassV1Basis`) and Site 3 (read-out), separately.
-5. §5.1 remains untested at a site where `D` mixes space. Do not implement a
+   low-pass, `midget_speed_mtMix`, `midgetKo_site2_sigma005`,
+   `uniformAmpDelay_mtMix`, τ = 2 `hf_failure`, `hf_failure_tau8`, or
+   `hf_highcut` for their own sake. Do not mix V1 and MT Site-2.
+2. Site 1 (`shClassV1Basis`) and Site 3 (read-out), separately.
+3. §5.1 remains untested at a site where `D` mixes space. Do not implement a
    mixing `D` just to salvage the prediction without saying so.
 
 ---
