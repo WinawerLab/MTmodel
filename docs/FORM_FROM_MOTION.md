@@ -242,6 +242,143 @@ Next: step 3, `explore/formFromMotionSpeedCoherence.m`, run on the desktop
 from a private git bundle (not pushed: the branch mentions unpublished pilot
 data); then step 4, `explore/formFromMotionParasolGain.m`.
 
+### Step 3 results (2026-09-11, run on the desktop)
+
+`explore/formFromMotionSpeedCoherence.m`, commit c8add29: RGC noise SD 0.05,
+matched filters from 8 noise-free trials per letter, 40 trials per condition;
+the grid took 18 minutes on the desktop. Matched-filter proportion correct:
+
+| coherence | 0.15 deg/s | 0.3 | 0.6 | 1.25 | 2.5 | 5 | 10 | 20 |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 0.15 | 0.20 | 0.43 | 0.65 | 0.88 | 0.90 | 0.83 | 0.30 |
+| 0.75 | 0.08 | 0.13 | 0.28 | 0.53 | 0.68 | 0.83 | 0.80 | 0.15 |
+| 0.5 | 0.08 | 0.13 | 0.18 | 0.35 | 0.53 | 0.68 | 0.55 | 0.10 |
+| 0.25 | 0.08 | 0.10 | 0.08 | 0.23 | 0.35 | 0.35 | 0.35 | 0.10 |
+
+Joint fits (speeds up to 10 deg/s; the controls are the 10 current-code units,
+censored fits):
+
+| fit | `b` | σ |
+|---|---|---|
+| model, all coherences | −1.88 | 0.61 |
+| model, without 0.25 | −2.06 | 0.57 |
+| model, without 0.25 and 0.5 | −2.18 | 0.49 |
+| model, inside-minus-outside decoder | −1.85 | 0.68 |
+| controls, median (range) | −1.41 (−1.96 to −1.13) | 0.27 (0.14 to 0.76) |
+
+Fitted separately, the thresholds at coherence 1, 0.75, 0.5 and 0.25 are 0.83,
+1.58, 3.87 and 19.0 deg/s (σ 0.43, 0.52, 0.75, 0.95).
+
+What it shows:
+
+1. **The qualitative pattern is reproduced.** Performance rises with speed, and
+   lower coherence moves the curves to faster speeds and lowers them.
+2. **Threshold rises more steeply with falling coherence than in the controls.**
+   The per-coherence thresholds scale as about c^−2.2 at every step, so the model
+   trades speed against coherence roughly as speed × coherence² = constant,
+   where the controls are closer to speed × coherence. It is not an artifact of
+   the plateau at low coherence (point 3): removing the low coherences makes `b`
+   steeper, not shallower. A possible reason, not checked: the opponent MT
+   signal grows faster than linearly with coherence (d′ at 5 deg/s is 25, 18,
+   8.6 and 3.2 for coherences 1, 0.75, 0.5 and 0.25).
+3. **Each coherence has its own ceiling.** Peak proportion correct is 0.90,
+   0.82, 0.68 and 0.35, and the lapse rate sits at its bound (0.06) in every
+   fit. This is the partial ceiling of `SUMMARY.md` §5.1 (hypothesis 3, a
+   coherence floor), with a mechanism: faster dots cannot make up for low
+   coherence, because MT's drive falls again beyond about 5–10 deg/s. The joint
+   model cannot express a ceiling that depends on coherence; the A(c) model of
+   §5.1 could.
+4. **The curves are shallower than the controls'**, and more so at low
+   coherence, so the model's chance-corrected ratio curves rise more gradually
+   with relative speed.
+5. **Performance falls at 20 deg/s at every coherence**, beyond MT's fastest
+   tuning.
+
+### Full coherence: model against controls (2026-09-11)
+
+`explore/formFromMotionFullCoherence.m`. The model's coherence-1 trials (step 3)
+and each of the 10 control units' coherence-1 trials, fitted the same way: one
+psychometric function of log speed, chance 0.1, lapse at most 0.06.
+
+| | threshold | σ | proportion correct above 3× own threshold |
+|---|---|---|---|
+| model | 0.83 (model units) | 0.43 | 0.87 (120 trials) |
+| controls, median | 0.18 deg/s | 0.13 | 0.95 (38 trials; 9 of 10 units at 100%) |
+| controls, range | 0.10–0.56 | 0.01–0.62 | |
+
+Proportion correct against speed relative to each observer's own threshold:
+
+| speed ÷ own threshold | ≈0.75× | ≈1.4× | ≈2.4–3× | ≈4–6× | ≈12× |
+|---|---|---|---|---|---|
+| controls, trials pooled | 0.38 | 0.68 | 0.88 | 0.93 | 1.00 |
+| model | 0.43 | 0.65 | 0.88 | 0.90 | 0.83 |
+
+1. **Around threshold the model tracks the pooled controls closely**, from about
+   0.7× to 6× threshold. The individual control fits look much steeper (median
+   σ 0.13), but each rests on 50 staircase trials bunched near threshold, so
+   those slopes are poorly determined; the pooled trials point to a slope
+   nearer 0.25–0.3, like the joint fits, against the model's 0.43.
+2. **The difference is at the top.** The controls reach 100% whenever the
+   staircase took them well above threshold (only 1–4 trials per unit, apart
+   from wlsubj114_R). The model peaks near 0.90 and falls again beyond about
+   6× threshold, as MT's drive drops at high speed.
+3. **Below threshold there are no control data** to compare with the model's
+   lower tail.
+4. The model's threshold is about 4.6 times the controls' in deg/s; the model's
+   units make this a label, not a finding.
+
+### Letter confusions, and MT receptive-field size (2026-09-11)
+
+The question (JW) was whether a subset of letters reaches the model's own
+ceiling when accuracy is high (high coherence, high speed). It does: six of the
+ten are never missed. With the C, D and O templates correlating at 0.97–0.99,
+very little noise is needed to push those three off ceiling.
+
+**The model's shortfall from ceiling is mostly the round letters.** 200 trials
+at coherence 1 and 5 deg/s (desktop filters; the first 40 trials reproduced
+the desktop's exactly): 93.5% correct. Six letters (H, N, R, S, V, Z) were never
+missed. Of the 13 errors, C–O 6, D–O 4, C–D 1 — **85% within {C, D, O}** — and
+K–R 2. These are the letters whose expected MT maps are most alike (C–O
+r = 0.987, C–D 0.969, D–O 0.964; median pair 0.847).
+
+**The controls confuse them too, but they are a smaller share of their
+errors.** The 10 current-code units at coherence 1: 206 errors in 500 trials,
+mostly near threshold. D–O (7%) and C–O (6%) are the two most frequent pairs,
+but only **15%** of errors fall within {C, D, O}; the rest spread thinly (K–N,
+R–S, R–Z, …). O, D, C and also R are the humans' hardest letters. Caveat: most
+human errors are near threshold, where observers partly guess, while the
+model's are at 93.5% correct and systematic. A fair comparison needs
+confusions at matched accuracy.
+
+**MT receptive-field size.** The model's MT spatial extent combines the V1
+filter (σ ≈ 1.3 px), the complex-cell blur (σ 1.6 px) and MT pooling (σ 3.0 px),
+plus the parasol centre (σ 1.6 px) in the lagged model: σ ≈ 3.7–4 px, so
+2σ ≈ 0.75–0.8 deg everywhere (the model is not foveated). In macaque, MT's
+excitatory RF has 2σ ≈ eccentricity (JW). The C's opening is 0.5 deg high and
+centred 1.45 deg from the letter's centre, where a macaque MT RF would have
+2σ ≈ 1.45 deg: about twice the model's, and about three times the opening. So a
+biologically sized MT would blur the gap more, not less. If human reading
+depended only on single MT RFs at that size, the round letters should dominate
+human errors even more than they do in the model; they do not. Two
+possibilities, neither tested: a population read-out can resolve detail finer
+than one RF when noise is low (the matched filter separates C from O perfectly
+without noise, despite r = 0.987), and kinetic-boundary signals outside MT
+(V2/V3) may carry the fine form.
+
+### Internal noise against coherence: design (2026-09-11)
+
+The premise of the approach is that lowering coherence (external noise) acts
+like raising internal noise (JW). Before this run the model had several noise
+levels at one speed (5 deg/s) and one noise level across speed (step 3), which
+cannot test that. `explore/formFromMotionNoiseLevel.m` runs coherence 1 at RGC
+noise SD 0.05, 0.06, 0.07, 0.085, 0.10 and 0.12, across step 3's 8 speeds, 40
+trials each (SD 0.05 reproduces step 3's coherence-1 trials as a check). Every
+curve, noise and coherence alike, is fitted with a psychometric function whose
+ceiling is free (lapse up to 0.9), because each coherence has its own ceiling.
+The test: do the noise points and the coherence points trace one path in
+threshold, slope and ceiling? Both use the model's speed axis, so this does not
+depend on units.
+
 ### Step 4 design (2026-09-11)
 
 Lower the parasol gain with the RGC noise fixed, at coherence 1, across speed.
@@ -264,6 +401,13 @@ equivalent-noise account tested inside the model, on one speed axis.
   lesion in the model should likewise spare a static read-out (for example from
   V1 or the midget-bearing stream). Not yet built.
 - **Stimulus properties** (§4): dot size, density, trial length.
+- **MT receptive-field size.** Scale the MT pooling filter so 2σ ≈ 1.5 deg
+  (macaque MT at the C's opening) and see how performance and the C/D/O
+  confusions change. The model is not foveated, so this is one size at one
+  eccentricity, not a foveated MT.
+- **Confusions at matched accuracy.** Compare the model's and the controls'
+  confusion matrices where both are at similar proportion correct (for the
+  model, about 1.25 deg/s at coherence 1).
 
 A bug found on the way, and fixed: `explore/runMotionLetterDemo.m` resized the
 letter mask to the MT map instead of cropping it, and scored the V1 map with the
