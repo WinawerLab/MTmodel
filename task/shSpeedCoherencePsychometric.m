@@ -12,7 +12,8 @@ function proportionCorrect = shSpeedCoherencePsychometric(params, speed, coheren
 %             which is 55% correct when gamma = 0.1.
 %     b       exponent of threshold speed on coherence:
 %             threshold(c) = 10^mu0 * c^b. b = -1 means speed x coherence is
-%             constant at threshold.
+%             constant at threshold. NaN (a fit to one coherence) is allowed
+%             for evaluation at coherence 1 only.
 %     sigma   width of the curve, in log10 speed
 %     lambda  lapse rate
 %     gamma   chance level
@@ -34,6 +35,19 @@ function proportionCorrect = shSpeedCoherencePsychometric(params, speed, coheren
         coherence double {mustBePositive}
     end
 
-    z = (log10(speed)-params.mu0-params.b*log10(coherence))/params.sigma;
+    logCoherence = log10(coherence);
+    if isnan(params.b)
+        % A fit to a single coherence does not estimate b (it is reported as
+        % NaN), so it describes coherence 1 only, where the term is zero.
+        if any(abs(logCoherence(:)) > eps)
+            error("shSpeedCoherencePsychometric:noB", ...
+                "b was not estimated (NaN), so this fit can only be evaluated at coherence 1. " + ...
+                "Fit several coherences to estimate b.");
+        end
+        coherenceTerm = zeros(size(logCoherence));
+    else
+        coherenceTerm = params.b*logCoherence;
+    end
+    z = (log10(speed)-params.mu0-coherenceTerm)/params.sigma;
     proportionCorrect = params.gamma + (1-params.gamma-params.lambda)*0.5*erfc(-z/sqrt(2));
 end

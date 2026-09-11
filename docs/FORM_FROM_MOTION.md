@@ -109,6 +109,7 @@ lower signal-to-noise ratio), V1 (after normalization), MT. Off by default.
 | noise for steps 3 and 4 | RGC noise only, SD 0.05: the easiest condition (coherence 1, 5 deg/s) stays about 95% correct, as for the controls, and lower coherence and slower speeds are noise-limited. This replaces a first rule, "d′ ≈ 3", which left even the easiest condition at 45% correct (§5). V1 and MT noise are later checks |
 | step-3 grid | 8 speeds (0.15–20 deg/s) × 4 coherences (1, 0.75, 0.5, 0.25) × 40 trials, run locally (`explore/formFromMotionSpeedCoherence.m`) |
 | psychometric fit | speeds up to 10 deg/s only: beyond MT's fastest tuning performance falls again, which a rising psychometric function cannot describe |
+| step-4 lesion | gain of the 8 parasol classes × 1, 0.8, 0.65, 0.5, 0.35; midget classes untouched; RGC noise fixed at SD 0.05, added after the gain; weights not refitted; the observer keeps the healthy model's matched filters. Coherence 1, the same 8 speeds, 40 trials (`explore/formFromMotionParasolGain.m`) |
 | noise | additive, independent, fixed variance, at the OUTPUT of RGC, V1 and MT |
 | V1 noise site | after normalization, like the other two (not in the numerator) |
 | letter direction | random left/right on each trial, as in the booth |
@@ -239,7 +240,30 @@ ceiling, as for the controls, while low coherence clearly costs performance.
 
 Next: step 3, `explore/formFromMotionSpeedCoherence.m`, run on the desktop
 from a private git bundle (not pushed: the branch mentions unpublished pilot
-data).
+data); then step 4, `explore/formFromMotionParasolGain.m`.
+
+### Step 4 design (2026-09-11)
+
+Lower the parasol gain with the RGC noise fixed, at coherence 1, across speed.
+Reported: proportion correct; the mean and trial-to-trial SD of the true
+letter's matched-filter score (normalization may hold the mean while the
+variability grows); a psychometric fit per gain; the chance-corrected ratio to
+the healthy model beside Raz et al.'s patient-to-control curves (shapes only —
+Raz's axis lies below the model's speed range, and their values are not
+chance-corrected). If step 3's results are on the same machine, each gain is
+matched to the coherence whose ratio curve it resembles most: the
+equivalent-noise account tested inside the model, on one speed axis.
+
+### Open checks
+
+- **Per-condition matched filters.** Do filters built at other speeds or
+  coherences decode better than the single set built at coherence 1, 5 deg/s?
+- **V1 and MT noise** instead of RGC noise.
+- **The static control (Raz's feature 2).** Raz's patients kept 83–91% of normal
+  performance on a static, luminance-defined object even when acute. A parasol
+  lesion in the model should likewise spare a static read-out (for example from
+  V1 or the midget-bearing stream). Not yet built.
+- **Stimulus properties** (§4): dot size, density, trial length.
 
 A bug found on the way, and fixed: `explore/runMotionLetterDemo.m` resized the
 letter mask to the MT map instead of cropping it, and scored the V1 map with the
