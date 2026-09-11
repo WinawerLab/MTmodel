@@ -42,6 +42,11 @@ end
 nume = pop;
 normwts = ones(size(pop, 2), size(deno, 2))';
 pop = pars.scaleFactors.mtPattern.*pop./(normstrength.*deno*normwts' + mtsigma.^2);
+mtSd = shNoiseSd(pars, 'mtSd');
+if mtSd > 0
+    % Site-3 noise: late noise on the MT output (docs/NOISE_AND_DEMYELINATION.md 4.1).
+    pop = pop + mtSd * randn(size(pop));
+end
 
 varargout{1} = pop;
 varargout{2} = ind;

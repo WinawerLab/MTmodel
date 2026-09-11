@@ -70,6 +70,12 @@ function [pop, ind] = shModelV1ComplexForMt(stimulus, pars)
         error('shModelV1ComplexForMt:delayValue', 'mtMix.delay must be a non-negative integer.');
     end
 
+    % Both streams rebuild the RGC basis. They read out the same retina, so
+    % they must see the same RGC noise: fix its seed once, here.
+    if shNoiseSd(pars, 'rgcSd') > 0 && isempty(pars.noise.seed)
+        pars.noise.seed = randi(2^31 - 1);
+    end
+
     % --- stream A: fast magnocellular drive (parasol-masked weights) ---
     parsA = pars;
     parsA.rgc.v1Weights = mix.weightsA;

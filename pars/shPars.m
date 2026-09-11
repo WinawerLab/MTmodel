@@ -111,6 +111,25 @@ function pars = shPars(preset)
     pars.mtBaseline = .1;                           % Baseline response of MT neurons.
     pars.mtExponent = 2;                            % Exponent to which MT neuron responses are raised.
 
+    %%%%% INTERNAL NOISE -- off by default
+    % Additive Gaussian noise on the OUTPUT of each of the three stages,
+    % independent across positions, frames and neurons (the sites of
+    % docs/NOISE_AND_DEMYELINATION.md 4.1). Each SD is in that stage's own
+    % response units. With every SD 0 no random numbers are drawn and the model
+    % is bit-identical to the noise-free one.
+    %   rgcSd  each RGC class channel, AFTER its gain and any impairment, so a
+    %          lower gain means a lower signal-to-noise ratio. Lagged copies of
+    %          one cell type (names ending _lagN) share one noise movie,
+    %          delayed by N frames.
+    %   v1Sd   the V1 output, AFTER V1 normalization ('tuned' only). MT pools
+    %          it before its own normalization, so MT's gain still acts on it.
+    %   mtSd   the MT output, AFTER MT normalization ('tuned' only).
+    %   seed   seeds the RGC noise. Leave it empty: each run then draws its own,
+    %          and shModelV1ComplexForMt fixes it once per run so that both MT
+    %          streams see the SAME retina. A fixed seed gives every run the
+    %          same RGC noise.
+    pars.noise = struct('rgcSd', 0, 'v1Sd', 0, 'mtSd', 0, 'seed', []);
+
     %%%% COMPUTE SCALE FACTORS
     % Scale factors are derived from the legacy (no-RGC) path so any
     % subsequent weight fit has the correct normalization reference.

@@ -22,10 +22,19 @@ function [S, ind, nCols] = shClassV1Basis(M, pars)
 
     % --- per-class channels, causal trim, then ON/OFF readout offset ---
     nClass = numel(classes);
+    rgcSd = shNoiseSd(pars, 'rgcSd');
+    if rgcSd > 0
+        rgcNoise = localRgcNoise(mSz, classes, rgcSd, pars);
+    end
     chTrim = cell(1, nClass);
     for c = 1:nClass
         ch = localClassChannel(M, classes(c));
         ch = shApplyRgcImpairment(ch, pars.rgc);   % optic-neuritis deficit (no-op unless enabled)
+        if rgcSd > 0
+            % Site-1 noise, after gain and impairment: a weaker cell has a
+            % worse signal-to-noise ratio (docs/NOISE_AND_DEMYELINATION.md 4.1).
+            ch = ch + rgcNoise{c};
+        end
         ch = ch(:, :, fsz:end);
         off = classes(c).readoutOffset;
         if numel(off) == 2 && any(off ~= 0)
@@ -72,6 +81,50 @@ function [S, ind, nCols] = shClassV1Basis(M, pars)
 end
 
 % =====================================================================
+% One noise movie per RGC, not per class. The lagged classes of a preset
+% (names ending _lagN) are delayed copies of one cell type, so they share that
+% cell's noise, delayed by N frames: noise_N(t) = noise_0(t - N). Drawing it
+% independently for each lag would average the noise down four-fold in the
+% read-out. Classes without a lag suffix each get their own noise.
+%
+% With pars.noise.seed set, the noise comes from a private stream, so that the
+% two MT streams -- which each rebuild this basis -- see the same retina.
+function noise = localRgcNoise(mSz, classes, sd, pars)
+    seed = [];
+    if isfield(pars.noise, 'seed')
+        seed = pars.noise.seed;
+    end
+    if isempty(seed)
+        stream = RandStream.getGlobalStream;
+    else
+        stream = RandStream('mt19937ar', 'Seed', seed);
+    end
+
+    nClass = numel(classes);
+    base = cell(1, nClass);
+    lags = zeros(1, nClass);
+    for c = 1:nClass
+        base{c} = classes(c).name;
+        tok = regexp(classes(c).name, '^(.*)_lag(\d+)$', 'tokens', 'once');
+        if ~isempty(tok)
+            base{c} = tok{1};
+            lags(c) = str2double(tok{2});
+        end
+    end
+    [~, ~, group] = unique(base, 'stable');
+
+    maxLag = max(lags);
+    nT = mSz(3);
+    noise = cell(1, nClass);
+    for g = 1:max(group)
+        src = sd * randn(stream, mSz(1), mSz(2), nT + maxLag);
+        for c = find(group(:)' == g)
+            first = maxLag - lags(c) + 1;
+            noise{c} = src(:, :, first:first + nT - 1);
+        end
+    end
+end
+
 function ch = localClassChannel(M, class)
 % One class channel [Y X T]: spatial RF -> rectify -> causal temporal filter ->
 % per-class gain. spatialRF = [] means a delta (single-pixel) RF, i.e. no spatial

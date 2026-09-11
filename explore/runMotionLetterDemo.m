@@ -69,9 +69,12 @@ for pIdx = 1:numel(presets)
     v1Opp = mean(squeeze(shGetSubPop(popV1, indV1, jR)) - ...
                  squeeze(shGetSubPop(popV1, indV1, jL)), 3);
 
-    mask = imresize(double(info.binaryMask), size(mtOpp), 'nearest') > 0.5;
-    dMt = localDprime(mtOpp, mask);
-    dV1 = localDprime(v1Opp, mask);
+    % Each map is a CROP of the stimulus grid, and the V1 and MT maps are
+    % different sizes, so each gets the letter mask cropped to its own size.
+    maskMt = shCropToOutput(info.binaryMask, size(mtOpp));
+    maskV1 = shCropToOutput(info.binaryMask, size(v1Opp));
+    dMt = localDprime(mtOpp, maskMt);
+    dV1 = localDprime(v1Opp, maskV1);
 
     fprintf('  MT pair: %5.1f deg @ %.3f  vs %5.1f deg @ %.3f px/frame\n', ...
         rad2deg(mtVels(iR,1)), mtVels(iR,2), rad2deg(mtVels(iL,1)), mtVels(iL,2));
@@ -88,7 +91,8 @@ for pIdx = 1:numel(presets)
     results(r).dV1 = dV1;
     results(r).mtPair = mtVels([iR iL], :);
     results(r).v1Pair = v1Dirs([jR jL], :);
-    results(r).mask = mask;
+    results(r).maskMt = maskMt;
+    results(r).maskV1 = maskV1;
 end
 
 %% ---- Figure: stimulus and single-frame invisibility of the letter -------
@@ -122,16 +126,16 @@ tiledlayout(2, 3, 'Padding', 'compact', 'TileSpacing', 'compact');
 
 for r = 1:numel(results)
     nexttile;
-    localShowMap(results(r).v1Opp, results(r).mask);
+    localShowMap(results(r).v1Opp, results(r).maskV1);
     title(sprintf('V1 opponent — %s\nd'' = %.2f', results(r).name, results(r).dV1));
 
     nexttile;
-    localShowMap(results(r).mtOpp, results(r).mask);
+    localShowMap(results(r).mtOpp, results(r).maskMt);
     title(sprintf('MT opponent — %s\nd'' = %.2f', results(r).name, results(r).dMt));
 
     nexttile;
-    inVals = results(r).mtOpp(results(r).mask);
-    outVals = results(r).mtOpp(~results(r).mask);
+    inVals = results(r).mtOpp(results(r).maskMt);
+    outVals = results(r).mtOpp(~results(r).maskMt);
     histogram(outVals, 40, 'Normalization', 'pdf', 'FaceAlpha', 0.55); hold on;
     histogram(inVals, 40, 'Normalization', 'pdf', 'FaceAlpha', 0.55); hold off;
     grid on; legend({'background', 'letter'}, 'Location', 'best', 'FontSize', 8);
@@ -163,7 +167,7 @@ for k = 1:3
     [pM, iM] = shModel(s, pars, 'mtPattern');
     [iR, iL] = localOpponentPair(pars.mtPopulationVelocities, inf_.dotSpeedPxPerFrame);
     ctlMaps{k} = mean(squeeze(shGetSubPop(pM,iM,iR)) - squeeze(shGetSubPop(pM,iM,iL)), 3);
-    mk = imresize(double(inf_.binaryMask), size(ctlMaps{k}), 'nearest') > 0.5;
+    mk = shCropToOutput(inf_.binaryMask, size(ctlMaps{k}));
     ctlD(k) = localDprime(ctlMaps{k}, mk);
     staticCue = localDprime(mean(s, 3), inf_.binaryMask);
     fprintf('  %-24s  MT d'' = %+.3f   (static-luminance d'' = %+.4f)\n', ...

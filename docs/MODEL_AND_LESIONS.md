@@ -406,45 +406,76 @@ units were driven off their peak, and their small effects are partly confounded
 with that. This is suggestive, not settled. The proper test is per-neuron speed
 tuning with alpha on and off.
 
-### 4.6 MT recovers a motion-defined letter; V1 barely does
+### 4.6 V1 and MT both recover a motion-defined letter
+
+> **Corrected 2026-09-11.** The numbers first recorded here (MT d′ +1.32, V1 +0.23)
+> came from two bugs in `explore/runMotionLetterDemo.m`. First, it resized the
+> letter mask to the size of the MT map. But a model map is a **crop** of the
+> stimulus grid — each stage trims its filter support — so the resized letter was
+> shrunk and misaligned. Second, it scored the V1 map, which is larger than the MT
+> map, with that same MT-sized mask, so V1 was compared against a scrambled set of
+> pixels. Both are fixed (`model/shCropToOutput.m`). Re-run with the old mask
+> method, the same conditions reproduce the recorded values to within 0.06; with
+> the fix they give the values below. The old heading, "MT recovers a
+> motion-defined letter; V1 barely does", was an artifact of the V1 bug. (The demo
+> itself now runs at 1 px/frame, where the derivative preset gives MT +5.52 and V1
+> +6.87.)
 
 `stim/mkMotionLetter.m` builds a Regan-style motion-defined letter: the dots inside
 the letter drift one way, the background dots drift the other. This is the
 stimulus for deficit (b). Seeded, 0.3125 px/frame (1.6 deg/s at the current
-anchor; it was run and reported as 5 deg/s under SH's), letter 'C', 128×128×120, from
-`explore/runMotionLetterDemo.m`:
+anchor; it was first run and reported as 5 deg/s under SH's), letter 'C',
+128×128×120, with the settings of `explore/runMotionLetterDemo.m`:
 
-| stage | derivative preset | lagged preset |
+| stage | derivative preset | lagged preset* |
 |---|---|---|
-| V1 opponent d′ | +0.23 | +0.22 |
-| MT opponent d′ | **+1.32** | **+1.32** |
+| V1 opponent d′ | +5.00 | +4.63 |
+| MT opponent d′ | **+5.35** | **+5.24** |
 
-The two RGC presets are indistinguishable, which is what you want for a healthy
-stimulus and is the right baseline for lesioning.
+\*The demo builds its lagged preset by hand, which gives the **single-stream** MT
+(no `pars.rgc.mtMix`). The two-stream MT has not been measured on this stimulus.
+
+The two RGC presets still agree closely, which is what you want for a healthy
+stimulus and is the right baseline for lesioning. V1 and MT are also close: with
+correct masks, V1's opponent map separates the letter nearly as well as MT's.
 
 Three controls establish that the separation really is based on motion:
 
 | control | MT d′ |
 |---|---|
-| opposite drift (the Regan stimulus) | +1.32 |
-| static background | +1.30 |
-| **same drift, no relative motion** | **−0.34** |
+| opposite drift (the Regan stimulus) | +5.35 |
+| static background | +4.89 |
+| **same drift, no relative motion** | **−0.31** |
 
 There is no static cue to exploit: d′ on the time-averaged image is −0.008, on a
 single frame −0.002, and dot coverage is 0.3025 inside the letter against 0.3124
 outside.
 
-MT d′ is **flat** across the clinical band, while V1's weaker opponent signal does
-rise with speed (96×96 field, derivative preset, seeded):
+How d′ depends on speed (96×96 field, derivative preset, letter 'C', seed 7, the
+demo's other settings; measured 2026-09-11 with the corrected masks):
 
 | px/frame | deg/s | MT opponent d′ | V1 opponent d′ |
 |---|---|---|---|
-| 0.0625 | 0.31 | 1.31 | 0.18 |
-| 0.1250 | 0.63 | 1.31 | 0.26 |
-| 0.3125 | 1.56 | 1.29 | 0.31 |
-| 0.6000 | 3.0 | 1.31 | 0.33 |
-| 1.0000 | 5.0 | 1.34 | 0.33 |
-| 3.0000 | 15.0 | 1.29 | 0.32 |
+| 0.0625 | 0.31 | 4.06 | 1.03 |
+| 0.1250 | 0.63 | 4.32 | 2.38 |
+| 0.3125 | 1.56 | 4.52 | 4.76 |
+| 0.6000 | 3.0 | 4.77 | 5.88 |
+| 1.0000 | 5.0 | 4.84 | 6.35 |
+| 3.0000 | 15.0 | 4.62 | 5.80 |
+
+MT d′ changes little across the band (4.1 to 4.8). V1 d′ rises steeply with
+speed: V1 is well below MT at the slowest speeds, and above it from about 0.3
+px/frame (1.6 deg/s) up. One possible reason, not checked: MT pools over a larger
+area, which blurs the letter's edges.
+
+The table recorded here before 2026-09-11 (MT flat at 1.29–1.34, V1 0.18–0.33)
+used the buggy mask method **and** settings that were not recorded: re-running the
+demo's settings with the old method does not reproduce it. Its numbers are
+therefore withdrawn rather than corrected.
+
+Note what this d′ measures: letter pixels against background pixels **within one
+map**. It is not discriminability across trials, which needs trial-to-trial
+variability and so internal noise (`docs/FORM_FROM_MOTION.md`).
 
 An earlier claim that MT d′ improved with speed came from a broken opponent-unit
 selector, since fixed.
@@ -662,7 +693,7 @@ Caveats on this measurement:
 | MT's measured speed tuning | **current** (2026-08-25) |
 | two-stream MT reproduces Maunsell's knockouts | **current** (2026-08-14) |
 | midget dependence graded by speed | **current but confounded** — one fixed grating for all units (§4.5) |
-| motion-letter healthy baseline, d′ = 1.32 | **current** (2026-08-17) |
+| motion-letter healthy baseline | **corrected** 2026-09-11: MT d′ +5.35, V1 +5.00 (derivative). The old +1.32 / +0.23 came from a mask bug (§4.6) |
 | compensation index | **current** (2026-08-19) |
 | uniform versus non-uniform amplitude and delay lesions | **pre-mtMix** — the front-end conclusion probably survives, the MT numbers need re-measuring |
 | parasol-only and ON-only lesions | **invalid as biology** — measured on the midget-dominated MT |

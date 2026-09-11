@@ -386,8 +386,7 @@ function d = angleDiff(a, b)
     d = abs(atan2(sin(a - b), cos(a - b)));
 end
 
+% The MT map is a crop of the stimulus grid, not a rescaling (shCropToOutput).
 function mask = localMaskOnGrid(fullMask, outY, outX)
-    fullMask = double(fullMask);
-    mask = imresize(fullMask, [outY outX], 'nearest');
-    mask = mask > 0.5;
+    mask = shCropToOutput(fullMask, [outY outX]);
 end

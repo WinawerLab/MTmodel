@@ -28,6 +28,13 @@ nume = pop * pars.scaleFactors.v1Complex;
 normwts = shModelV1Normalization_TunedWts(popdirs, popdirs)';
 normwts = normwts*pars.scaleFactors.v1NormalizationPopulationK;
 pop = nume./(normstrength.*deno*normwts + v1sigma.^2);
+v1Sd = shNoiseSd(pars, 'v1Sd');
+if v1Sd > 0
+    % V1 noise on the output, after normalization, like the RGC and MT noise.
+    % MT's linear stage pools it before MT's own normalization, so MT's gain
+    % still acts on it (docs/NOISE_AND_DEMYELINATION.md 4.2).
+    pop = pop + v1Sd * randn(size(pop));
+end
 
 varargout{1} = pop;
 varargout{2} = ind;

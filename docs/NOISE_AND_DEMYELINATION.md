@@ -357,6 +357,23 @@ decisions would change the sign of several predictions.
 5. **Temporal noise** — jitter per trial and Bernoulli dropout (§4.4). These are
    the ones with no deterministic counterpart at all.
 
+> **Built 2026-09-11, on branch `form-from-motion`.** `pars.noise` (see `shPars`)
+> adds independent Gaussian noise to the **output** of each stage: `rgcSd` on each
+> RGC class channel, after its gain and any impairment, so a weaker cell has a
+> worse signal-to-noise ratio; `v1Sd` on the V1 output, after V1 normalization;
+> and `mtSd` on the MT output. This departs from item 4 as written: JW chose to
+> put the V1 noise **after** normalization, like the other two, rather than in
+> the numerator. The gain mechanism of §4.2 still acts on it one stage later,
+> because MT's linear stage pools the noisy V1 output before MT's own
+> normalization. Lagged RGC classes share one noise movie per cell type, delayed
+> by their lag. Every SD defaults to 0, and at 0 the output is unchanged.
+>
+> Of the decisions below, one has now been taken: the noise has **fixed
+> variance** — it does not scale with the response. The others are still open.
+> The noise is independent across space and time, and dropout and jitter are
+> not built. The first use is the form-from-motion task
+> (`docs/FORM_FROM_MOTION.md`).
+
 ### Decisions that have to be made first
 
 - **Does the noise scale with the response, or have fixed variance?**
