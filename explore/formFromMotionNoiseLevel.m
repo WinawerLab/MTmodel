@@ -80,7 +80,7 @@ tiledlayout(1, 2, TileSpacing="compact");
 nexttile
 if hasStep3
     semilogx(step3.speedsDegPerSec, step3.proportionMatched.', "o-", LineWidth=1.4)
-    legend("coherence " + string(step3.coherences), Location="northwest")
+    legend("coherence " + string(step3.coherences), Location="northwest", AutoUpdate="off")
 end
 yline(chance, "k:")
 ylim([0 1])
@@ -90,7 +90,7 @@ title("Lower coherence (noise SD 0.05)")
 grid on
 nexttile
 semilogx(speedsDegPerSec, proportionMatched.', "o-", LineWidth=1.4)
-legend("noise SD " + string(noiseSds), Location="northwest")
+legend("noise SD " + string(noiseSds), Location="northwest", AutoUpdate="off")
 yline(chance, "k:")
 ylim([0 1])
 xlabel("dot speed (model deg/s)")

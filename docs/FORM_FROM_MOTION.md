@@ -238,9 +238,9 @@ lands near SD 0.1, where even the easiest condition is 45% correct and coherence
 0.25 is at chance. **SD 0.05 was chosen (JW):** the easiest condition stays near
 ceiling, as for the controls, while low coherence clearly costs performance.
 
-Next: step 3, `explore/formFromMotionSpeedCoherence.m`, run on the desktop
-from a private git bundle (not pushed: the branch mentions unpublished pilot
-data); then step 4, `explore/formFromMotionParasolGain.m`.
+Done on the desktop: step 3, step 4 and the noise-level run (results below).
+The branch travels as a private git bundle and is not pushed, because it
+mentions unpublished pilot data.
 
 ### Step 3 results (2026-09-11, run on the desktop)
 
@@ -273,14 +273,14 @@ What it shows:
 
 1. **The qualitative pattern is reproduced.** Performance rises with speed, and
    lower coherence moves the curves to faster speeds and lowers them.
-2. **Threshold rises more steeply with falling coherence than in the controls.**
-   The per-coherence thresholds scale as about c^−2.2 at every step, so the model
-   trades speed against coherence roughly as speed × coherence² = constant,
-   where the controls are closer to speed × coherence. It is not an artifact of
-   the plateau at low coherence (point 3): removing the low coherences makes `b`
-   steeper, not shallower. A possible reason, not checked: the opponent MT
-   signal grows faster than linearly with coherence (d′ at 5 deg/s is 25, 18,
-   8.6 and 3.2 for coherences 1, 0.75, 0.5 and 0.25).
+2. **~~Threshold rises more steeply with falling coherence than in the
+   controls.~~ Wrong — see "Ceilings, refitted" below.** With the lapse rate
+   capped at 0.06, the fitted thresholds scale as about c^−2.2. An earlier
+   version of this note said this was not caused by the low-coherence plateau,
+   because removing the low coherences made `b` steeper. That test was flawed:
+   it kept the near-1 ceiling on the coherences that remained, and even
+   coherence 0.75 levels off at 0.81. A fit forced to one common ceiling reads a
+   lower plateau as a rightward shift.
 3. **Each coherence has its own ceiling.** Peak proportion correct is 0.90,
    0.82, 0.68 and 0.35, and the lapse rate sits at its bound (0.06) in every
    fit. This is the partial ceiling of `SUMMARY.md` §5.1 (hypothesis 3, a
@@ -293,6 +293,46 @@ What it shows:
    with relative speed.
 5. **Performance falls at 20 deg/s at every coherence**, beyond MT's fastest
    tuning.
+
+### Ceilings, refitted (2026-09-11)
+
+The step-3 trials refitted with a **free ceiling** for each coherence (lapse
+rate up to 0.9), at speeds up to 10 deg/s. Threshold here is each curve's
+midpoint, halfway between chance and its own ceiling. Figure:
+`explore/_figs/formFromMotionCeilingFits.png` (made interactively; not yet a
+script).
+
+| coherence | ceiling | threshold (midpoint) | σ |
+|---|---|---|---|
+| 1 | 0.87 | 0.73 deg/s | 0.34 |
+| 0.75 | 0.81 | 1.09 | 0.34 |
+| 0.5 | 0.61 | 1.25 | 0.28 |
+| 0.25 | 0.35 | 1.25 (poorly determined: the curve is nearly a step) | 0.03 |
+
+Slope of log threshold on log coherence: **`b` = −0.33**. The joint model of
+`SUMMARY.md` §5.1 — power-law threshold, shared σ, a ceiling per coherence —
+gives **`b` = −0.59**, σ 0.31, ceilings 0.88, 0.79, 0.61 and 0.39.
+
+1. **In the model, lower coherence mainly lowers the ceiling;** it moves the
+   curve along speed only a little. The steep `b` of the capped-lapse fits was
+   an artifact of forcing one common ceiling.
+2. **This differs from the controls in degree, not entirely in kind.** Most
+   control curves mainly shift along speed (`b` −1.2 to −1.4) and still reach
+   ceiling, but some controls in some conditions also level off at low
+   accuracy, as the model does at low coherence (JW): KM100 at coherence 0.10,
+   wlsubj221_R and wlsubj178_L at 0.25 (the series censored in `SUMMARY.md`).
+   In the model every coherence below 1 is capped, even 0.75 (at 0.81); in the
+   controls only the lowest coherences are, in a few units. A likely reason, not
+   tested: MT's drive in the model peaks near 5 deg/s, only about 6× above the
+   full-coherence threshold, and falls beyond it, so faster dots cannot make up
+   for a weaker signal. The controls were tested up to about 20× their threshold
+   without running out of drive. That ratio does not depend on units, so this is
+   a real structural difference between the model and the observers.
+3. **A possible link to the patients (a suggestion only):** Raz's patients
+   never regain 100% of control even at fast speeds, which pure coherence
+   reduction in the psychometric model could not produce (`SUMMARY.md` §5,
+   §8). In this model, lowering the signal-to-noise ratio does lower the
+   ceiling.
 
 ### Full coherence: model against controls (2026-09-11)
 
@@ -379,6 +419,67 @@ The test: do the noise points and the coherence points trace one path in
 threshold, slope and ceiling? Both use the model's speed axis, so this does not
 depend on units.
 
+### Lower gain or more noise: how they relate in the model (2026-09-11)
+
+JW did not mean to distinguish a lower gain at fixed noise (step 4) from more
+noise at fixed gain (the noise-level run), and it is not known how the two
+differ in optic neuritis: conduction block removes signal (like a gain loss),
+while jitter and dispersion add noise.
+
+In the model the two are nearly the same thing. RGC noise is added after the
+gain, so a channel carries gain × signal + noise, and dividing by the gain k
+shows that **gain k at noise SD s equals gain 1 at noise SD s/k**, provided
+everything downstream scales with its input. It almost does: the V1 filters are
+linear, the complex-cell stage squares, and divisive normalization divides by
+pooled energy that scales the same way, so the factor cancels. The exception is
+the constant in each normalization denominator (σ², the semi-saturation
+constant), which becomes σ²/k². So a gain loss equals a noise increase **plus**
+a contrast-like loss of drive against a fixed constant. Where the drive is well
+above that constant the two are identical; where it is weak they diverge. The
+compensation index (`MODEL_AND_LESIONS.md` §4.8) says that compensation is
+substantial but incomplete, so the difference should be modest.
+
+A second, smaller difference: step 4 lowers only the parasol gain, while the
+noise run adds noise to every RGC class. MT takes 90% of its drive from the
+parasol-only stream.
+
+**Prediction:** at matched signal-to-noise ratio, a gain loss should cost most
+where MT's drive is weakest — the slow speeds, where Raz's patients are worst.
+**It did not hold:** at matched ratio the two gave the same proportion correct at
+every speed, to within one binomial standard error (results below).
+
+The two runs already pair up at matched ratio: parasol gain 0.5 ↔ noise SD
+0.10 exactly; gains 0.8 and 0.65 ↔ SD ≈ 0.063 and 0.077, bracketed by the noise
+run's 0.06, 0.07 and 0.085.
+
+### Contrast response at the default gain (2026-09-11)
+
+`explore/formFromMotionContrastResponse.m`, no internal noise. A calibration
+(JW): one V1 unit (355 deg, 0.81 px/frame) and one MT unit (0 deg, 1 px/frame),
+each driven by a drifting grating at its preferred spatial frequency and speed
+(found by search: V1 0.16 cyc/px, 0.13 cyc/frame; MT 0.12 cyc/px, 0.12
+cyc/frame), at 16 Michelson contrasts from 0.001 to 1, with every RGC class at
+gain 1 (the default), 0.5, 0.25 and 0.125.
+
+| | c50 at default gain | saturates by | letter dots, as grating contrast (coh 1 / 0.5 / 0.25) |
+|---|---|---|---|
+| V1 | 0.048 | about 0.3 | 0.026 / 0.022 / 0.020 |
+| MT | 0.043 | about 0.3 | 0.044 / 0.026 / 0.019 |
+
+1. **At the default gain the contrast response is sigmoidal over 0–1** (on log
+   contrast) for both neurons, half-maximal near 4–5% contrast and saturating
+   by about 30%.
+2. **Lower gain shifts the curve along contrast, as it must:** each lower-gain
+   curve matches the default curve at contrast × gain to within 1% of the
+   maximum. Contrast and gain enter the model only as their product.
+3. **The letter task is a low-contrast stimulus for these neurons.** A uniform
+   field of the task's dots (5 deg/s, area-weighted, 50% coverage, 100 ms
+   lifetime) drives them like a grating of only 2–4.5% contrast: at or below
+   c50, on the steep part of the curve. Lower coherence lowers it further, as a
+   contrast-like loss of drive for a direction-tuned neuron. So the task works
+   where a loss of gain or contrast costs response quickly, not on the
+   saturated plateau.
+
 ### Step 4 design (2026-09-11)
 
 Lower the parasol gain with the RGC noise fixed, at coherence 1, across speed.
@@ -390,6 +491,60 @@ Raz's axis lies below the model's speed range, and their values are not
 chance-corrected). If step 3's results are on the same machine, each gain is
 matched to the coherence whose ratio curve it resembles most: the
 equivalent-noise account tested inside the model, on one speed axis.
+
+### Step 4 and the noise-level run: results (2026-09-11, desktop)
+
+Both ran on the desktop from commit 8200346 (22 and 26 minutes), and both
+reproduced step 3's healthy trials exactly. Matched-filter proportion correct at
+coherence 1:
+
+| condition | 0.15 deg/s | 0.3 | 0.6 | 1.25 | 2.5 | 5 | 10 | 20 |
+|---|---|---|---|---|---|---|---|---|
+| healthy (gain 1, noise SD 0.05) | 0.15 | 0.20 | 0.43 | 0.65 | 0.88 | 0.90 | 0.83 | 0.30 |
+| parasol gain 0.8 | 0.15 | 0.18 | 0.40 | 0.58 | 0.70 | 0.88 | 0.78 | 0.20 |
+| parasol gain 0.65 | 0.15 | 0.18 | 0.20 | 0.48 | 0.63 | 0.73 | 0.60 | 0.13 |
+| parasol gain 0.5 | 0.13 | 0.13 | 0.15 | 0.33 | 0.43 | 0.50 | 0.40 | 0.13 |
+| parasol gain 0.35 | 0.10 | 0.10 | 0.10 | 0.20 | 0.23 | 0.28 | 0.23 | 0.13 |
+| noise SD 0.06 | 0.13 | 0.18 | 0.40 | 0.58 | 0.73 | 0.88 | 0.78 | 0.23 |
+| noise SD 0.07 | 0.15 | 0.18 | 0.23 | 0.53 | 0.68 | 0.78 | 0.70 | 0.18 |
+| noise SD 0.085 | 0.15 | 0.15 | 0.18 | 0.38 | 0.63 | 0.58 | 0.53 | 0.10 |
+| noise SD 0.10 | 0.13 | 0.13 | 0.15 | 0.25 | 0.43 | 0.50 | 0.38 | 0.13 |
+| noise SD 0.12 | 0.10 | 0.10 | 0.13 | 0.18 | 0.33 | 0.33 | 0.25 | 0.13 |
+
+Free-ceiling fits (speeds up to 10 deg/s; threshold = curve midpoint), for all
+three manipulations (figure: `explore/_figs/formFromMotionThreeManipulations.png`,
+made interactively):
+
+| manipulation | levels | threshold (model deg/s) | ceiling |
+|---|---|---|---|
+| lower coherence | 1, 0.75, 0.5, 0.25 | 0.73, 1.09, 1.25, 1.25 | 0.87, 0.81, 0.61, 0.35 |
+| more RGC noise | SD 0.05, 0.06, 0.07, 0.085, 0.10, 0.12 | 0.73, 0.82, 0.98, 1.05, 1.25, 1.29 | 0.87, 0.82, 0.74, 0.58, 0.44, 0.30 |
+| lower parasol gain | 1, 0.8, 0.65, 0.5, 0.35 | 0.73, 0.83, 0.98, 1.05, 1.13 | 0.87, 0.82, 0.67, 0.45, 0.24 |
+
+1. **More internal noise looks like lower coherence, qualitatively.** Both
+   mainly lower the ceiling with a modest shift to faster speeds, and both keep
+   the drop at 20 deg/s. At a matched ceiling, lower coherence shifts the
+   threshold somewhat further (ceiling ≈ 0.81: coherence 0.75 at 1.09 deg/s,
+   noise SD 0.06 at 0.82), and costs relatively more at slow-to-middle speeds.
+   With 40 trials per point this difference is suggestive, not established.
+2. **A lower gain and more noise are interchangeable at matched
+   signal-to-noise ratio.** Mean absolute difference in proportion correct over
+   the 8 speeds: gain 0.8 vs SD 0.06, 0.009 (largest 0.025); gain 0.65 vs SD
+   0.077 (interpolated), 0.017 (0.042); gain 0.5 vs SD 0.10, 0.013 (0.075). The
+   binomial standard error of one point is up to 0.079. Their fitted paths
+   separate somewhat at large lesions, but the fits are loose where ceilings
+   are low; the raw curves agree.
+3. **A parasol-gain loss lowers performance at every speed, mostly by lowering
+   the ceiling.** Above about 1 deg/s, where the healthy model is well above
+   chance, the lesioned/healthy chance-corrected ratio rises with speed,
+   qualitatively like Raz's patients. Below that the healthy model is near
+   chance and the ratio — including the upturn at slow speeds in the step-4
+   figure — is not meaningful. The step-4 script's equivalent-coherence table
+   used capped-lapse fits and should not be relied on.
+4. **The true letter's matched-filter score falls and grows more variable as
+   the gain drops** (5 deg/s: mean 0.87 → 0.34, SD 0.035 → 0.16). This score is
+   a correlation with the expected map, not the raw MT response, so it cannot
+   show whether normalization holds up the mean response.
 
 ### Open checks
 
@@ -405,6 +560,12 @@ equivalent-noise account tested inside the model, on one speed axis.
   (macaque MT at the C's opening) and see how performance and the C/D/O
   confusions change. The model is not foveated, so this is one size at one
   eccentricity, not a foveated MT.
+- **Mean response against variability under a gain loss.** Measure the MT
+  response amplitude itself (not the matched-filter correlation) with and
+  without the lesion, to see whether normalization holds up the mean while
+  the variability grows (`NOISE_AND_DEMYELINATION.md` §4.2).
+- **Step 4's ratio and equivalent coherence with free-ceiling fits.** The
+  script's versions use capped-lapse fits.
 - **Confusions at matched accuracy.** Compare the model's and the controls'
   confusion matrices where both are at similar proportion correct (for the
   model, about 1.25 deg/s at coherence 1).
