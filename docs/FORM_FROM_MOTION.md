@@ -546,6 +546,48 @@ made interactively):
    a correlation with the expected map, not the raw MT response, so it cannot
    show whether normalization holds up the mean response.
 
+### Why lower coherence lowers the ceiling: headroom (2026-09-12)
+
+JW's question: is the model's narrow range of speeds, from threshold to best
+performance, what makes lower coherence show up as a lower ceiling rather than a
+higher threshold? The step-3 numbers say yes. Fitting log d′ (matched filter,
+true letter) over the rising part of the curves, 0.3–2.5 deg/s:
+
+- **d′ ≈ coherence^1.1 × speed^1.06**, within about 12% (residual SD 0.17 in
+  log2 units). Speed and coherence act on d′ separately, so on this stretch
+  lowering coherence is the same as lowering speed. At fixed d′ the threshold
+  moves as **coherence^−1.05**, inside the controls' range (mean b = −1.24,
+  range −0.92 to −1.65).
+- **But d′ peaks at 5 deg/s** and falls after it. At noise SD 0.05, full
+  coherence reaches its ceiling only at that peak; the noise level was chosen to
+  make the *best* condition about 95% correct, and the best condition is at the
+  peak. So there is no headroom: a lower-coherence curve reaches the peak before
+  it gets high enough, and its ceiling drops.
+- The noise-level run is separable in the same way: **d′ ∝ (noise SD)^−1.88 ×
+  speed^1.0**.
+
+**What would widen the range.** Not more MT units at higher speeds: the 6
+px/frame tier already exists and peaks at about 18 deg/s, limited by V1 (§4.3 of
+`MODEL_AND_LESIONS.md`). Not more V1 neurons at the same scale: the 28 V1 neurons
+are exactly a 28-dimensional basis (`rank(shQwts(pars.v1PopulationDirections))`
+= 28), so a new direction at this scale is a mix of the same filters. The limit
+is the single spatial scale (peak 0.21 cycles/pixel, about 2 cycles/deg) with the
+50 Hz frame rate capping temporal frequency at 25 Hz: about 2 px/frame (10 deg/s)
+is the fastest well-represented speed. Faster channels need a coarser spatial
+scale with the same temporal filters. The existing pyramid (`pars.nScales`,
+`shBlurDn3`) shrinks time along with space, so each of its scales prefers the
+same speed; it would need a space-only level, a check of the RGC-to-V1 weights at
+that scale, and a decoder that combines scales. That only helps if the letter
+signal keeps rising at faster speeds; coarse scales see a blurrier letter.
+
+**The cheaper test: less internal noise.** Lowering the noise raises d′
+everywhere, so full coherence reaches its ceiling at slower speeds and leaves
+headroom. Extrapolating the noise exponent, at SD 0.02 full coherence should
+reach about 0.88 correct near 0.7 deg/s and coherence 0.25 the same near 5 deg/s:
+mostly a shift along speed. `explore/formFromMotionLowNoise.m` reruns step 3 at
+SD 0.03 and 0.02 with the same seeds and filters (2,560 runs, sent to the
+desktop). It drops the "easiest condition about 95%" rule for these runs.
+
 ### Open checks
 
 - **Per-condition matched filters.** Do filters built at other speeds or
