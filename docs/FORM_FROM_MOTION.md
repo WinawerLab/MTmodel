@@ -148,6 +148,17 @@ flatten, and four of the ten newer units have one.
 | speeds | staircase, 0.009–4 deg/s | fixed grid, chosen for the model's own MT tuning | absolute thresholds cannot be compared (`UNITS_AND_SCALE.md` §6) |
 | observer | human, 10-AFC | template decoder that knows the 10 letters and where they are | an ideal read-out of MT, not a model of the whole observer |
 
+**What the dots look like (2026-09-13).** One frame was drawn two ways from the
+same dot positions (same seed and the same number of dots; a scratch render, not
+in the repo): booth-like, 4-px round dots at 100 px/deg, and the model's 0.4-px
+area dots at 10 px/deg. The booth-like frame shows distinct white dots covering
+35% of the area (pixel SD 0.24). Averaged into 0.1° pixels, its SD is 0.068 and
+it correlates 0.86 with the model's frame (SD 0.084). So the model's frame is
+close to the booth image seen through 0.1° pixels: the dots vanish because each
+model pixel is 2.5 dot diameters wide, not because of how they are drawn. The
+model's frame is brighter on average (0.75 against 0.68) because it adds the
+areas of overlapping dots, where the booth draws an overlap only once.
+
 The last two rows mean the comparison with data is about **shape**: the
 coherence exponent `b`, the slope σ, and the chance-corrected ratio curves — not
 threshold values.
