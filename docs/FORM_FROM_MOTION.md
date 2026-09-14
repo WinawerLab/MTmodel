@@ -556,8 +556,9 @@ true letter) over the rising part of the curves, 0.3–2.5 deg/s:
 - **d′ ≈ coherence^1.1 × speed^1.06**, within about 12% (residual SD 0.17 in
   log2 units). Speed and coherence act on d′ separately, so on this stretch
   lowering coherence is the same as lowering speed. At fixed d′ the threshold
-  moves as **coherence^−1.05**, inside the controls' range (mean b = −1.24,
-  range −0.92 to −1.65).
+  moves as **coherence^−1.05**, close to the controls (mean b = −1.24 over the
+  units in SUMMARY.md, range −0.92 to −1.65; median −1.41 for the 10
+  current-code units' censored fits).
 - **But d′ peaks at 5 deg/s** and falls after it. At noise SD 0.05, full
   coherence reaches its ceiling only at that peak; the noise level was chosen to
   make the *best* condition about 95% correct, and the best condition is at the
@@ -587,6 +588,40 @@ reach about 0.88 correct near 0.7 deg/s and coherence 0.25 the same near 5 deg/s
 mostly a shift along speed. `explore/formFromMotionLowNoise.m` reruns step 3 at
 SD 0.03 and 0.02 with the same seeds and filters (2,560 runs, sent to the
 desktop). It drops the "easiest condition about 95%" rule for these runs.
+
+### Lower internal noise: results (2026-09-13, desktop)
+
+Ran from commit 4011534 (38 minutes). Free-ceiling fits per coherence (speeds up
+to 10 deg/s), and the joint fit with the controls' rule (lapse at most 0.06):
+
+| RGC noise SD | ceilings, c = 1 / 0.75 / 0.5 / 0.25 | thresholds (model deg/s) | joint b |
+|---|---|---|---|
+| 0.05 (step 3) | 0.87 / 0.81 / 0.61 / 0.35 | 0.73 / 1.09 / 1.25 / 1.25 | −1.88 |
+| 0.03 | 0.98 / 0.95 / 0.83 / 0.56 | 0.49 / 0.63 / 0.82 / 1.21 | −1.71 |
+| 0.02 | 0.99 / 0.93 / 0.91 / 0.74 | 0.37 / 0.44 / 0.63 / 1.09 | −1.27 |
+| controls (10 current-code units, censored fits) | | | median −1.41, range −1.96 to −1.13 |
+
+1. **Headroom helps, as predicted, down to coherence 0.5.** At SD 0.02 the
+   ceilings for coherence 1–0.5 are 0.91–0.99, the thresholds spread along
+   speed, and the joint b (−1.27) is inside the controls' range.
+2. **Coherence 0.25 stays capped (ceiling 0.74).** The extrapolation failed
+   there because lowering internal noise raises d′ much less at low coherence:
+   at 5 deg/s, d′ rose 5.1× at coherence 1 (25.5 → 130) but only 2.3× at
+   coherence 0.25 (3.2 → 7.3). At low coherence the limiting noise is the dots'
+   own randomness, which internal noise does not touch. The earlier noise-free
+   check agrees: at no internal noise, coherence 0.25 at 5 deg/s was 0.70
+   correct (20 trials).
+3. **The speed–coherence trade-off on the rising limb does not depend on the
+   noise.** The fit of §"headroom" gives an implied exponent of −1.05, −1.06 and
+   −1.07 at SD 0.05, 0.03 and 0.02, although both exponents grow (coherence 1.12
+   → 1.45, speed 1.06 → 1.35) as the dots' noise takes a larger share.
+4. **The drop at 20 deg/s remains** at every noise level, as expected.
+
+So for the lowest coherence the ceiling is set by how much letter signal the dots
+carry within the model's speed window. Only channels that keep responding at
+faster speeds (a coarser spatial scale, §"headroom") could raise it. With 40
+trials per point a proportion correct has a standard error up to 0.08, and the
+single-coherence fit at 0.25 is loose.
 
 ### Open checks
 
