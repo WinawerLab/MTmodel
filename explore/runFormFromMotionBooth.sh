@@ -10,12 +10,23 @@
 # 3. The "analysis" job combines them and makes the tables and figures.
 # 4. The results are copied into <resultsFolder>, which also gets one log per job.
 #
-# Set MATLAB=/path/to/matlab if matlab is not on the PATH. Works in bash 3.2.
+# MATLAB: set MATLAB=/path/to/matlab to choose one. Otherwise matlab on the PATH
+# is used, or else the newest /Applications/MATLAB_R*.app (a zsh alias for
+# matlab is not visible to this script). Works in bash 3.2.
 
 set -u
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 results="${1:?Give a folder for the logs and results}"
 matlab="${MATLAB:-matlab}"
+if ! command -v "$matlab" > /dev/null 2>&1; then
+    newest="$(ls -d /Applications/MATLAB_R*.app 2> /dev/null | tail -1)"
+    if [ -z "$newest" ]; then
+        echo "MATLAB was not found. Set MATLAB=/path/to/matlab and run again."
+        exit 1
+    fi
+    matlab="$newest/bin/matlab"
+fi
+echo "Using $matlab"
 mkdir -p "$results"
 cd "$repo" || exit 1
 
@@ -23,30 +34,38 @@ runJob() {
     "$matlab" -batch "jobs = \"$1\"; run('explore/formFromMotionBooth.m')" > "$results/booth_$1.log" 2>&1
 }
 
+showFailure() {
+    echo "The $1 job failed. The end of its log, $results/booth_$1.log:"
+    tail -20 "$results/booth_$1.log"
+}
+
 echo "$(date): building the templates and matched filters"
 if ! runJob filters; then
-    echo "The filters job failed; see $results/booth_filters.log"
+    showFailure filters
     exit 1
 fi
 
 echo "$(date): starting 5 parallel jobs"
+parallelJobs=(coherence1 coherence2 coherence3 coherence4 model1s)
 pids=()
-for job in coherence1 coherence2 coherence3 coherence4 model1s; do
+for job in "${parallelJobs[@]}"; do
     runJob "$job" &
     pids+=($!)
 done
 failed=0
-for pid in "${pids[@]}"; do
-    wait "$pid" || failed=1
+for k in "${!pids[@]}"; do
+    if ! wait "${pids[$k]}"; then
+        showFailure "${parallelJobs[$k]}"
+        failed=1
+    fi
 done
 if [ "$failed" -ne 0 ]; then
-    echo "At least one job failed; see the logs in $results"
     exit 1
 fi
 
 echo "$(date): combining the jobs"
 if ! runJob analysis; then
-    echo "The analysis job failed; see $results/booth_analysis.log"
+    showFailure analysis
     exit 1
 fi
 cp explore/_figs/formFromMotionBooth* "$results/"
