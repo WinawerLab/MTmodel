@@ -634,6 +634,59 @@ faster speeds (a coarser spatial scale, §"headroom") could raise it. With 40
 trials per point a proportion correct has a standard error up to 0.08, and the
 single-coherence fit at 0.25 is loose.
 
+### The booth stimulus (2026-09-13)
+
+If the model cannot reach ceiling without internal noise, it cannot match the
+controls. Before concluding that, the stimulus should match the experiment. The
+earlier trials differed in trial length (1 s against 4 s), field (10 × 10° against
+12.7 × 9.5°), and dot rendering: 0.4-px dots were drawn as area straight into
+0.1° pixels, which sums overlapping dots where the booth draws an overlap once.
+
+JW's point: a person in the booth sees the individual 2.4-arcmin dots, so human
+RGCs resolve them. A foveal midget cell's centre is about one cone (~1 arcmin),
+and parasol centres are several times larger. The model's midget centre σ is
+0.08° (about 5 arcmin, already flagged in `MODEL_AND_LESIONS.md` as 2–4× too
+large), on 0.1° pixels, so the model cannot resolve the dots. That is a limit of
+the model, left for later (open checks). The run below keeps the model as it is
+and matches the stimulus.
+
+What was built:
+
+- `stim/boothDisplay.m`: the booth's parameters from the experiment code
+  (Parameters.m, setupDisplay.m, runSingleTrial.m): 1280 × 960 px at 100.66
+  px/deg, 85 frames/s, 4-s trials, white 4-px anti-aliased dots on grey, 50%
+  coverage per population (48,892 dots each), 100-ms lifetime, 282-px Sloan
+  letter (168 arcmin).
+- `stim/mkBoothLetterMovie.m`: draws every booth frame by runSingleTrial.m's
+  rules (staggered lifetimes and replotting, noise dots with their own fixed
+  headings, letter or background membership by rounded position), with
+  anti-aliased disks resolved to 1/16 px and overlaps blended as Psychtoolbox
+  blends them. Each frame is averaged into 10 × 10 blocks (one model pixel,
+  0.0993°), and the frames shown during each 20-ms model frame are averaged in
+  time. A trial is 96 × 128 model pixels × 200 frames; the MT output is 60 × 92 ×
+  192.
+- Checked: the letter is 283 booth px tall. At 1 model px/frame, frame-to-frame
+  correlation peaks at +1 px inside the letter (0.80) and at −1 px in the
+  background (0.80).
+- `shLetterTemplates(..., BoothDisplay=booth)` draws the letters at booth
+  resolution and averages them into model pixels (majority rule), and
+  `shRunLetterTrials` draws booth trials whenever its templates were built this
+  way. The earlier path is unchanged.
+- Cost on the laptop: 7.7 s to draw a trial and 13.7 s for the model (5.9× a 1-s
+  trial), with a peak of 4.4 GB per MATLAB process.
+
+The run is `explore/formFromMotionBooth.m`: no internal noise, the step-3 grid (8
+speeds × 4 coherences × 40 trials) with the booth stimulus, and the same grid
+without noise on the step-3 stimulus for comparison.
+`explore/runFormFromMotionBooth.sh` runs it on the desktop as one job for the
+templates and matched filters, then five parallel MATLAB processes (one per
+coherence, plus the comparison), then the analysis.
+
+For this run the departures table's rows on dot size, overlap, trial length and
+field no longer apply. What remains: the frame rate (the 85-Hz frames are
+averaged into 50 frames/s), the 0.7% difference in pixel size, and the model's
+own receptive fields.
+
 ### Open checks
 
 - **Per-condition matched filters.** Do filters built at other speeds or
@@ -654,6 +707,11 @@ single-coherence fit at 0.25 is loose.
   the variability grows (`NOISE_AND_DEMYELINATION.md` §4.2).
 - **Step 4's ratio and equivalent coherence with free-ceiling fits.** The
   script's versions use capped-lapse fits.
+- **RGC receptive-field size and pixel size.** A person in the booth sees the
+  2.4-arcmin dots; foveal midget centres are about a cone wide (~1 arcmin). The
+  model's midget centre σ is 0.08° on 0.1° pixels and cannot resolve them. A
+  finer grid with smaller RGC centres would also need V1 filters rescaled to it,
+  at a much larger computational cost.
 - **Confusions at matched accuracy.** Compare the model's and the controls'
   confusion matrices where both are at similar proportion correct (for the
   model, about 1.25 deg/s at coherence 1).
