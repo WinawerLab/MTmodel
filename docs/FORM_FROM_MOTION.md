@@ -729,6 +729,33 @@ coherence acts like more internal noise) and step 4 can now be retested. A
 1,280-run booth grid is about 6 hours of computation, about 1.5 hours on the
 desktop split into four parallel jobs.
 
+### The booth stimulus with internal noise: design (2026-09-14)
+
+`explore/formFromMotionBoothNoise.m` adds RGC noise back on the booth stimulus,
+with the no-noise run's seeds and matched filters. Twelve conditions, each 8
+speeds × 40 trials:
+
+- coherence families (all four coherences) at RGC noise SD 0.01 and 0.02;
+- a noise family at coherence 1: SD 0.035, 0.05, 0.07 and 0.1, which with SD 0,
+  0.01 and 0.02 makes seven levels.
+
+The levels come from extrapolating the 1-s runs. There, at 5 deg/s, the part of
+d′ limited by internal noise scaled as about coherence^1.9 (coherence 1: 143;
+coherence 0.25: 10.8, at SD 0.02). Assuming a 4-s trial doubles it, SD 0.01–0.02
+should leave coherence 0.25 near ceiling at its best speed, and SD 0.05 should
+pull it well below. The questions:
+
+1. Up to what noise level does every coherence still reach ceiling, as in the
+   controls? That is the model's human-like operating point, and the level for
+   step 4.
+2. The premise: does more noise at coherence 1 trace the same path, in threshold,
+   ceiling and slope, as lower coherence at a fixed noise level?
+
+`explore/runFormFromMotionBoothNoise.sh` runs the twelve jobs as parallel MATLAB
+processes (six at a time by default, about 4.5 GB each), then the analysis. It was
+checked with a fake MATLAB (the job pool and the failure report) and with fake
+trials (the analysis and figures), not at full scale on the laptop.
+
 ### Open checks
 
 - **Per-condition matched filters.** Do filters built at other speeds or
