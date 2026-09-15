@@ -687,6 +687,48 @@ field no longer apply. What remains: the frame rate (the 85-Hz frames are
 averaged into 50 frames/s), the 0.7% difference in pixel size, and the model's
 own receptive fields.
 
+### The booth stimulus without internal noise: results (2026-09-14, desktop)
+
+Ran from commit 1c3af70 as parallel jobs: each booth coherence took about 91
+minutes of computation, the 1-s comparison 60. Matched-filter proportion correct,
+no internal noise:
+
+| stimulus, coherence | 0.15 deg/s | 0.3 | 0.6 | 1.25 | 2.5 | 5 | 10 | 20 |
+|---|---|---|---|---|---|---|---|---|
+| booth, 1 | 0.38 | 0.75 | 0.98 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+| booth, 0.75 | 0.30 | 0.60 | 0.93 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+| booth, 0.5 | 0.25 | 0.43 | 0.85 | 0.95 | 1.00 | 1.00 | 0.98 | 0.98 |
+| booth, 0.25 | 0.13 | 0.23 | 0.48 | 0.75 | 0.93 | 1.00 | 0.95 | 0.93 |
+| 1 s, 1 | 0.25 | 0.50 | 0.93 | 0.95 | 0.98 | 0.98 | 1.00 | 0.90 |
+| 1 s, 0.75 | 0.30 | 0.43 | 0.70 | 0.88 | 0.93 | 0.93 | 0.98 | 0.85 |
+| 1 s, 0.5 | 0.20 | 0.30 | 0.50 | 0.83 | 0.95 | 0.93 | 0.98 | 0.60 |
+| 1 s, 0.25 | 0.20 | 0.20 | 0.33 | 0.55 | 0.70 | 0.78 | 0.80 | 0.38 |
+
+1. **With the booth stimulus, every coherence reaches ceiling without internal
+   noise.** Coherence 0.25 reaches 1.00 at 5 deg/s (40 of 40; the 95% lower bound
+   is about 0.93), and 0.93–0.95 from 2.5 to 20 deg/s. With the earlier stimulus
+   it peaks at 0.80. The earlier cap came from the stimulus, not the model's
+   architecture, so the model can reach the controls' ceilings.
+2. **Lower coherence now moves the curve along speed.** Free-ceiling fits:
+   thresholds 0.21, 0.26, 0.34 and 0.72 deg/s, ceilings 1.00, 1.00, 0.99 and
+   0.97. The controls' joint fit gives b = −0.99 and σ = 0.31 (the controls'
+   current-code units: b median −1.41, range −1.96 to −1.13; σ median 0.27). The
+   model's b is just outside the controls' range, on the shallow side; its σ is
+   typical.
+3. **No drop at 20 deg/s** (0.93–1.00), although d′ still falls above 5 deg/s
+   (coherence 1: 591 at 5 deg/s, 276 at 20).
+4. **Where the gain comes from, roughly.** At 5 deg/s, d′ rose 1.9× at coherence
+   1 (307 → 591) and 4.6× at coherence 0.25 (9.9 → 45.8). A trial 4× longer
+   would give about 2× if the dots' noise averaged like independent samples. The
+   larger gain at low coherence suggests the booth rendering (overlaps drawn
+   once, anti-aliased dots) and the larger field also matter. The run does not
+   separate them.
+
+With internal noise added back on the booth stimulus, the premise (lower
+coherence acts like more internal noise) and step 4 can now be retested. A
+1,280-run booth grid is about 6 hours of computation, about 1.5 hours on the
+desktop split into four parallel jobs.
+
 ### Open checks
 
 - **Per-condition matched filters.** Do filters built at other speeds or
