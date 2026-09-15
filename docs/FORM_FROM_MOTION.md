@@ -808,6 +808,26 @@ carries over, then at SD 0.02 parasol gains of about 0.57, 0.4, 0.29 and 0.2 wou
 behave like SD 0.035, 0.05, 0.07 and 0.1 here. That equivalence has not been
 checked on the booth stimulus.
 
+### Step 4 on the booth stimulus: design (2026-09-15)
+
+JW chose RGC noise SD 0.02 as the operating point: the largest level at which
+every coherence still reaches ceiling. `explore/formFromMotionBoothParasolGain.m`
+lowers the gain of the parasol classes to 0.8, 0.65, 0.5 and 0.35 at that noise
+level (coherence 1, the booth stimulus, the same seeds and matched filters). Gain
+1 is the noise run's condition at SD 0.02 and coherence 1, so there are four jobs.
+The analysis:
+
+- checks the equivalence directly: each gain k against the noise run's
+  coherence-1 curves interpolated to SD 0.02/k;
+- puts the gain family on the threshold–ceiling–slope plot with more noise and
+  lower coherence (SD 0.02), all from free-ceiling fits;
+- gives the lesioned-to-healthy chance-corrected ratio against speed from the
+  free-ceiling fits, which replaces the capped-lapse version of the 1-s step 4.
+
+`explore/runFormFromMotionJobs.sh <script> <numJobs> <resultsFolder>` is a
+general form of the noise run's launcher, for any script with jobs "job1" to
+"jobN" and "analysis".
+
 ### Open checks
 
 - **Per-condition matched filters.** Do filters built at other speeds or
