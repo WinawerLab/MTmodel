@@ -756,6 +756,58 @@ processes (six at a time by default, about 4.5 GB each), then the analysis. It w
 checked with a fake MATLAB (the job pool and the failure report) and with fake
 trials (the analysis and figures), not at full scale on the laptop.
 
+### The booth stimulus with internal noise: results (2026-09-15, desktop)
+
+Ran from commit a758f98, six jobs at a time. Each job took about 2.1 hours of
+computation, 31 hours in all. Matched-filter proportion correct (SD 0 is the
+no-noise run):
+
+| RGC noise SD, coherence | 0.15 deg/s | 0.3 | 0.6 | 1.25 | 2.5 | 5 | 10 | 20 |
+|---|---|---|---|---|---|---|---|---|
+| 0, 1 | 0.38 | 0.75 | 0.98 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+| 0, 0.25 | 0.13 | 0.23 | 0.48 | 0.75 | 0.93 | 1.00 | 0.95 | 0.93 |
+| 0.01, 1 | 0.43 | 0.68 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+| 0.01, 0.75 | 0.33 | 0.53 | 0.85 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+| 0.01, 0.5 | 0.33 | 0.38 | 0.70 | 0.95 | 1.00 | 1.00 | 0.98 | 0.98 |
+| 0.01, 0.25 | 0.18 | 0.30 | 0.45 | 0.68 | 0.93 | 1.00 | 0.90 | 0.90 |
+| 0.02, 1 | 0.35 | 0.53 | 0.80 | 1.00 | 1.00 | 1.00 | 1.00 | 0.98 |
+| 0.02, 0.75 | 0.30 | 0.40 | 0.70 | 0.98 | 1.00 | 1.00 | 1.00 | 0.93 |
+| 0.02, 0.5 | 0.28 | 0.40 | 0.55 | 0.85 | 1.00 | 1.00 | 0.98 | 0.85 |
+| 0.02, 0.25 | 0.28 | 0.28 | 0.33 | 0.58 | 0.83 | 0.95 | 0.83 | 0.53 |
+| 0.035, 1 | 0.18 | 0.30 | 0.58 | 0.90 | 1.00 | 0.98 | 1.00 | 0.68 |
+| 0.05, 1 | 0.13 | 0.23 | 0.35 | 0.60 | 0.90 | 0.93 | 0.85 | 0.40 |
+| 0.07, 1 | 0.08 | 0.13 | 0.23 | 0.40 | 0.58 | 0.83 | 0.58 | 0.18 |
+| 0.1, 1 | 0.08 | 0.10 | 0.15 | 0.20 | 0.33 | 0.50 | 0.25 | 0.13 |
+
+1. **Operating point.** Every coherence still reaches ceiling at SD 0.01
+   (coherence 0.25: 1.00 at 5 deg/s), and nearly at SD 0.02 (0.95). At SD 0.05,
+   full coherence itself tops out at 0.93. So the model reaches ceiling at every
+   coherence, as the controls do, for RGC noise SD up to about 0.02.
+2. **The premise holds for threshold and ceiling.** In the free-ceiling fits, the
+   curves from more noise at coherence 1 lie on the same threshold–ceiling path as
+   the curves from lower coherence at SD 0, 0.01 and 0.02, as far as the coherence
+   families reach (threshold up to about 0.8 deg/s, ceiling down to about 0.9).
+   Past that, more noise keeps lowering the ceiling (SD 0.07: 0.69; SD 0.1: 0.37),
+   a region that coherence 0.25 does not reach at these noise levels.
+3. **It does not hold for slope.** Lower coherence makes the curve shallower (σ at
+   SD 0.02: 0.35, 0.35, 0.41 and 0.53 from coherence 1 to 0.25), while more noise
+   at coherence 1 leaves σ between 0.26 and 0.35. At a matched threshold of about
+   0.8 deg/s, coherence 0.25 at SD 0.02 has σ 0.53, and SD 0.05 at coherence 1 has
+   0.34. Each σ comes from 280 trials at 7 speeds, so single values are loose, but
+   the trend holds in all three coherence families.
+4. **Joint fits against the controls.** b = −0.99, −1.00 and −1.12 at SD 0, 0.01
+   and 0.02 (controls: median −1.41, range −1.96 to −1.13); σ = 0.31, 0.35 and 0.48
+   (controls: median 0.27, range 0.14–0.76). At SD 0.02 the model's b reaches the
+   shallow end of the controls' range.
+5. **The drop at high speed returns with noise:** coherence 0.25 at SD 0.02 goes
+   from 0.95 at 5 deg/s to 0.53 at 20; coherence 1 at SD 0.05, from 0.93 to 0.40.
+
+Step 4 by equivalence: on the 1-s stimulus, a parasol gain k and RGC noise SD s/k
+were interchangeable (mean difference 0.01–0.02 in proportion correct). If that
+carries over, then at SD 0.02 parasol gains of about 0.57, 0.4, 0.29 and 0.2 would
+behave like SD 0.035, 0.05, 0.07 and 0.1 here. That equivalence has not been
+checked on the booth stimulus.
+
 ### Open checks
 
 - **Per-condition matched filters.** Do filters built at other speeds or
