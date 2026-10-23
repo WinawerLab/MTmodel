@@ -19,7 +19,7 @@ tests = {
     'testClassPathDerivative',
     'testClassPathBiological',
     'testV1Rf',
-    'testImpairment',
+    % 'testImpairment',  % moved to _archive_lesions_and_noise/tests/
     'testGetNeuron',
     'testEdgeCases',
 };
