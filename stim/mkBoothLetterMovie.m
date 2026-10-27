@@ -40,12 +40,14 @@ function [movie, info] = mkBoothLetterMovie(letterMask, booth, options)
 %                              0 = right, 90 = down [0]
 %     BackgroundVelocityScale  background signal velocity as a multiple of the
 %                              letter's [-1], as in the booth
+%     LifetimeSec              dot lifetime in seconds [booth.lifetimeSec]. Inf:
+%                              dots are never replotted during the trial
 %
 %   Outputs:
 %     movie   [booth.modelSize], grey background booth.background, dots up to
 %             booth.dotValue
 %     info    numDots (per population), numBoothFrames, speedPxPerSec,
-%             coherence, motionAngleDeg, backgroundVelocityScale
+%             coherence, motionAngleDeg, backgroundVelocityScale, lifetimeSec
 %
 %   See also boothDisplay, mkLetterMask, mkMotionLetter, shRunLetterTrials
 
@@ -56,6 +58,7 @@ function [movie, info] = mkBoothLetterMovie(letterMask, booth, options)
         options.Coherence (1,1) double {mustBeBetween(options.Coherence, 0, 1)} = 1
         options.MotionAngleDeg (1,1) double = 0
         options.BackgroundVelocityScale (1,1) double = -1
+        options.LifetimeSec (1,1) double {mustBePositive} = booth.lifetimeSec
     end
 
     screenY = booth.screenSizePx(1);
@@ -75,7 +78,7 @@ function [movie, info] = mkBoothLetterMovie(letterMask, booth, options)
     frameWeights = localFrameWeights(numBoothFrames, booth.frameRate, booth.modelSize(3), ...
         booth.modelFrameRate);
     coherence = options.Coherence;
-    lifetimeSec = booth.lifetimeSec;
+    lifetimeSec = options.LifetimeSec;
     direction = [cosd(options.MotionAngleDeg), sind(options.MotionAngleDeg)];
 
     % The draws are made in the same order as in runSingleTrial.m.
@@ -125,7 +128,8 @@ function [movie, info] = mkBoothLetterMovie(letterMask, booth, options)
         "speedPxPerSec", options.SpeedPxPerSec, ...
         "coherence", coherence, ...
         "motionAngleDeg", options.MotionAngleDeg, ...
-        "backgroundVelocityScale", options.BackgroundVelocityScale);
+        "backgroundVelocityScale", options.BackgroundVelocityScale, ...
+        "lifetimeSec", lifetimeSec);
 end
 
 function dots = localMove(dots, direction, step, screenX, screenY)
@@ -142,6 +146,7 @@ end
 
 function dots = localReplot(dots, dt, lifetimeSec, coherence, screenX, screenY)
 % Dots whose life has run out are replotted, as in respawnLimitedLifetimeDots.
+% With lifetimeSec = Inf every life starts at rand*Inf = Inf and never runs out.
     dots.lifeSec = dots.lifeSec - dt;
     isDead = dots.lifeSec <= 0;
     nDead = nnz(isDead);

@@ -14,6 +14,10 @@
 # 3. Copies explore/_figs/<script name>* into <resultsFolder>, which also gets one
 #    log per job.
 #
+# SETUP: MATLAB statements run before the script in every job, to set the
+# script's other variables, for example
+#   SETUP="coherence = 0.5;" explore/runFormFromMotionJobs.sh explore/formFromMotionBoothLifetime.m 2 <resultsFolder>
+#
 # MATLAB: set MATLAB=/path/to/matlab to choose one. Otherwise matlab on the PATH
 # is used, or else the newest /Applications/MATLAB_R*.app (a zsh alias for
 # matlab is not visible to this script). Works in bash 3.2.
@@ -24,6 +28,7 @@ script="${1:?Give the script, for example explore/formFromMotionBoothParasolGain
 numJobs="${2:?Give the number of jobs}"
 results="${3:?Give a folder for the logs and results}"
 parallel="${PARALLEL:-6}"
+setup="${SETUP:-}"
 name="$(basename "$script" .m)"
 matlab="${MATLAB:-matlab}"
 if ! command -v "$matlab" > /dev/null 2>&1; then
@@ -43,7 +48,7 @@ if [ ! -f "$script" ]; then
 fi
 
 runJob() {
-    "$matlab" -batch "jobs = \"$1\"; run('$script')" > "$results/${name}_$1.log" 2>&1
+    "$matlab" -batch "$setup jobs = \"$1\"; run('$script')" > "$results/${name}_$1.log" 2>&1
 }
 
 showFailure() {

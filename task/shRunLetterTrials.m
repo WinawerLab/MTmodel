@@ -66,12 +66,15 @@ function results = shRunLetterTrials(pars, nTrials, options)
 %                              on the booth display (mkBoothLetterMovie), and
 %                              DotLifetimeFrames, FCovered, DotSizePx and
 %                              DotRendering are ignored.
+%     BoothLifetimeSec         dot lifetime of the booth stimulus in seconds
+%                              [the booth's, 0.1]. Inf: no replotting
 %     BoothDisplay             from boothDisplay [none]. Used only when
 %                              Templates is not given: booth templates are then
 %                              built, so the trials are drawn as on the booth.
 %     MatchedFilters           from shMatchedFilterTemplates [none]
 %     Weighting                shOpponentMap weighting ["cosine"]
 %     KeepMaps                 keep every trial's opponent map [false]
+%     ProgressFcn              called as ProgressFcn(n) after trial n [none]
 %
 %   Output fields:
 %     options, letters, stimInfo (first trial), seconds
@@ -108,6 +111,8 @@ function results = shRunLetterTrials(pars, nTrials, options)
         options.MatchedFilters struct = struct.empty
         options.Weighting (1,1) string = "cosine"
         options.KeepMaps (1,1) logical = false
+        options.BoothLifetimeSec double {mustBeScalarOrEmpty, mustBePositive} = []
+        options.ProgressFcn = []
     end
 
     templates = options.Templates;
@@ -126,6 +131,9 @@ function results = shRunLetterTrials(pars, nTrials, options)
         booth = templates.boothDisplay;
     end
     isBooth = ~isempty(booth);
+    if isBooth && ~isempty(options.BoothLifetimeSec)
+        booth.lifetimeSec = options.BoothLifetimeSec;
+    end
     useMatched = ~isempty(options.MatchedFilters);
     if useMatched && ~strcmp(options.MatchedFilters.letters, templates.letters)
         error("shRunLetterTrials:letters", ...
@@ -183,6 +191,9 @@ function results = shRunLetterTrials(pars, nTrials, options)
         if options.KeepMaps
             maps(:, :, n) = map;
         end
+        if ~isempty(options.ProgressFcn)
+            options.ProgressFcn(n);
+        end
         if n == 1
             stimInfo = info;
             if ~isBooth
@@ -215,7 +226,7 @@ function results = shRunLetterTrials(pars, nTrials, options)
     end
 
     results = struct( ...
-        "options", rmfield(options, ["Templates", "MatchedFilters"]), ...
+        "options", rmfield(options, ["Templates", "MatchedFilters", "ProgressFcn"]), ...
         "letters", templates.letters, ...
         "stimInfo", stimInfo, ...
         "seconds", seconds, ...

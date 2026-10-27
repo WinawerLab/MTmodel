@@ -828,6 +828,58 @@ The analysis:
 general form of the noise run's launcher, for any script with jobs "job1" to
 "jobN" and "analysis".
 
+### Does dot lifetime limit the noise-free model at slow speeds? (2026-10-27, iMac)
+
+**Question.** Without internal noise, at coherence 1, the booth stimulus gives
+only 0.38 correct at 0.15 model deg/s and 0.75 at 0.3 deg/s. The model is then
+deterministic, so the limit comes from the stimulus. Leading guess: the 100-ms
+dot lifetime. At 0.15 deg/s a dot moves 0.015 deg in its life, about 1/7 of a
+model pixel, while every dot is replotted somewhere else every 100 ms. The
+alternative: the model's coarse pixels and weak slow-speed channels.
+
+**Test.** `explore/formFromMotionBoothLifetime.m`. The same condition (coherence 1,
+RGC noise SD 0, the booth run's templates, matched filters and per-trial seeds)
+with dot lifetimes of 1 s and Inf (no replotting during the 4-s trial), at the two
+slowest speeds, 40 trials each. The 0.1-s column is the no-noise booth run. The
+lifetime is set with a new option, `BoothLifetimeSec` of `shRunLetterTrials`
+(passed on as `LifetimeSec` of `mkBoothLetterMovie`); the default is unchanged.
+Both jobs ran at once, 62 minutes in all (about 45 s per trial).
+
+Matched-filter proportion correct (number correct out of 40):
+
+| lifetime | 0.15 deg/s | 0.3 deg/s |
+|---|---|---|
+| 0.1 s (booth) | 0.38 (15) | 0.75 (30) |
+| 1 s | 0.80 (32) | 0.98 (39) |
+| Inf | 0.73 (29) | 0.50 (20) |
+
+Chance is 0.1. The standard error of one cell is about 0.07. The trials share
+seeds, so each one can be paired with its 0.1-s twin. Trials that only the longer
+lifetime got right, against trials that only the 0.1-s baseline got right:
+
+| lifetime | 0.15 deg/s | 0.3 deg/s |
+|---|---|---|
+| 1 s | 17 vs 0 | 9 vs 0 |
+| Inf | 17 vs 3 | 5 vs 15 |
+
+(Two-sided sign tests on these counts: p ≈ 0.00002 and 0.004 for 1 s; 0.003 and
+0.04 for Inf.)
+
+Figure: `explore/_figs/formFromMotionBoothLifetime_curves.png`.
+
+**Answer.** The 100-ms lifetime is the main limit at slow speeds. A 1-s lifetime
+lifts 0.15 deg/s from 0.38 to 0.80 and 0.3 deg/s from 0.75 to 0.98, so the
+model's pixels and slow-speed channels are not what holds it down there.
+
+**A surprise.** Longer is not always better. With no replotting at all (Inf),
+0.15 deg/s gains less than with 1 s, and 0.3 deg/s falls *below* the 0.1-s
+baseline (0.50, and 15 of the 20 discordant trials favour the baseline). We do
+not know why. A guess, not tested: with a 1-s lifetime a trial shows four
+independent dot patterns, but with Inf it shows only one, so a single unlucky
+pattern can spoil the whole trial; the matched filters were also built with the
+0.1-s stimulus, and a frozen pattern may give opponent maps that match them less
+well. Looking at the maps of the 0.3-deg/s Inf trials would tell these apart.
+
 ### Open checks
 
 - **Per-condition matched filters.** Do filters built at other speeds or
