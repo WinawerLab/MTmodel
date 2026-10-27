@@ -880,6 +880,30 @@ pattern can spoil the whole trial; the matched filters were also built with the
 0.1-s stimulus, and a frozen pattern may give opponent maps that match them less
 well. Looking at the maps of the 0.3-deg/s Inf trials would tell these apart.
 
+**Second stage: coherence 0.5.** The same test at coherence 0.5 (run with
+`SETUP="coherence = 0.5;"`; 59 minutes). The 0.1-s row is the no-noise booth run
+at coherence 0.5. Figure: `explore/_figs/formFromMotionBoothLifetime_coherence0.5_curves.png`.
+
+| lifetime | 0.15 deg/s | 0.3 deg/s | paired, 0.15 | paired, 0.3 |
+|---|---|---|---|---|
+| 0.1 s (booth) | 0.25 (10) | 0.43 (17) | | |
+| 1 s | 0.35 (14) | 0.50 (20) | 8 vs 4 | 11 vs 8 |
+| Inf | 0.38 (15) | 0.40 (16) | 10 vs 5 | 8 vs 9 |
+
+"Paired" counts, as above, the trials only the longer lifetime got right against
+those only the baseline got right. None of these differences is reliable (sign
+tests, p = 0.3 to 1).
+
+At half coherence, a longer lifetime helps little. Was the idea right that
+lifetime and coherence combine as a product, with useful fraction ≈ coherence ×
+(1 − Δt/lifetime)? Take Δt as one model frame (20 ms). Then coherence 1 at 0.1 s
+(useful fraction 0.8) should beat coherence 0.5 with no replotting (0.5). It does
+at 0.3 deg/s (0.75 against 0.40), but not at 0.15 deg/s (0.38 against 0.38). And
+the same lengthening of lifetime, which raises the product by the same factor at
+both coherences, gives large gains at coherence 1 but small ones at coherence 0.5.
+So these data do not support a simple product. With 40 trials per cell this is a
+weak conclusion.
+
 ### Open checks
 
 - **Per-condition matched filters.** Do filters built at other speeds or
